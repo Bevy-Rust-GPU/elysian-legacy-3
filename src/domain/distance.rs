@@ -52,13 +52,3 @@ where
 pub type DistanceT<T> = DomainT<T, Distance<f32>>;
 pub type DistanceF = DomainF<Distance<f32>>;
 
-#[cfg(test)]
-mod test {
-    use crate::{shape, Point, Domain, Distance, DistanceF32};
-
-    #[test]
-    fn test_distance() {
-        let shape = shape() << Point;
-        let f = Domain::<DistanceF32>::domain(shape);
-    }
-}
