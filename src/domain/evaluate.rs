@@ -24,3 +24,21 @@ where
             .split(SubtreeF::default().call(self))
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{shape, Isosurface, Point, Translate, Domain, Evaluate};
+
+    #[test]
+    fn test_evaluate() {
+        let shape_a = shape() << Translate(-0.8, -0.8) << Point << Isosurface(0.4);
+        let shape_b = shape() << Translate(0.8, 0.8) << Point << Isosurface(0.2);
+        let shape_c = shape() << Translate(0.0, 0.8) << Point << Isosurface(0.5);
+        let shape_d = shape() << Translate(0.0, -0.8) << Point << Isosurface(0.3);
+
+        let shape = shape_a + shape_b + shape_c * shape_d;
+
+        let res = Domain::<Evaluate>::domain(shape);
+        panic!("{res:#?}");
+    }
+}
