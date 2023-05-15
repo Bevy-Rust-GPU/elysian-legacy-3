@@ -3,9 +3,9 @@ use std::{marker::PhantomData, ops::Mul};
 use crate::Shape;
 
 use super::Boolean;
-use type_fields::t_funk::{Gt, Fst, Composed, Splitted, CopointF};
+use type_fields::t_funk::{Composed, Fst, Gt};
 
-pub type Intersect = Composed<Gt, Composed<Splitted<CopointF, CopointF>, Fst>>;
+pub type Intersect = Composed<Gt, Fst>;
 pub type Intersectioned<L, R> = Boolean<L, R, Intersect>;
 
 // /\

@@ -1,12 +1,12 @@
 use std::{marker::PhantomData, ops::Add};
 
-use type_fields::t_funk::{Lt, Fst, Composed, CopointF, Splitted};
+use type_fields::t_funk::{Composed, Fst, Lt};
 
 use crate::Shape;
 
 use super::Boolean;
 
-pub type UnionC = Composed<Lt, Composed<Splitted<CopointF, CopointF>, Fst>>;
+pub type UnionC = Composed<Lt, Fst>;
 pub type Unioned<T, U> = Boolean<T, U, UnionC>;
 
 // \/
@@ -33,4 +33,3 @@ impl<L, R> Add<R> for Shape<L> {
         Boolean(self, rhs, PhantomData)
     }
 }
-

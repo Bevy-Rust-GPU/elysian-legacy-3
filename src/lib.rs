@@ -11,24 +11,21 @@ pub use shape::*;
 #[cfg(test)]
 mod test {
     use crate::{
-        shape, Ascii, Distance, DistanceF, DistanceF32, Domain, Gradient, GradientF, GradientF32,
-        Image, Isosurface, Manifold, Point, PointDistance, Position, Evaluate, EvaluateF, Translate,
-        ViuerPrint, ASCII_RAMP,
+        shape, Ascii, DistanceF, Domain, Evaluate, EvaluateF, GradientF, Image, Isosurface,
+        Manifold, Point, Position, Translate, ViuerPrint, ASCII_RAMP,
     };
 
     use image::{DynamicImage, ImageBuffer};
     use type_fields::t_funk::{
-        arrow::First,
         arrow::Second,
         closure::Compose,
         function::{Const, Id},
-        hlist::{Chain, PushBackF},
+        hlist::Chain,
         list::hlist::ChainF,
         list::hlist::Nil,
         tlist::ToHList,
-        CallF, Closure, Composed, CopointF, Curry2, Curry2B, Either, Fanout, Fanouted, FlipTuple,
-        Fmap, FmapF, Fst, IntoF, Lt, MakeIf, PrintLn, RShiftTuple, Seconded, Snd, Split, Splitted,
-        Transpose,
+        CallF, Closure, Curry2, Either, Fanout, FlipTuple, Fmap, FmapF, Fst, IntoF, Lt, MakeIf,
+        PrintLn, RShiftTuple, Snd, Split, Transpose,
     };
     use viuer::Config;
 
@@ -50,7 +47,6 @@ mod test {
         let oof = Domain::<Evaluate>::domain(shape_a)
             .fanout(Domain::<Evaluate>::domain(shape_b))
             .compose_l(Transpose)
-            .compose_l(CopointF.split(CopointF).first())
             .compose_l(
                 MakeIf
                     .split(MakeIf)
@@ -59,7 +55,7 @@ mod test {
             .compose_l(Transpose)
             .compose_l((CallF.compose_l(Either::unwrap)).split(CallF));
         let rab = oof.call((p, Nil));
-        panic!("{rab:#?}");
+        //panic!("{rab:#?}");
 
         let foo = Domain::<Evaluate>::domain(shape_a);
         let _bar = foo.call((p, Nil));
@@ -86,7 +82,7 @@ mod test {
             .compose_l(Snd.compose_l(Snd).fanout(CallF.compose_l(Snd)));
         //panic!("{bar:#?}");
         let baz = bar.call((p, Nil));
-        panic!("{baz:#?}");
+        //panic!("{baz:#?}");
 
         //let baz = baz.call(baz);
 

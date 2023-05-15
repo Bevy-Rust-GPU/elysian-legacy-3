@@ -2,8 +2,8 @@ use core::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
 use crate::{
-    Distance, DistanceF, DistanceF32, Domain, Gradient, GradientF, GradientF32, Position,
-    PositionF32, Evaluate, EvaluateT,
+    Distance, DistanceF, DistanceF32, Domain, Evaluate, EvaluateT, Gradient, GradientF,
+    GradientF32, Position, PositionF32,
 };
 
 use image::{ImageBuffer, Luma, Pixel, Rgb};
@@ -55,7 +55,8 @@ where
                 let nx = ((x as f32 + 0.5) / w as f32) * 2.0 - 1.0;
                 let ny = ((y as f32 + 0.5) / h as f32) * 2.0 - 1.0;
 
-                let dist = 1.0 - func.clone().call(Position(nx, ny)).0.max(0.0).min(1.0);
+                let Distance(dist) = func.clone().call(Position(nx, ny));
+                let dist = 1.0 - dist.max(0.0).min(1.0);
 
                 buf.put_pixel(x, y, *Pixel::from_slice(&[dist]));
             }
@@ -77,12 +78,7 @@ where
                 RShiftTuple,
                 Fanouted<
                     Fst,
-                    Composed<
-                        Seconded<
-                            Composed<type_fields::t_funk::hlist::ChainF, Curry2B<FmapF, GradientF>>,
-                        >,
-                        EvaluateT<S>,
-                    >,
+                    Composed<Seconded<Composed<ChainF, Curry2B<FmapF, GradientF>>>, EvaluateT<S>>,
                 >,
             >,
         >,
