@@ -2,23 +2,22 @@
 //!
 //! Used to drill down into the leaf element of a shape tree
 
-use crate::{DistanceF32, DistanceT, Domain, DomainF};
-
-use type_fields::t_funk::{list::hlist::PushBackF, Curry2, Curry2B, Split};
+use crate::{Domain, DomainF};
 
 pub enum Subtree {}
 
 pub type SubtreeT<T> = <T as Domain<Subtree>>::Domain;
 pub type SubtreeF = DomainF<Subtree>;
 
-impl<T> Domain<Subtree> for T
-where
-    T: Clone + Domain<DistanceF32>,
-    DistanceT<T>: Split<Curry2B<PushBackF, T>>,
-{
-    type Domain = Curry2B<PushBackF, T>;
+#[macro_export]
+macro_rules! impl_subtree {
+    ($ty:ident $(<$gen:ident>)?) => {
+        impl$(<$gen>)? Domain<crate::Subtree> for $ty $(<$gen>)? {
+            type Domain = type_fields::t_funk::Curry2B<type_fields::t_funk::hlist::PushBackF, $ty $(<$gen>)?>;
 
-    fn domain(self) -> Self::Domain {
-        PushBackF.suffix2(self)
-    }
+            fn domain(self) -> Self::Domain {
+                type_fields::t_funk::Curry2::suffix2(type_fields::t_funk::hlist::PushBackF, self)
+            }
+        }
+    };
 }

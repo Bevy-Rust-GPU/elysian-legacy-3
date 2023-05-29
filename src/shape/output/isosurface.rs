@@ -1,12 +1,14 @@
 use core::ops::Sub;
 
-use crate::{DistanceF32, Domain, GradientF32, Distance};
+use crate::{
+    impl_identity, impl_null, impl_split, impl_subtree, Distance, DistanceF32, Domain, GradientF32,
+};
 
 use type_fields::{
     macros::{
         applicative::Applicative, arrow::Arrow, category::Category, functor::Functor, monad::Monad,
     },
-    t_funk::{function::Id, Closure},
+    t_funk::Closure,
 };
 
 // Isosurface output modifier symbol
@@ -38,10 +40,14 @@ where
 }
 
 impl<T> Domain<GradientF32> for Isosurface<T> {
-    type Domain = Id;
+    type Domain = ();
 
     fn domain(self) -> Self::Domain {
-        Id
+        ()
     }
 }
 
+impl_identity!(Isosurface<T>);
+impl_null!(Isosurface<T>);
+impl_split!(Isosurface<T>);
+impl_subtree!(Isosurface<T>);

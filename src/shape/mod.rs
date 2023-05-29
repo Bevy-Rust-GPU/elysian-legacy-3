@@ -6,12 +6,12 @@ pub use field::*;
 pub use input::*;
 pub use output::*;
 
-use crate::{Domain, Evaluate, EvaluateF};
+use crate::{Domain, DomainF};
 
 use type_fields::{
     macros::{applicative::Applicative, functor::Functor, monad::Monad},
     t_funk::{
-        hlist::{Nil, PushBack},
+        hlist::{Nil, PushBack, Cons},
         list::{
             hlist::{Chain, ChainT},
             tlist::ToHList,
@@ -28,15 +28,15 @@ use std::fmt::Debug;
 )]
 pub struct Shape<T>(pub T);
 
-impl<T> Domain<Evaluate> for Shape<T>
+impl<T, U> Domain<U> for Shape<T>
 where
-    T: Fmap<EvaluateF>,
-    FmapT<T, EvaluateF>: Chain,
+    T: Fmap<DomainF<U>>,
+    FmapT<T, DomainF<U>>: Chain,
 {
-    type Domain = ChainT<FmapT<T, EvaluateF>>;
+    type Domain = ChainT<FmapT<T, DomainF<U>>>;
 
     fn domain(self) -> Self::Domain {
-        self.0.fmap(EvaluateF::default()).chain()
+        self.0.fmap(DomainF::default()).chain()
     }
 }
 
@@ -54,6 +54,15 @@ where
 
 pub fn shape() -> Shape<Nil> {
     Shape(Nil)
+}
+
+
+/// A shape whose first instruction is Lift,
+/// thus guaranteeing that it is the root shape
+pub type RootShape<T> = Shape<Cons<Lift, Cons<T, Nil>>>;
+
+pub fn root_shape() -> Shape<Cons<Lift, Nil>> {
+    Shape(Cons(Lift, Nil))
 }
 
 pub trait ToShape: Sized {

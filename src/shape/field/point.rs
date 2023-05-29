@@ -1,11 +1,11 @@
-use crate::{Distance, DistanceF32, Domain, Gradient, GradientF32, Position, PositionF32};
+use crate::{
+    impl_identity, impl_split, impl_subtree, Distance, DistanceF32, Domain, Gradient, GradientF32,
+    Position, PositionF32, impl_null,
+};
 
 use type_fields::{
     macros::{arrow::Arrow, category::Category, Closure},
-    t_funk::{
-        arrow::{First, Firsted},
-        Function, FlipTuple, closure::Compose, Composed,
-    },
+    t_funk::Function,
 };
 
 // Point field symbol
@@ -36,10 +36,10 @@ impl Function<PositionF32> for PointDistance {
 
 // Gradient
 impl Domain<GradientF32> for Point {
-    type Domain = Composed<FlipTuple, Firsted<PointGradient>>;
+    type Domain = PointGradient;
 
     fn domain(self) -> Self::Domain {
-        PointGradient.first().compose_l(FlipTuple)
+        PointGradient
     }
 }
 
@@ -48,7 +48,7 @@ impl Domain<GradientF32> for Point {
 )]
 pub struct PointGradient;
 
-impl Function<Position<f32>> for PointGradient {
+impl Function<PositionF32> for PointGradient {
     type Output = GradientF32;
 
     fn call(Position(x, y): Position<f32>) -> Self::Output {
@@ -56,3 +56,8 @@ impl Function<Position<f32>> for PointGradient {
         Gradient(x / l, y / l)
     }
 }
+
+impl_identity!(Point);
+impl_null!(Point);
+impl_split!(Point);
+impl_subtree!(Point);

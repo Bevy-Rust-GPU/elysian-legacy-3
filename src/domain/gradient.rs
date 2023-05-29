@@ -5,7 +5,7 @@ use type_fields::t_funk::{
     Either, Fmap, FmapT,
 };
 
-use crate::{Domain, DomainF};
+use crate::{DomainF, Domain};
 
 // Gradient domain
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

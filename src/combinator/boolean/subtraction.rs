@@ -1,10 +1,10 @@
 use std::{marker::PhantomData, ops::Sub};
 
-use type_fields::t_funk::{function::Id, Composed, Firsted, Fst, Gt, Neg, Splitted};
+use type_fields::t_funk::{Composed, Firsted, Gt, Neg};
 
 use crate::{Boolean, Shape};
 
-pub type Subtract = Composed<Composed<Gt, Firsted<Neg>>, Fst>;
+pub type Subtract = Composed<Gt, Firsted<Neg>>;
 pub type Subtractioned<T, U> = Boolean<T, U, Subtract>;
 
 pub trait Subtraction<T>: Sized {

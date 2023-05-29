@@ -1,10 +1,10 @@
-use crate::{DistanceF32, Domain, GradientF32, Position};
+use crate::{impl_identity, impl_split, impl_subtree, DistanceF32, Domain, GradientF32, Position, impl_null};
 
 use type_fields::{
     macros::{
         applicative::Applicative, arrow::Arrow, category::Category, functor::Functor, monad::Monad,
     },
-    t_funk::{arrow::First, Closure, FirstT},
+    t_funk::Closure,
 };
 
 // Scale input modifier symbol
@@ -22,10 +22,10 @@ impl<T> Domain<DistanceF32> for Scale<T> {
 }
 
 impl<T> Domain<GradientF32> for Scale<T> {
-    type Domain = FirstT<ScaleF<T>>;
+    type Domain = ScaleF<T>;
 
     fn domain(self) -> Self::Domain {
-        ScaleF(self.0).first()
+        ScaleF(self.0)
     }
 }
 
@@ -44,3 +44,8 @@ where
         Position(x / s.clone(), y / s)
     }
 }
+
+impl_identity!(Scale<T>);
+impl_null!(Scale<T>);
+impl_split!(Scale<T>);
+impl_subtree!(Scale<T>);

@@ -1,11 +1,10 @@
-use crate::{DistanceF32, Domain, GradientF32, Position};
+use crate::{
+    impl_identity, impl_split, impl_subtree, DistanceF32, Domain, GradientF32, Position, impl_null,
+};
 
 use type_fields::{
     macros::{arrow::Arrow, category::Category},
-    t_funk::{
-        arrow::{First, FirstT},
-        Closure,
-    },
+    t_funk::Closure,
 };
 
 // Translation input modifier symbol
@@ -21,16 +20,16 @@ impl<T> Domain<DistanceF32> for Translate<T> {
 }
 
 impl<T> Domain<GradientF32> for Translate<T> {
-    type Domain = FirstT<TranslateF<T>>;
+    type Domain = TranslateF<T>;
 
     fn domain(self) -> Self::Domain {
-        TranslateF(self.0, self.1).first()
+        TranslateF(self.0, self.1)
     }
 }
 
 // General translation function
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Category, Arrow)]
-pub struct TranslateF<T>(T, T);
+pub struct TranslateF<T>(pub T, pub T);
 
 impl<T> Closure<Position<T>> for TranslateF<T>
 where
@@ -43,3 +42,8 @@ where
         Position(x - dx, y - dy)
     }
 }
+
+impl_identity!(Translate<T>);
+impl_null!(Translate<T>);
+impl_split!(Translate<T>);
+impl_subtree!(Translate<T>);

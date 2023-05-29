@@ -11,7 +11,7 @@ use std::ops::Shr;
 
 use type_fields::t_funk::Closure;
 
-use crate::{Boolean, Shape};
+use crate::{Boolean, Shape, Bounding};
 
 impl<T, U> Shr<U> for Shape<T>
 where
@@ -27,6 +27,20 @@ where
 }
 
 impl<A, B, O, U> Shr<U> for Boolean<A, B, O>
+where
+    A: Clone,
+    B: Clone,
+    U: Closure<Self>,
+{
+    type Output = Self;
+
+    fn shr(self, rhs: U) -> Self::Output {
+        rhs.call(self.clone());
+        self
+    }
+}
+
+impl<A, B, O, U> Shr<U> for Bounding<A, B, O>
 where
     A: Clone,
     B: Clone,

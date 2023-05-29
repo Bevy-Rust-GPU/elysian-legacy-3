@@ -1,8 +1,12 @@
+extern crate self as functional_sdf;
+
+mod closure;
 mod combinator;
 mod domain;
 mod interpreter;
 mod shape;
 
+pub use closure::*;
 pub use combinator::*;
 pub use domain::*;
 pub use interpreter::*;
@@ -10,24 +14,12 @@ pub use shape::*;
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        shape, Ascii, DistanceF, Domain, Evaluate, EvaluateF, GradientF, Image, Isosurface,
-        Manifold, Point, Position, Translate, ViuerPrint, ASCII_RAMP,
-    };
+    use crate::{shape, Domain, Evaluate, Isosurface, Point, Position, Translate};
 
-    use image::{DynamicImage, ImageBuffer};
     use type_fields::t_funk::{
-        arrow::Second,
-        closure::Compose,
-        function::{Const, Id},
-        hlist::Chain,
-        list::hlist::ChainF,
-        list::hlist::Nil,
-        tlist::ToHList,
-        CallF, Closure, Curry2, Either, Fanout, FlipTuple, Fmap, FmapF, Fst, IntoF, Lt, MakeIf,
-        PrintLn, RShiftTuple, Snd, Split, Transpose,
+        closure::Compose, function::Id, list::hlist::Nil, CallF, Closure, Either, Fanout, Fst, Lt,
+        MakeIf, Split, Transpose,
     };
-    use viuer::Config;
 
     #[test]
     fn test_functional_sdf() {
@@ -38,11 +30,13 @@ mod test {
 
         let p: Position<f32> = Position(-1.0, 0.0);
 
+        /*
         let foo = (Translate(-1.0, -1.0), Point, Isosurface(2.0), Manifold)
             .to_hlist()
             .fmap(EvaluateF::default())
             .chain();
         let bar = foo.call((p, Nil));
+        */
 
         let oof = Domain::<Evaluate>::domain(shape_a)
             .fanout(Domain::<Evaluate>::domain(shape_b))
@@ -54,7 +48,7 @@ mod test {
             )
             .compose_l(Transpose)
             .compose_l((CallF.compose_l(Either::unwrap)).split(CallF));
-        let rab = oof.call((p, Nil));
+        let _rab = oof.call((p, Nil));
         //panic!("{rab:#?}");
 
         let foo = Domain::<Evaluate>::domain(shape_a);
@@ -67,54 +61,8 @@ mod test {
         //panic!("{baz:#?}");
         //
 
-        let foo = shape() << Point << Manifold;
-        let bar = Fst
-            .fanout(
-                Domain::<Evaluate>::domain(foo).compose_l(
-                    FmapF
-                        .suffix2(GradientF::default())
-                        .compose_l(ChainF)
-                        .second(),
-                ),
-            )
-            .compose_l(RShiftTuple)
-            .compose_l(FlipTuple)
-            .compose_l(Snd.compose_l(Snd).fanout(CallF.compose_l(Snd)));
-        //panic!("{bar:#?}");
-        let baz = bar.call((p, Nil));
-        //panic!("{baz:#?}");
-
         //let baz = baz.call(baz);
 
         //panic!("{baz:#?}");
-
-        let ascii = Ascii::<64, 32, f32>::default().curry2().call(ASCII_RAMP);
-        let _out = ascii.call(foo);
-        //panic!("\n{out:}");
-
-        let config = Config {
-            transparent: false,
-            absolute_offset: false,
-            x: 0,
-            y: 0,
-            restore_cursor: false,
-            width: Some(48),
-            height: None,
-            truecolor: true,
-            use_kitty: true,
-            use_iterm: false,
-        };
-
-        let viuer = Image::<DistanceF>::default()
-            .curry2()
-            .call(ImageBuffer::new(48, 48))
-            .compose_l(IntoF::<DynamicImage>::default())
-            .compose_l(ViuerPrint.curry2().call(config))
-            .compose(
-                Id.fanout(Const.prefix2(String::default()).compose_l(PrintLn))
-                    .compose_l(Fst),
-            );
-
-        viuer.call(foo).unwrap();
     }
 }

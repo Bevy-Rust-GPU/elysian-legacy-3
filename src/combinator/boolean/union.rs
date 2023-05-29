@@ -1,13 +1,12 @@
 use std::{marker::PhantomData, ops::Add};
 
-use type_fields::t_funk::{Composed, Fst, Lt};
+use type_fields::t_funk::Lt;
 
 use crate::Shape;
 
 use super::Boolean;
 
-pub type UnionC = Composed<Lt, Fst>;
-pub type Unioned<T, U> = Boolean<T, U, UnionC>;
+pub type Unioned<T, U> = Boolean<T, U, Lt>;
 
 // \/
 pub trait Union<T>: Sized {

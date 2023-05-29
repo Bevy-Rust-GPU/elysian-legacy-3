@@ -1,5 +1,5 @@
 use crate::{
-    DistanceF, DistanceF32, DistanceT, Domain, DomainF, DomainT, GradientF32, Isosurface, Point,
+    DistanceF, DistanceF32, DistanceT, Domain, DomainF, DomainT, GradientF32, Isosurface, Point, impl_subtree, impl_split, impl_identity, impl_null,
 };
 
 use type_fields::{
@@ -30,3 +30,8 @@ impl<T> Domain<GradientF32> for Circle<T> {
         DomainF::<GradientF32>::default().call(Point)
     }
 }
+
+impl_identity!(Circle<T>);
+impl_null!(Circle<T>);
+impl_split!(Circle<T>);
+impl_subtree!(Circle<T>);
