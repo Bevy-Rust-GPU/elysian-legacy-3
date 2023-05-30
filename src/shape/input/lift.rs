@@ -1,6 +1,6 @@
 //! Lift a single input (ex. position) into the expected input type of a composite domain
 
-use crate::{impl_identity, impl_null, DistanceF32, Domain, DomainT, GradientF32, Split, Subtree};
+use crate::{impl_identity, impl_null, DistanceF32, Domain, DomainT, GradientF32, Split, Subtree, impl_domains};
 use type_fields::t_funk::{
     function::Const, function::Id, hlist::Nil, Curry2, Curry2A, Fanout, Fanouted,
 };
@@ -15,6 +15,7 @@ impl<A, B> Domain<Split<A, B>> for Lift
 where
     Lift: Domain<B>,
 {
+    type Input = ();
     type Domain = Fanouted<Id, DomainT<Lift, B>>;
 
     fn domain(self) -> Self::Domain {
@@ -23,6 +24,7 @@ where
 }
 
 impl Domain<DistanceF32> for Lift {
+    type Input = ();
     type Domain = Id;
 
     fn domain(self) -> Self::Domain {
@@ -31,6 +33,7 @@ impl Domain<DistanceF32> for Lift {
 }
 
 impl Domain<GradientF32> for Lift {
+    type Input = ();
     type Domain = Id;
 
     fn domain(self) -> Self::Domain {
@@ -39,6 +42,7 @@ impl Domain<GradientF32> for Lift {
 }
 
 impl Domain<Subtree> for Lift {
+    type Input = ();
     type Domain = Curry2A<Const, Nil>;
 
     fn domain(self) -> Self::Domain {
@@ -47,4 +51,5 @@ impl Domain<Subtree> for Lift {
 }
 
 impl_identity!(Lift);
+impl_domains!(Lift);
 impl_null!(Lift);

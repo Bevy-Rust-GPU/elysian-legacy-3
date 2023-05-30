@@ -6,7 +6,7 @@ pub use field::*;
 pub use input::*;
 pub use output::*;
 
-use crate::{Domain, DomainF};
+use crate::{Domain, DomainF, Domains};
 
 use type_fields::{
     macros::{applicative::Applicative, functor::Functor, monad::Monad},
@@ -33,6 +33,7 @@ where
     T: Fmap<DomainF<U>>,
     FmapT<T, DomainF<U>>: Chain,
 {
+    type Input = ();
     type Domain = ChainT<FmapT<T, DomainF<U>>>;
 
     fn domain(self) -> Self::Domain {

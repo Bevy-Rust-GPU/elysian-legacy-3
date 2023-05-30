@@ -1,4 +1,4 @@
-use crate::{impl_identity, impl_split, impl_subtree, DistanceF32, Domain, GradientF32, Position, impl_null};
+use crate::{impl_identity, impl_split, impl_subtree, DistanceF32, Domain, GradientF32, Position, impl_null, PositionF32, impl_domains};
 
 use type_fields::{
     macros::{
@@ -14,6 +14,7 @@ use type_fields::{
 pub struct Scale<T>(pub T);
 
 impl<T> Domain<DistanceF32> for Scale<T> {
+    type Input = PositionF32;
     type Domain = ScaleF<T>;
 
     fn domain(self) -> Self::Domain {
@@ -22,6 +23,7 @@ impl<T> Domain<DistanceF32> for Scale<T> {
 }
 
 impl<T> Domain<GradientF32> for Scale<T> {
+    type Input = PositionF32;
     type Domain = ScaleF<T>;
 
     fn domain(self) -> Self::Domain {
@@ -47,5 +49,6 @@ where
 
 impl_identity!(Scale<T>);
 impl_null!(Scale<T>);
+impl_domains!(Scale<T>);
 impl_split!(Scale<T>);
 impl_subtree!(Scale<T>);

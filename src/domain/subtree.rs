@@ -13,6 +13,7 @@ pub type SubtreeF = DomainF<Subtree>;
 macro_rules! impl_subtree {
     ($ty:ident $(<$gen:ident>)?) => {
         impl$(<$gen>)? Domain<crate::Subtree> for $ty $(<$gen>)? {
+            type Input = $ty $(<$gen>)?;
             type Domain = type_fields::t_funk::Curry2B<type_fields::t_funk::hlist::PushBackF, $ty $(<$gen>)?>;
 
             fn domain(self) -> Self::Domain {

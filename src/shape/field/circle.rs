@@ -1,5 +1,5 @@
 use crate::{
-    DistanceF, DistanceF32, DistanceT, Domain, DomainF, DomainT, GradientF32, Isosurface, Point, impl_subtree, impl_split, impl_identity, impl_null,
+    DistanceF, DistanceF32, DistanceT, Domain, DomainF, DomainT, GradientF32, Isosurface, Point, impl_subtree, impl_split, impl_identity, impl_null, PositionF32, impl_domains,
 };
 
 use type_fields::{
@@ -14,6 +14,7 @@ use type_fields::{
 pub struct Circle<T>(pub T);
 
 impl<T> Domain<DistanceF32> for Circle<T> {
+    type Input = PositionF32;
     type Domain = Composed<DistanceT<Isosurface<T>>, DistanceT<Point>>;
 
     fn domain(self) -> Self::Domain {
@@ -24,6 +25,7 @@ impl<T> Domain<DistanceF32> for Circle<T> {
 }
 
 impl<T> Domain<GradientF32> for Circle<T> {
+    type Input = PositionF32;
     type Domain = DomainT<Point, GradientF32>;
 
     fn domain(self) -> Self::Domain {
@@ -32,6 +34,7 @@ impl<T> Domain<GradientF32> for Circle<T> {
 }
 
 impl_identity!(Circle<T>);
+impl_domains!(Circle<T>);
 impl_null!(Circle<T>);
 impl_split!(Circle<T>);
 impl_subtree!(Circle<T>);

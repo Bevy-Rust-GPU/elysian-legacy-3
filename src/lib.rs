@@ -1,4 +1,4 @@
-extern crate self as functional_sdf;
+extern crate self as elysian;
 
 mod closure;
 mod combinator;
@@ -22,7 +22,7 @@ mod test {
     };
 
     #[test]
-    fn test_functional_sdf() {
+    fn test_elysian() {
         let shape_a = shape() << Translate(-0.8, -0.8) << Point << Isosurface(0.4);
         let shape_b = shape() << Translate(0.8, 0.8) << Point << Isosurface(0.2);
         let shape_c = shape() << Translate(0.0, 0.8) << Point << Isosurface(0.5);

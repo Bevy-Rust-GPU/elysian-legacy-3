@@ -1,7 +1,7 @@
 use core::ops::Sub;
 
 use crate::{
-    impl_identity, impl_null, impl_split, impl_subtree, Distance, DistanceF32, Domain, GradientF32,
+    impl_identity, impl_null, impl_split, impl_subtree, Distance, DistanceF32, Domain, GradientF32, impl_domains,
 };
 
 use type_fields::{
@@ -18,6 +18,7 @@ use type_fields::{
 pub struct Isosurface<T>(pub T);
 
 impl<T> Domain<DistanceF32> for Isosurface<T> {
+    type Input = DistanceF32;
     type Domain = IsosurfaceDistance<T>;
 
     fn domain(self) -> Self::Domain {
@@ -40,6 +41,7 @@ where
 }
 
 impl<T> Domain<GradientF32> for Isosurface<T> {
+    type Input = ();
     type Domain = ();
 
     fn domain(self) -> Self::Domain {
@@ -48,6 +50,7 @@ impl<T> Domain<GradientF32> for Isosurface<T> {
 }
 
 impl_identity!(Isosurface<T>);
+impl_domains!(Isosurface<T>);
 impl_null!(Isosurface<T>);
 impl_split!(Isosurface<T>);
 impl_subtree!(Isosurface<T>);

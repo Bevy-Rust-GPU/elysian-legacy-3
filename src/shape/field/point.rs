@@ -1,6 +1,6 @@
 use crate::{
     impl_identity, impl_split, impl_subtree, Distance, DistanceF32, Domain, Gradient, GradientF32,
-    Position, PositionF32, impl_null,
+    Position, PositionF32, impl_null, impl_domains,
 };
 
 use type_fields::{
@@ -14,6 +14,7 @@ pub struct Point;
 
 // Distance
 impl Domain<DistanceF32> for Point {
+    type Input = PositionF32;
     type Domain = PointDistance;
 
     fn domain(self) -> Self::Domain {
@@ -36,6 +37,7 @@ impl Function<PositionF32> for PointDistance {
 
 // Gradient
 impl Domain<GradientF32> for Point {
+    type Input = PositionF32;
     type Domain = PointGradient;
 
     fn domain(self) -> Self::Domain {
@@ -58,6 +60,7 @@ impl Function<PositionF32> for PointGradient {
 }
 
 impl_identity!(Point);
+impl_domains!(Point);
 impl_null!(Point);
 impl_split!(Point);
 impl_subtree!(Point);

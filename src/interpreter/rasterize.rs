@@ -3,15 +3,25 @@
 use core::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
-use crate::{root_shape, Domain, DomainT, Position, PositionF32, RootShape};
+use crate::{
+    root_shape, Domain, DomainT, Domains, DomainsT, PosDistGrad, Position, PositionF32, RootShape,
+};
 
-use type_fields::t_funk::{closure::OutputT, Closure, Copointed, Fmap, Pointed};
+use type_fields::t_funk::{
+    arrow::Fanout,
+    closure::OutputT,
+    function::Id,
+    set::Set,
+    CallF, Closure,
+    closure::{Compose, Composed},
+    Copointed, FanoutT, Fmap, Pointed,
+};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Raster<T>(pub Vec<Vec<T>>);
 
 impl<T> Raster<T> {
-    fn new(width: usize, height: usize) -> Self
+    pub fn new(width: usize, height: usize) -> Self
     where
         T: Default + Clone,
     {
@@ -77,13 +87,13 @@ pub type RasterRGB32<const W: usize, const H: usize> = Raster<(f32, f32, f32)>;
 pub type RasterU8<const W: usize, const H: usize> = Raster<u8>;
 pub type RasterRGB8<const W: usize, const H: usize> = Raster<(u8, u8, u8)>;
 
-pub struct Rasterize<D> {
+pub struct Rasterize<D, C> {
     pub width: usize,
     pub height: usize,
-    pub phantom: PhantomData<D>,
+    pub phantom: PhantomData<(D, C)>,
 }
 
-impl<D> Default for Rasterize<D> {
+impl<D, C> Default for Rasterize<D, C> {
     fn default() -> Self {
         Self {
             width: 32,
@@ -93,7 +103,7 @@ impl<D> Default for Rasterize<D> {
     }
 }
 
-impl<D> Clone for Rasterize<D> {
+impl<D, C> Clone for Rasterize<D, C> {
     fn clone(&self) -> Self {
         Self {
             width: self.width,
@@ -103,25 +113,27 @@ impl<D> Clone for Rasterize<D> {
     }
 }
 
-impl<D> Copy for Rasterize<D> {}
+impl<D, C> Copy for Rasterize<D, C> {}
 
-impl<D, S> Closure<S> for Rasterize<D>
+impl<D, C, S> Closure<S> for Rasterize<D, C>
 where
-    RootShape<S>: Domain<D>,
-    DomainT<RootShape<S>, D>: Clone + Closure<PositionF32>,
-    OutputT<DomainT<RootShape<S>, D>, PositionF32>: Clone + Default,
+    S: Domains<D>,
+    DomainsT<S, D>: Fanout<Id>,
+    Composed<CallF, FanoutT<DomainsT<S, D>, Id>>: Clone + Closure<C>,
+    OutputT<Composed<CallF, FanoutT<DomainsT<S, D>, Id>>, C>: Clone + Default,
+    C: Default + Set<PositionF32>,
 {
-    type Output = Raster<OutputT<DomainT<RootShape<S>, D>, PositionF32>>;
+    type Output = Raster<OutputT<Composed<CallF, FanoutT<DomainsT<S, D>, Id>>, C>>;
 
     fn call(self, shape: S) -> Self::Output {
-        let func = (root_shape() << shape).domain();
+        let func = shape.domains().fanout(Id).compose_l(CallF);
 
         let mut out: Self::Output = Raster::new(self.width, self.height);
         for (y, row) in out.iter_mut().enumerate() {
             for (x, col) in row.iter_mut().enumerate() {
                 let nx = ((x as f32 + 0.5) / self.width as f32) * 2.0 - 1.0;
                 let ny = ((y as f32 + 0.5) / self.height as f32) * 2.0 - 1.0;
-                *col = func.clone().call(Position(nx, ny));
+                *col = func.clone().call(C::default().set(Position(nx, ny)));
             }
         }
         out

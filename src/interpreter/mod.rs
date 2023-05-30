@@ -1,4 +1,5 @@
 mod ascii;
+pub mod context;
 mod rasterize;
 
 #[cfg(feature = "std")]
@@ -8,6 +9,7 @@ mod image;
 mod viuer;
 
 pub use ascii::*;
+pub use context::*;
 pub use rasterize::*;
 
 #[cfg(feature = "std")]

@@ -1,6 +1,6 @@
-use functional_sdf::{
+use elysian::{
     make_viuer, shape, Circle, Distance, DistanceF32, Gradient, GradientF32, Invert, Isosurface,
-    Manifold, Saturate, Scale, Translate,
+    Manifold, PosDistGrad, Saturate, Scale, Translate,
 };
 use image::{Luma, Pixel, Rgb};
 use type_fields::{
@@ -43,7 +43,10 @@ fn main() {
     let viuer = move || {
         DebugMultilineF
             .compose_l(PrintLn)
-            .fanout(make_viuer::<DistanceF32, DistanceF32, DistToLuma>(48, 48).compose_l(ResultUnwrap))
+            .fanout(
+                make_viuer::<(DistanceF32, ()), PosDistGrad, DistanceF32, DistToLuma>(48, 48)
+                    .compose_l(ResultUnwrap),
+            )
             /*
             .fanout(
                 make_viuer::<
@@ -57,6 +60,8 @@ fn main() {
             .compose_l(Snd)
     };
 
+    // FIXME
+    /*
     let shape_a = shape() << Translate(-0.5, -0.5) << Circle(1.2) >> viuer();
     let shape_b = shape() << Translate(0.5, 0.5) << Circle(1.1) >> viuer();
     let shape_c = shape() << Translate(0.0, 0.5) << Circle(1.3) >> viuer();
@@ -67,4 +72,5 @@ fn main() {
     let _shape =
         shape() << Translate(0.25, 0.25) << Scale(0.5) << combined << Manifold << Isosurface(0.2)
             >> viuer();
+    */
 }

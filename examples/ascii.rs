@@ -1,8 +1,16 @@
-use functional_sdf::{make_ascii, shape, Circle, Isosurface, Manifold, Scale, Translate};
+use elysian::{
+    make_ascii, shape, Ascii, Circle, DistanceF32, Isosurface, Manifold, PosDistGrad, Raster,
+    Rasterize, Scale, Translate, ASCII_RAMP,
+};
+use type_fields::t_funk::{
+    closure::{Closure, Compose},
+    Curry2,
+};
 
 fn main() {
     let ascii = || make_ascii(48, 24);
 
+    /*
     let shape_a = shape() << Translate(-0.8, -0.8) << Circle(0.2) >> ascii();
     let shape_b = shape() << Translate(0.8, 0.8) << Circle(0.1) >> ascii();
     let shape_c = shape() << Translate(0.0, 0.8) << Circle(0.3) >> ascii();
@@ -10,7 +18,9 @@ fn main() {
 
     let combined = shape_a + shape_b + shape_c * shape_d >> ascii();
 
+    // FIXME
     let _shape =
         shape() << Translate(0.25, 0.25) << Scale(0.5) << combined << Isosurface(0.2) << Manifold
             >> ascii();
+    */
 }

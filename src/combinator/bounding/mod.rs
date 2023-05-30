@@ -69,10 +69,11 @@ where
 impl<T, U, O> Domain<DistanceF32> for Bounding<T, U, O>
 where
     T: Domain<DistanceF32>,
-    U: Domain<DistanceF32>,
+    U: Domain<DistanceF32, Input = T::Input>,
     O: Default,
     DomainT<T, DistanceF32>: Fanout<DomainT<U, DistanceF32>>,
 {
+    type Input = T::Input;
     type Domain = Composed<
         Composed<EitherUnwrap, CallF>,
         Fanouted<
@@ -92,6 +93,7 @@ where
 }
 
 impl<T, U, O> Domain<Identity> for Bounding<T, U, O> {
+    type Input = ();
     type Domain = Id;
 
     fn domain(self) -> Self::Domain {

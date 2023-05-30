@@ -1,5 +1,6 @@
 use crate::{
-    impl_identity, impl_split, impl_subtree, DistanceF32, Domain, GradientF32, Position, impl_null,
+    impl_domains, impl_identity, impl_null, impl_split, impl_subtree, DistanceF32, Domain,
+    GradientF32, Position, PositionF32,
 };
 
 use type_fields::{
@@ -12,6 +13,7 @@ use type_fields::{
 pub struct Translate<T>(pub T, pub T);
 
 impl<T> Domain<DistanceF32> for Translate<T> {
+    type Input = PositionF32;
     type Domain = TranslateF<T>;
 
     fn domain(self) -> Self::Domain {
@@ -20,6 +22,7 @@ impl<T> Domain<DistanceF32> for Translate<T> {
 }
 
 impl<T> Domain<GradientF32> for Translate<T> {
+    type Input = PositionF32;
     type Domain = TranslateF<T>;
 
     fn domain(self) -> Self::Domain {
@@ -44,6 +47,7 @@ where
 }
 
 impl_identity!(Translate<T>);
+impl_domains!(Translate<T>);
 impl_null!(Translate<T>);
 impl_split!(Translate<T>);
 impl_subtree!(Translate<T>);

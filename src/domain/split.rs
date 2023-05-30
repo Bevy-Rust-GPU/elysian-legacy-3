@@ -15,6 +15,7 @@ macro_rules! impl_split {
             $ty $(<$gen>)?: Clone + crate::Domain<A> + crate::Domain<B>,
             crate::DomainT<$ty $(<$gen>)?, A>: type_fields::t_funk::arrow::Split<crate::DomainT<$ty $(<$gen>)?, B>>,
         {
+            type Input = ();
             type Domain =
                 type_fields::t_funk::arrow::SplitT<crate::DomainT<$ty $(<$gen>)?, A>, crate::DomainT<$ty $(<$gen>)?, B>>;
 

@@ -1,11 +1,12 @@
-use crate::{Distance, DistanceF32, Domain, DomainT, Gradient, GradientF32, Identity, Split};
+use crate::{
+    Distance, DistanceF32, Domain, DomainT, Gradient, GradientF32, Identity, PositionF32, Split, impl_domains,
+};
 use type_fields::{
     macros::{arrow::Arrow, category::Category, Closure},
     t_funk::{
-        arrow::Split as SplitA,
         closure::{Closure, Compose},
         function::Id,
-        Abs, Composed, Curry2, Curry2B, Fanout, Fanouted, FmapF, Fst, Function, Snd,
+        Abs, Composed, Curry2, Fanout, Fanouted, FmapF, Fst, Function, Snd,
     },
 };
 
@@ -14,6 +15,7 @@ use type_fields::{
 pub struct Manifold;
 
 impl Domain<DistanceF32> for Manifold {
+    type Input = DistanceF32;
     type Domain = ManifoldDistance;
 
     fn domain(self) -> Self::Domain {
@@ -49,6 +51,7 @@ where
 */
 
 impl Domain<GradientF32> for Manifold {
+    type Input = (DistanceF32, GradientF32);
     type Domain = ManifoldGradient;
 
     fn domain(self) -> Self::Domain {
@@ -57,6 +60,7 @@ impl Domain<GradientF32> for Manifold {
 }
 
 impl Domain<Split<DistanceF32, GradientF32>> for Manifold {
+    type Input = ();
     type Domain = Fanouted<Composed<ManifoldDistance, Fst>, ManifoldGradient>;
 
     fn domain(self) -> Self::Domain {
@@ -68,6 +72,7 @@ impl<T> Domain<Split<DistanceF32, Split<GradientF32, T>>> for Manifold
 where
     Manifold: Domain<T>,
 {
+    type Input = ();
     type Domain = Fanouted<
         Composed<DomainT<Manifold, DistanceF32>, Fst>,
         Fanouted<
@@ -86,6 +91,7 @@ where
 }
 
 impl Domain<Identity> for Manifold {
+    type Input = ();
     type Domain = Id;
 
     fn domain(self) -> Self::Domain {
@@ -106,6 +112,8 @@ impl Function<(DistanceF32, GradientF32)> for ManifoldGradient {
         Gradient(x * s, y * s)
     }
 }
+
+impl_domains!(Manifold);
 
 #[cfg(test)]
 mod test {
