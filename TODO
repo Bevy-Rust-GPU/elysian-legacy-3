@@ -1,0 +1,133 @@
+* Refactor domain types as trait impls
+  * Semantically similar to context, i.e. a set of types
+  * Will avoid having to implement combinators over (Distance, D)
+  * Should allow replacing (DistanceF32, (GradientF32, ()) with PosDistGrad
+    * Feels like Input / Field / Output taking multiple values may complicate this
+
+  DONE: Attempted, but ended up creating type aliases for lists,
+        as Combine subtypes need to pattern-match an ADT in order to deconflict their impls
+
+* Elide Input / Output / Field wrapping for API purposes
+  * Structs still need to exist for ADT purposes
+  * Need an ADT lifting function that can be called inside the Shr impl
+
+  DONE: Implemented via shape builder wrapper and Shr operator
+
+* Formalize rasterize, ascii, image, viuer into new ADT subtype
+  * Interpreter is the wrong term
+  * Semantically a Context -> Context operation
+    * Similar to domain-lifted Input / Output / Field functions,
+      and composable with them
+  * Supertype of all existing ADT ops?
+    * Devil's advocate says this is overcomplicated and should be omitted
+      in favour of simple function composition
+      * However, it's still useful as ADT for the following reasons:
+        * Chaining multiple actions within a context (i.e. nesting inside Shape, Combine)
+        * Use of output within a context
+          * ex:
+            Texture mapping via Raster + Uv + Color
+            Conversion to a mesh for LOD / optimization purposes under software rasterization
+            Rendering generated ascii as distance field characters
+            Using texture lookup as an alternative to domain evaluation
+        * Breaking specific entries out of a context to leave the ADT and continue via simple composition
+
+  DONE: Implemented Modify as an ADT unit, but not useful for rasterize etc
+        since they evaluate an ADT rather than modifying a context.
+        However, this realizes Get, Set and related lifted functions as Modify subtypes.
+
+* Make Combine operation types symbolic
+  * Lift via trait, similar to domain functions
+  * Allows the ADT to remain a Free structure
+  * Allows formalization of interpreters over free structure
+
+  DONE: Combine ops are now lifted into the register machine interpreter via the LiftCombine trait
+
+* Strengthen Input / Field / Output encoding
+  * Create specific traits to replace Domain
+    * LiftInput / LiftOutput / LiftField
+    * Allows relating of open symbol types to closed ADT wrappers
+  * Feels like it relates to a prospective output type encoding,
+    since the promise is that A flows through Inputs,
+    is transformed into B by Field, then flows through Outputs
+  
+  DONE: Encoded via LiftAdt, since lifting into a wrapper and lifting into functions are distinct
+
+* Parameter substitution for symbolic ADT inner types
+  * Use functions instead of literals
+    * Ex. Isosurface(Const(0.2)) instead of Isosurface(0.2)
+  * Lift to context functions and evaluate as part of overall graph
+  * Using functions allows arbitrary value transformation before use as input
+  * Opens the door to functional reactive programming
+    * Animation system by using time as a parameter
+  * Can use Tagged types for named variables
+    * ex. Tagged<ProjectionMatrix, Mat4> for raymarching, corresponding GetF<ProjectionMatrix>
+    * May be able to replace DistanceF32 etc with true symbol types
+
+  DONE: Parameters are now functions, and get lifted via LiftParam during evaluation
+
+* ADT de/serialization via serde
+  * Opens the door to an Elysian file type, FFI, etc
+
+  DONE: Derived Serialize / Deserialize for all ADT structs and symbols
+
+=======================================================================================================================
+
+* Abstract over multi-frame evaluation
+  * ex:
+    Generating a series of images for ascii / viuer printing
+    Generating an animated GIF for viuer printing
+  * Can use a parameter function to retrieve time from context and parametrize
+
+* Investigate Monad / Applicative instances for ADT
+  * List is monadic, so the ADT should be too
+
+* Investigate Semigroup / Monoid instances for ADT
+  * Intuitive binary operation over shapes is Union
+
+* Investigate refactoring LiftDomain and co into a State monad impl
+  * Effectively equivalent - drags a state (i.e. context) through a chain of functions,
+    which can be lifted to operate on the state
+  * Haskell RWST transformer is of interest, if Elysian can be a Monad
+
+* R&D for proxy application
+  * Semantically, this is a combine operation that
+    evaluates shapes A and B, and replaces or blends
+    some subset of shape B's context into shape A's context
+  * In theory, this is a superset of distance boolean / bounding operators
+    i.e. Replacing distance in the case of regular boolean,
+         and blending it in the case of smooth boolean
+
+* Haskell diagrams R&D
+  * Lots of food for thought in the documentation
+    * https://archives.haskell.org/projects.haskell.org/diagrams/doc/quickstart.html
+  * Raycast-based layout
+  * Notion of local origin
+
+* Formalize interpretation of free structure
+  * Existing type-level register machine behaviour is an interpreter
+  * Alternate interpreters:
+    * Dynamic structuring
+      * Convert ADT into a type-erased value-level equivalent (ex. dyn / impl Trait)
+        * Useful for runtime editing,
+          though may not be mandatory if strongly-typed recursive control flow is viable
+    * EDSL graph visualizer
+      * Create a new EDSL visualizing the graph as UI primitives
+    * Graph optimizer
+    * Bevy hierarchy generator
+      * Interpret boolean union as breaking a child out of its parent hierarchy
+    * Static evaluation
+      * Pre-evaluate expensive operations
+        * ex. Layout:
+          Replace a Combine<A, B, AxialFit> with Combine<Shape<Translate, A>, Shape<Translate, B>, Union>
+          * Where AxialFit is semantically equivalent to raycast-based layout from Haskell diagrams
+          * This raises the question of how AxialFit relates to Union
+            * Suggests the need for composable Combine subtypes?
+              * Devil's advocate says this may be overkill,
+                since ex. horizontal layout aims to avoid overlap
+              * However, making it compositional strengthens semantics
+                and eases implementation for coupled cases
+                (i.e. via type alias or function call wrapping)
+          * Code should be shareable between runtime and static evaluation
+
+* ADT parsing via nom
+  * Opens the door to creating a specialized CLI REPL

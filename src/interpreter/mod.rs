@@ -1,19 +1,3 @@
-mod ascii;
-pub mod context;
-mod rasterize;
+mod register_machine;
 
-#[cfg(feature = "std")]
-mod image;
-
-#[cfg(feature = "std")]
-mod viuer;
-
-pub use ascii::*;
-pub use context::*;
-pub use rasterize::*;
-
-#[cfg(feature = "std")]
-pub use self::image::*;
-
-#[cfg(feature = "std")]
-pub use self::viuer::*;
+pub use register_machine::*;

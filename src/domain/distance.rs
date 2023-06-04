@@ -3,11 +3,11 @@
 
 use std::ops::Neg;
 
-use type_fields::macros::{
+use t_funk::macros::{
     applicative::Applicative, functor::Functor, monad::Monad, Copointed, Pointed,
 };
 
-use crate::{DomainF, DomainT};
+use crate::{Domain, DomainF, FunctionT};
 
 // Distance domain values
 #[derive(
@@ -41,5 +41,9 @@ where
 
 pub type DistanceF32 = Distance<f32>;
 
-pub type DistanceT<T> = DomainT<T, Distance<f32>>;
+pub type DistanceT<T> = FunctionT<T, Distance<f32>>;
 pub type DistanceF = DomainF<Distance<f32>>;
+
+impl<T> Domain<Self> for Distance<T> {
+    type Outputs = Self;
+}

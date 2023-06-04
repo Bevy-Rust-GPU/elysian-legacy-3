@@ -4,11 +4,13 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["std"]
+default = ["std", "serde"]
 std = ["dep:image", "dep:viuer"]
+serde = ["dep:serde"]
 
 [dependencies]
-type-fields = { git = "https://github.com/bevy-rust-gpu/type-fields" }
+t-funk = { git = "https://github.com/bevy-rust-gpu/t-funk" }
 
 image = { version = "0.24.6", optional = true }
 viuer = { version = "0.6.2", optional = true }
+serde = { version = "1.0.163", features = ["derive"], optional = true }
