@@ -1,4 +1,6 @@
-use crate::{DistanceF32, DomainFunction, GradientF32, Input, LiftAdt, Position, PositionF32};
+use crate::{
+    DistanceF32, DomainFunction, GradientF32, Input, LiftShape, Nil, Position, PositionF32,
+};
 
 use t_funk::{
     closure::Closure,
@@ -14,11 +16,11 @@ use t_funk::{
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Scale<T>(pub T);
 
-impl<T> LiftAdt for Scale<T> {
-    type LiftAdt = Input<Self>;
+impl<T> LiftShape for Scale<T> {
+    type LiftShape = Input<Self, Nil>;
 
-    fn adt(self) -> Self::LiftAdt {
-        Input(self)
+    fn lift_shape(self) -> Self::LiftShape {
+        Input(self, Nil)
     }
 }
 

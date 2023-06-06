@@ -3,18 +3,17 @@ mod list;
 use std::marker::PhantomData;
 
 pub use list::*;
-use t_funk::{function::Function, macros::Closure};
+use t_funk::{function::Function, macros::{Closure, types}};
 
 /// Given a structure of shape subtypes, and a list of domains,
 /// produce a function that takes a context, reads input from it,
 /// evaluates the relevant domain functions, and produces an updated context
+#[types]
 pub trait LiftDomains<T> {
     type LiftDomains;
 
     fn lift_domains(input: T) -> Self::LiftDomains;
 }
-
-pub type LiftDomainsT<D, T> = <D as LiftDomains<T>>::LiftDomains;
 
 #[derive(Closure)]
 pub struct LiftDomainsF<T>(PhantomData<T>);

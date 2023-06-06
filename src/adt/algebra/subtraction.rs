@@ -1,44 +1,28 @@
-use std::ops::Sub;
+use t_funk::{
+    macros::{functions, impl_adt, types},
+    r#do::DoUnit,
+};
 
-use crate::{Combine, Elysian, Field, Sequence, Subtraction};
+use crate::{symbol::Subtraction as SubtractionS, Combine, Field, LiftAdtF, Sequence};
 
-impl<T, R> Sub<R> for Field<T> {
-    type Output = Combine<Self, R, Subtraction>;
-
-    fn sub(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, Subtraction)
-    }
-}
-
-impl<T, N, R> Sub<R> for Sequence<T, N> {
-    type Output = Combine<Self, R, Subtraction>;
-
-    fn sub(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, Subtraction)
-    }
-}
-
-impl<L1, L2, O, R> Sub<R> for Combine<L1, L2, O> {
-    type Output = Combine<Self, R, Subtraction>;
-
-    fn sub(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, Subtraction)
-    }
-}
-
-pub trait CombineSubtraction<T> {
+#[functions]
+#[types]
+pub trait Subtraction<R> {
     type Subtraction;
 
-    fn subtraction(self, t: T) -> Self::Subtraction;
+    fn subtraction(self, rhs: R) -> Self::Subtraction;
 }
 
-impl<T, U> CombineSubtraction<U> for T
-where
-    T: Elysian + Sub<U>,
-{
-    type Subtraction = T::Output;
+pub fn subtraction() -> DoUnit<LiftAdtF, SubtractionF> {
+    Default::default()
+}
 
-    fn subtraction(self, t: U) -> Self::Subtraction {
-        self.sub(t)
+impl_adt! {
+    impl<A, B, C, R> Subtraction<R> for Field<A, B> | Sequence<A, B> | Combine<A, B, C> {
+        type Subtraction = Combine<Self, R, SubtractionS>;
+
+        fn subtraction(self, rhs: R) -> Self::Subtraction {
+            Combine(self, rhs, SubtractionS)
+        }
     }
 }

@@ -4,6 +4,7 @@ use t_funk::{collection::set::GetF, typeclass::functor::Fmap};
 
 use crate::{LiftAdt, LiftModifier, Modify};
 
+#[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Get<T>(pub PhantomData<T>);
 
@@ -32,7 +33,7 @@ impl<T, F> Fmap<F> for Get<T> {
 impl<T> LiftAdt for Get<T> {
     type LiftAdt = Modify<Self>;
 
-    fn adt(self) -> Self::LiftAdt {
+    fn lift_adt(self) -> Self::LiftAdt {
         Modify(self)
     }
 }

@@ -1,4 +1,6 @@
-use crate::{DistanceF32, DomainFunction, GradientF32, Input, LiftAdt, Position, PositionF32};
+use crate::{
+    DistanceF32, DomainFunction, GradientF32, Input, LiftShape, Nil, Position, PositionF32,
+};
 
 use t_funk::{
     closure::{Closure, OutputT},
@@ -22,11 +24,11 @@ where
     }
 }
 
-impl<T> LiftAdt for Translate<T> {
-    type LiftAdt = Input<Self>;
+impl<T> LiftShape for Translate<T> {
+    type LiftShape = Input<Self, Nil>;
 
-    fn adt(self) -> Self::LiftAdt {
-        Input(self)
+    fn lift_shape(self) -> Self::LiftShape {
+        Input(self, Nil)
     }
 }
 

@@ -7,8 +7,8 @@ use crate::{AsUsize, CharsToString, Dist, DistanceF32, Index, Invert, PosDist, R
 use t_funk::{
     closure::{Compose, Composed, Curry2, Curry2A},
     collection::set::{Get, GetF},
-    function::{Function, Mul, PrintLn},
-    macros::Closure,
+    function::{Mul, PrintLn},
+    macros::lift,
     typeclass::{
         copointed::{CopointF, Copointed},
         functor::Fmap,
@@ -20,32 +20,26 @@ use super::Rasterize;
 pub type Ramp<const N: usize> = [char; N];
 pub const ASCII_RAMP: Ramp<11> = [' ', '.', ':', '-', '=', '+', '*', '#', '%', '@', '█'];
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure)]
-pub struct Ascii;
-
-impl<const N: usize, C> Function<(Ramp<N>, Raster<C>)> for Ascii
+#[lift]
+pub fn ascii<const N: usize, C>(ramp: Ramp<N>, rast: Raster<C>) -> String
 where
     C: Clone + Get<DistanceF32>,
 {
-    type Output = String;
-
-    fn call((ramp, rast): (Ramp<N>, Raster<C>)) -> Self::Output {
-        rast.fmap(GetF::<DistanceF32>::default())
-            .fmap(CopointF)
-            .fmap(Saturate)
-            .fmap(Invert)
-            .fmap(Mul.suffix2((N - 1) as f32))
-            .fmap(AsUsize)
-            .fmap(Index.prefix2(ramp))
-            .copoint()
-            .fmap(|mut line: Vec<char>| {
-                line.push('\n');
-                line
-            })
-            .fmap(CharsToString)
-            .into_iter()
-            .collect()
-    }
+    rast.fmap(GetF::<DistanceF32>::default())
+        .fmap(CopointF)
+        .fmap(Saturate)
+        .fmap(Invert)
+        .fmap(Mul.suffix2((N - 1) as f32))
+        .fmap(AsUsize)
+        .fmap(Index.prefix2(ramp))
+        .copoint()
+        .fmap(|mut line: Vec<char>| {
+            line.push('\n');
+            line
+        })
+        .fmap(CharsToString)
+        .into_iter()
+        .collect()
 }
 
 pub fn make_ascii(

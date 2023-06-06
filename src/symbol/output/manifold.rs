@@ -1,4 +1,4 @@
-use crate::{Distance, DistanceF32, DomainFunction, Gradient, GradientF32, LiftAdt, Output};
+use crate::{Distance, DistanceF32, DomainFunction, Gradient, GradientF32, LiftShape, Nil, Output};
 use t_funk::{
     closure::{Closure, Curry2},
     function::{Abs, Function},
@@ -19,11 +19,11 @@ impl<F> Fmap<F> for Manifold {
     }
 }
 
-impl LiftAdt for Manifold {
-    type LiftAdt = Output<Self>;
+impl LiftShape for Manifold {
+    type LiftShape = Output<Self, Nil>;
 
-    fn adt(self) -> Self::LiftAdt {
-        Output(self)
+    fn lift_shape(self) -> Self::LiftShape {
+        Output(self, Nil)
     }
 }
 

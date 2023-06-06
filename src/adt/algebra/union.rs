@@ -1,44 +1,28 @@
-use std::ops::Add;
+use t_funk::{
+    macros::{functions, impl_adt, types},
+    r#do::DoUnit,
+};
 
-use crate::{Combine, Elysian, Field, Sequence, Union};
+use crate::{symbol::Union as UnionS, Combine, LiftAdtF, Sequence, Shape};
 
-impl<T, R> Add<R> for Field<T> {
-    type Output = Combine<Self, R, Union>;
-
-    fn add(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, Union)
-    }
+pub fn union() -> DoUnit<LiftAdtF, UnionF> {
+    Default::default()
 }
 
-impl<T, N, R> Add<R> for Sequence<T, N> {
-    type Output = Combine<Self, R, Union>;
+#[functions]
+#[types]
+pub trait Union<T> {
+    type Union;
 
-    fn add(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, Union)
-    }
+    fn union(self, rhs: T) -> Self::Union;
 }
 
-impl<L1, L2, O, R> Add<R> for Combine<L1, L2, O> {
-    type Output = Combine<Self, R, Union>;
+impl_adt! {
+    impl<A, B, C, R> Union<R> for Shape<A> | Sequence<A, B> | Combine<A, B, C> {
+        type Union = Combine<Self, R, UnionS>;
 
-    fn add(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, Union)
-    }
-}
-
-pub trait CombineUnion<T> {
-    type CombineUnion;
-
-    fn union(self, t: T) -> Self::CombineUnion;
-}
-
-impl<T, U> CombineUnion<U> for T
-where
-    T: Elysian + Add<U>,
-{
-    type CombineUnion = T::Output;
-
-    fn union(self, t: U) -> Self::CombineUnion {
-        self.add(t)
+        fn union(self, rhs: R) -> Self::Union {
+            Combine(self, rhs, UnionS)
+        }
     }
 }

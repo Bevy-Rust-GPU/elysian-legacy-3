@@ -1,6 +1,6 @@
 use crate::{
-    DistanceF, DistanceF32, DistanceT, DomainF, DomainFunction, FunctionT, GradientF32, Input,
-    Isosurface, LiftAdt, Point, PositionF32,
+    DistanceF, DistanceF32, DistanceT, DomainF, DomainFunction, Field, FunctionT, GradientF32,
+    Isosurface, LiftShape, Nil, Point, PositionF32,
 };
 
 use t_funk::{
@@ -15,11 +15,11 @@ use t_funk::{
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Circle<T>(pub T);
 
-impl<T> LiftAdt for Circle<T> {
-    type LiftAdt = Input<Self>;
+impl<T> LiftShape for Circle<T> {
+    type LiftShape = Field<Self, Nil>;
 
-    fn adt(self) -> Self::LiftAdt {
-        Input(self)
+    fn lift_shape(self) -> Self::LiftShape {
+        Field(self, Nil)
     }
 }
 

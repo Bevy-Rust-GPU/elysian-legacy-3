@@ -1,44 +1,28 @@
-use std::ops::Mul;
+use t_funk::{
+    macros::{functions, impl_adt, types},
+    r#do::DoUnit,
+};
 
-use crate::{Combine, Elysian, Field, Intersection, Sequence};
+use crate::{symbol::Intersection as IntersectionS, Combine, Field, LiftAdtF, Sequence};
 
-impl<T, R> Mul<R> for Field<T> {
-    type Output = Combine<Self, R, Intersection>;
-
-    fn mul(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, Intersection)
-    }
-}
-
-impl<T, N, R> Mul<R> for Sequence<T, N> {
-    type Output = Combine<Self, R, Intersection>;
-
-    fn mul(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, Intersection)
-    }
-}
-
-impl<L1, L2, O, R> Mul<R> for Combine<L1, L2, O> {
-    type Output = Combine<Self, R, Intersection>;
-
-    fn mul(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, Intersection)
-    }
-}
-
-pub trait CombineIntersection<T> {
+#[functions]
+#[types]
+pub trait Intersection<R> {
     type Intersection;
 
-    fn intersection(self, t: T) -> Self::Intersection;
+    fn intersection(self, rhs: R) -> Self::Intersection;
 }
 
-impl<T, U> CombineIntersection<U> for T
-where
-    T: Elysian + Mul<U>,
-{
-    type Intersection = T::Output;
+pub fn intersection() -> DoUnit<LiftAdtF, IntersectionF> {
+    Default::default()
+}
 
-    fn intersection(self, t: U) -> Self::Intersection {
-        self.mul(t)
+impl_adt! {
+    impl<A, B, C, R> Intersection<R> for Field<A, B> | Sequence<A, B> | Combine<A, B, C> {
+        type Intersection = Combine<Self, R, IntersectionS>;
+
+        fn intersection(self, rhs: R) -> Self::Intersection {
+            Combine(self, rhs, IntersectionS)
+        }
     }
 }

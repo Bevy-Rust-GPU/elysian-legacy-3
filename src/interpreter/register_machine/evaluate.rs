@@ -1,37 +1,29 @@
-use t_funk::{
-    closure::{CallF, Curry2, Curry2B},
-    closure::{Closure, Compose, ComposeLT, OutputT},
-    typeclass::functor::{Fmap, FmapF, FmapT},
-};
+use t_funk::{closure::{Closure, OutputT}, macros::types};
 
-use crate::{LiftEvaluate, LiftEvaluateT, LiftParamF};
+use crate::{LiftCombine, LiftCombineT, LiftEvaluate, LiftEvaluateT, LiftParam, LiftParamT};
 
 /// Given a list of domains, a shape, and a context,
 /// evaluate the shape's domain functions and produce an updated context
+#[types]
 pub trait Evaluate<D, C> {
     type Evaluate;
 
     fn evaluate(self, input: C) -> Self::Evaluate;
 }
 
-pub type EvaluateT<T, D, C> = <T as Evaluate<D, C>>::Evaluate;
-
 impl<T, D, C> Evaluate<D, C> for T
 where
     C: Clone,
-    LiftParamF: Compose<Curry2B<CallF, C>>,
-    T: Fmap<Curry2B<FmapF, ComposeLT<LiftParamF, Curry2B<CallF, C>>>>,
-    FmapT<T, Curry2B<FmapF, ComposeLT<LiftParamF, Curry2B<CallF, C>>>>: LiftEvaluate<D>,
-    LiftEvaluateT<FmapT<T, Curry2B<FmapF, ComposeLT<LiftParamF, Curry2B<CallF, C>>>>, D>:
-        Closure<C>,
+    T: LiftParam<C>,
+    LiftParamT<T, C>: LiftCombine,
+    LiftCombineT<LiftParamT<T, C>>: LiftEvaluate<D>,
+    LiftEvaluateT<LiftCombineT<LiftParamT<T, C>>, D>: Closure<C>,
 {
-    type Evaluate = OutputT<
-        LiftEvaluateT<FmapT<T, Curry2B<FmapF, ComposeLT<LiftParamF, Curry2B<CallF, C>>>>, D>,
-        C,
-    >;
+    type Evaluate = OutputT<LiftEvaluateT<LiftCombineT<LiftParamT<T, C>>, D>, C>;
 
     fn evaluate(self, input: C) -> Self::Evaluate {
-        self.fmap(FmapF.suffix2(LiftParamF.compose_l(CallF.suffix2(input.clone()))))
+        self.lift_param(input.clone())
+            .lift_combine()
             .lift_evaluate()
             .call(input)
     }

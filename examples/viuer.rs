@@ -1,86 +1,89 @@
 use elysian::{
-    make_viuer, Circle, DistGrad, Distance, DistanceF32, Do, Done, Gradient, GradientF32, Invert,
-    Isosurface, Manifold, PosDistGrad, Saturate, Scale, Translate,
+    intersection, make_viuer, shape, subtraction, union, Circle, DistGrad, Distance, DistanceF32,
+    Done, Evaluate, Gradient, GradientF32, Invert, Isosurface, Manifold, PosDistGrad, Saturate,
+    Scale, Translate,
 };
 use image::{Luma, Pixel, Rgb};
 use t_funk::{
-    closure::{Compose, Const},
+    closure::{Closure, Compose, Const},
     collection::set::Get,
-    function::{DebugMultilineF, Function, PrintLn, ResultUnwrap, Snd},
-    macros::Closure,
+    function::{FormatDebugMultiline, PrintLn, ResultUnwrap, Snd},
+    macros::lift,
+    r#do::tap,
     typeclass::{arrow::Fanout, copointed::Copointed, functor::Fmap},
 };
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure)]
-struct DistToLuma;
-
-impl<C> Function<C> for DistToLuma
+#[lift]
+pub fn dist_to_luma<C>(c: C) -> Luma<f32>
 where
     C: Get<DistanceF32>,
 {
-    type Output = Luma<f32>;
-
-    fn call(input: C) -> Self::Output {
-        *Pixel::from_slice(&[input.get().fmap(Saturate).fmap(Invert).copoint()])
-    }
+    *Pixel::from_slice(&[c.get().fmap(Saturate).fmap(Invert).copoint()])
 }
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure)]
-struct DistGradToRgb;
-
-impl<C> Function<C> for DistGradToRgb
+#[lift]
+pub fn dist_grad_to_rgb<C>(c: C) -> Rgb<f32>
 where
     C: Get<(DistanceF32, GradientF32)>,
 {
-    type Output = Rgb<f32>;
+    let (Distance(dist), Gradient(gx, gy)) = c.get();
 
-    fn call(input: C) -> Self::Output {
-        let (Distance(dist), Gradient(gx, gy)) = input.get();
+    let c = if dist <= 0.0 {
+        [gx * 0.5 + 0.5, gy * 0.5 + 0.5, 1.0 - dist]
+    } else {
+        [gx * 0.5 + 0.5, gy * 0.5 + 0.5, 0.0]
+    };
 
-        let c = if dist <= 0.0 {
-            [gx * 0.5 + 0.5, gy * 0.5 + 0.5, 1.0 - dist]
-        } else {
-            [gx * 0.5 + 0.5, gy * 0.5 + 0.5, 0.0]
-        };
+    *Pixel::from_slice(&c)
+}
 
-        *Pixel::from_slice(&c)
-    }
+#[lift]
+pub fn viuer<T>(t: T)
+where
+    T: core::fmt::Debug
+        + Clone
+        + Evaluate<DistGrad<f32>, PosDistGrad<f32>, Evaluate = PosDistGrad<f32>>,
+{
+    FormatDebugMultiline
+        .compose_l(PrintLn)
+        /*
+        .fanout(
+            make_viuer::<Dist, PosDistGrad, PosDistGrad, DistToLuma>(48, 48)
+                .compose_l(ResultUnwrap),
+        )
+        */
+        .fanout(
+            make_viuer::<DistGrad<f32>, PosDistGrad<f32>, PosDistGrad<f32>, DistGradToRgb>(48, 48)
+                .compose_l(ResultUnwrap),
+        )
+        .compose_l(Snd)
+        .call(t);
 }
 
 fn main() {
-    let viuer = move || {
-        DebugMultilineF
-            .compose_l(PrintLn)
-            /*
-            .fanout(
-                make_viuer::<Dist, PosDistGrad, PosDistGrad, DistToLuma>(48, 48)
-                    .compose_l(ResultUnwrap),
-            )
-            */
-            .fanout(
-                make_viuer::<DistGrad<f32>, PosDistGrad<f32>, PosDistGrad<f32>, DistGradToRgb>(
-                    48, 48,
-                )
-                .compose_l(ResultUnwrap),
-            )
-            .compose_l(Snd)
-    };
-
     let shape_a =
-        Do >> Translate(Const(-0.5), Const(-0.5)) >> Circle(Const(1.2)) >> Done << viuer();
-    let shape_b = Do >> Translate(Const(0.5), Const(0.5)) >> Circle(Const(1.1)) >> Done << viuer();
-    let shape_c = Do >> Translate(Const(0.0), Const(0.5)) >> Circle(Const(1.3)) >> Done << viuer();
+        shape() << Translate(Const(-0.5), Const(-0.5)) << Circle(Const(1.2)) >> tap(Viuer) >> Done;
+
+    let shape_b =
+        shape() << Translate(Const(0.5), Const(0.5)) << Circle(Const(1.1)) >> tap(Viuer) >> Done;
+
+    let shape_c =
+        shape() << Translate(Const(0.0), Const(0.5)) << Circle(Const(1.3)) >> tap(Viuer) >> Done;
+
     let shape_d =
-        Do >> Translate(Const(0.0), Const(-0.5)) >> Circle(Const(1.15)) >> Done << viuer();
+        shape() << Translate(Const(0.0), Const(-0.5)) << Circle(Const(1.15)) >> tap(Viuer) >> Done;
 
-    let combined = shape_a * shape_b + shape_c - shape_d << viuer();
+    let combined = intersection() << shape_a >> union() << shape_b << shape_c >> subtraction()
+        << shape_d
+        >> tap(Viuer)
+        >> Done;
 
-    let _shape = Do
-        >> Translate(Const(0.25), Const(0.25))
-        >> Scale(Const(0.5))
-        >> combined
-        >> Manifold
-        >> Isosurface(Const(0.2))
-        >> Done
-        << viuer();
+    let _shape = shape()
+        << Translate(Const(0.25), Const(0.25))
+        << Scale(Const(0.5))
+        << combined
+        << Manifold
+        << Isosurface(Const(0.2))
+        >> tap(Viuer)
+        >> Done;
 }

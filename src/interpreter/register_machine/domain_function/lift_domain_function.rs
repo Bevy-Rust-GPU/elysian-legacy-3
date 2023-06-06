@@ -1,6 +1,6 @@
 use t_funk::{
     collection::set::{LiftContext, LiftContextT},
-    macros::functions,
+    macros::{functions, types},
 };
 
 use crate::{DomainFunction, FunctionT, InputsT};
@@ -9,6 +9,7 @@ use crate::{DomainFunction, FunctionT, InputsT};
 /// lift the resulting domain function to read input from a context,
 /// and produce a setter function to update that context with computed output
 #[functions]
+#[types]
 pub trait LiftDomainFunction<D> {
     type LiftDomainFunction;
 
@@ -26,5 +27,3 @@ where
         self.domain().lift_context()
     }
 }
-
-pub type LiftDomainFunctionT<T, D> = <T as LiftDomainFunction<D>>::LiftDomainFunction;

@@ -1,6 +1,6 @@
 use core::ops::Sub;
 
-use crate::{Distance, DistanceF32, DomainFunction, GradientF32, LiftAdt, Output};
+use crate::{Distance, DistanceF32, DomainFunction, GradientF32, LiftShape, Nil, Output};
 
 use t_funk::{
     closure::Closure,
@@ -16,11 +16,11 @@ use t_funk::{
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Isosurface<T>(pub T);
 
-impl<T> LiftAdt for Isosurface<T> {
-    type LiftAdt = Output<Self>;
+impl<T> LiftShape for Isosurface<T> {
+    type LiftShape = Output<Self, Nil>;
 
-    fn adt(self) -> Self::LiftAdt {
-        Output(self)
+    fn lift_shape(self) -> Self::LiftShape {
+        Output(self, Nil)
     }
 }
 

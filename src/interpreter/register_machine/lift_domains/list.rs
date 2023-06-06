@@ -3,6 +3,7 @@ use crate::{DomainFunction, LiftDomainFunctionF, LiftDomains, Pair};
 use t_funk::{
     closure::{CallF, Closure, Compose, ComposeLF, ComposeLT, OutputT},
     function::Id,
+    macros::types,
     typeclass::arrow::{Fanout, FanoutF, FanoutT, Second, SecondT},
 };
 
@@ -16,7 +17,7 @@ where
         FanoutT<
             ComposeLT<
                 OutputT<FanoutSettersT<Self>, OutputT<LiftDomainListT<Self, T>, T>>,
-                ComposeDomainsT<Self>,
+                ComposeSettersT<Self>,
             >,
             Id,
         >,
@@ -35,13 +36,12 @@ where
 
 /// Given a list of domain types and an ADT implementing those domains,
 /// produce a fanout structure of context-lifted domain functions
+#[types]
 pub trait LiftDomainList<T> {
     type LiftDomainList;
 
     fn lift_domain_list() -> Self::LiftDomainList;
 }
-
-pub type LiftDomainListT<D, T> = <D as LiftDomainList<T>>::LiftDomainList;
 
 impl<D, N, T> LiftDomainList<T> for (D, N)
 where
@@ -70,13 +70,12 @@ where
 
 /// Given a list of domain functions,
 /// produce a function that will fanout their resulting setters
+#[types]
 pub trait FanoutSetters {
     type FanoutSetters;
 
     fn fanout_setters() -> Self::FanoutSetters;
 }
-
-type FanoutSettersT<T> = <T as FanoutSetters>::FanoutSetters;
 
 impl<D, N, N2> FanoutSetters for (D, (N, N2))
 where
@@ -109,20 +108,19 @@ impl<D> FanoutSetters for (D, ()) {
 /// Given a list of domain functions,
 /// produce a function that will compose the fanout structure
 /// of their resulting setters
+#[types]
 pub trait ComposeSetters {
     type ComposeSetters;
 
     fn compose_setters() -> Self::ComposeSetters;
 }
 
-pub type ComposeDomainsT<T> = <T as ComposeSetters>::ComposeSetters;
-
 impl<D, N, N2> ComposeSetters for (D, (N, N2))
 where
     (N, N2): ComposeSetters,
     N2: Pair,
 {
-    type ComposeSetters = ComposeLT<SecondT<ComposeLF>, ComposeDomainsT<(N, N2)>>;
+    type ComposeSetters = ComposeLT<SecondT<ComposeLF>, ComposeSettersT<(N, N2)>>;
 
     fn compose_setters() -> Self::ComposeSetters {
         ComposeLF.second().compose_l(<(N, N2)>::compose_setters())

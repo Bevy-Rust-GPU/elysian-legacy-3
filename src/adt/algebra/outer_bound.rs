@@ -1,44 +1,28 @@
-use std::ops::BitXor;
+use t_funk::{
+    macros::{functions, impl_adt, types},
+    r#do::DoUnit,
+};
 
-use crate::{Combine, Elysian, Field, OuterBound, Sequence};
+use crate::{symbol::OuterBound as OuterBoundS, Combine, Field, LiftAdtF, Sequence};
 
-impl<T, R> BitXor<R> for Field<T> {
-    type Output = Combine<Self, R, OuterBound>;
-
-    fn bitxor(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, OuterBound)
-    }
-}
-
-impl<T, N, R> BitXor<R> for Sequence<T, N> {
-    type Output = Combine<Self, R, OuterBound>;
-
-    fn bitxor(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, OuterBound)
-    }
-}
-
-impl<L1, L2, O, R> BitXor<R> for Combine<L1, L2, O> {
-    type Output = Combine<Self, R, OuterBound>;
-
-    fn bitxor(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, OuterBound)
-    }
-}
-
-pub trait CombineOuterBound<T> {
+#[functions]
+#[types]
+pub trait OuterBound<R> {
     type OuterBound;
 
-    fn outer_bound(self, t: T) -> Self::OuterBound;
+    fn outer_bound(self, rhs: R) -> Self::OuterBound;
 }
 
-impl<T, U> CombineOuterBound<U> for T
-where
-    T: Elysian + BitXor<U>,
-{
-    type OuterBound = T::Output;
+pub fn outer_bound() -> DoUnit<LiftAdtF, OuterBoundF> {
+    Default::default()
+}
 
-    fn outer_bound(self, t: U) -> Self::OuterBound {
-        self.bitxor(t)
+impl_adt! {
+    impl<A, B, C, R> OuterBound<R> for Field<A, B> | Sequence<A, B> | Combine<A, B, C> {
+        type OuterBound = Combine<Self, R, OuterBoundS>;
+
+        fn outer_bound(self, rhs: R) -> Self::OuterBound {
+            Combine(self, rhs, OuterBoundS)
+        }
     }
 }

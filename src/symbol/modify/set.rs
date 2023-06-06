@@ -22,18 +22,18 @@ where
     }
 }
 
+impl<T> LiftAdt for Set<T> {
+    type LiftAdt = Modify<Self>;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        Modify(self)
+    }
+}
+
 impl<T> LiftModifier for Set<T> {
     type LiftModifier = Curry2B<SetF, T>;
 
     fn lift_modifier(self) -> Self::LiftModifier {
         SetF.suffix2(self.0)
-    }
-}
-
-impl<T> LiftAdt for Set<T> {
-    type LiftAdt = Modify<Self>;
-
-    fn adt(self) -> Self::LiftAdt {
-        Modify(self)
     }
 }

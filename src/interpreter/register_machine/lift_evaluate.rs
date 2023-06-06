@@ -1,50 +1,58 @@
 use std::marker::PhantomData;
 
-use t_funk::closure::{Closure, Compose, ComposeLT};
-
-use crate::{
-    Combine, Field, Input, LiftCombine, LiftCombineT, LiftDomains, LiftDomainsT, LiftModifier,
-    LiftModifierT, Modify, Output, Sequence,
+use t_funk::{
+    closure::{Closure, Compose, ComposeLT},
+    macros::{functions, impl_adt, types},
 };
 
+use crate::{
+    Combine, Field, Input, LiftDomains, LiftDomainsT, LiftModifier, LiftModifierT, Modify, Nil,
+    NotNil, Output, Sequence, Shape,
+};
+
+#[functions]
+#[types]
 pub trait LiftEvaluate<D> {
     type LiftEvaluate;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate;
 }
 
-pub type LiftEvaluateT<T, D> = <T as LiftEvaluate<D>>::LiftEvaluate;
+impl_adt! {
+    impl<A, B, D> LiftEvaluate<D> for Input<A, B> | Field<A, B> | Output<A, B>
+    where
+        D: LiftDomains<A>,
+        B: NotNil + LiftEvaluate<D>,
+    {
+        type LiftEvaluate = ComposeLT<LiftDomainsT<D, A>, LiftEvaluateT<B, D>>;
 
-impl<T, D> LiftEvaluate<D> for Input<T>
-where
-    D: LiftDomains<T>,
-{
-    type LiftEvaluate = LiftDomainsT<D, T>;
-
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        D::lift_domains(self.0)
+        fn lift_evaluate(self) -> Self::LiftEvaluate {
+            D::lift_domains(self.0).compose_l(self.1.lift_evaluate())
+        }
     }
 }
 
-impl<T, D> LiftEvaluate<D> for Field<T>
-where
-    D: LiftDomains<T>,
-{
-    type LiftEvaluate = LiftDomainsT<D, T>;
+impl_adt! {
+    impl<A, D> LiftEvaluate<D> for Input<A, Nil> | Field<A, Nil> | Output<A,Nil>
+    where
+        D: LiftDomains<A>,
+    {
+        type LiftEvaluate = LiftDomainsT<D, A>;
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        D::lift_domains(self.0)
+        fn lift_evaluate(self) -> Self::LiftEvaluate {
+            D::lift_domains(self.0)
+        }
     }
 }
 
-impl<T, D> LiftEvaluate<D> for Output<T>
+impl<T, D> LiftEvaluate<D> for Shape<T>
 where
-    D: LiftDomains<T>,
+    T: LiftEvaluate<D>,
 {
-    type LiftEvaluate = LiftDomainsT<D, T>;
+    type LiftEvaluate = LiftEvaluateT<T, D>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        D::lift_domains(self.0)
+        self.0.lift_evaluate()
     }
 }
 
@@ -72,14 +80,11 @@ where
     }
 }
 
-impl<A, B, F, D> LiftEvaluate<D> for Combine<A, B, F>
-where
-    F: LiftCombine,
-{
-    type LiftEvaluate = LiftEvaluateCombine<A, B, LiftCombineT<F>, D>;
+impl<A, B, F, D> LiftEvaluate<D> for Combine<A, B, F> {
+    type LiftEvaluate = LiftEvaluateCombine<A, B, F, D>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        LiftEvaluateCombine(self.0, self.1, self.2.lift_combine(), PhantomData)
+        LiftEvaluateCombine(self.0, self.1, self.2, PhantomData)
     }
 }
 

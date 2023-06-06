@@ -1,44 +1,28 @@
-use std::ops::BitAnd;
+use t_funk::{
+    macros::{functions, impl_adt, types},
+    r#do::DoUnit,
+};
 
-use crate::{Combine, Elysian, Field, InnerBound, Sequence};
+use crate::{symbol::InnerBound as InnerBoundS, Combine, Field, LiftAdtF, Sequence};
 
-impl<T, R> BitAnd<R> for Field<T> {
-    type Output = Combine<Self, R, InnerBound>;
+#[functions]
+#[types]
+pub trait InnerBound<R> {
+    type InnerBound;
 
-    fn bitand(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, InnerBound)
-    }
+    fn inner_bound(self, rhs: R) -> Self::InnerBound;
 }
 
-impl<T, N, R> BitAnd<R> for Sequence<T, N> {
-    type Output = Combine<Self, R, InnerBound>;
-
-    fn bitand(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, InnerBound)
-    }
+pub fn inner_bound() -> DoUnit<LiftAdtF, InnerBoundF> {
+    Default::default()
 }
 
-impl<L1, L2, O, R> BitAnd<R> for Combine<L1, L2, O> {
-    type Output = Combine<Self, R, InnerBound>;
+impl_adt! {
+    impl<A, B, C, R> InnerBound<R> for Field<A, B> | Sequence<A, B> | Combine<A, B, C> {
+        type InnerBound = Combine<Self, R, InnerBoundS>;
 
-    fn bitand(self, rhs: R) -> Self::Output {
-        Combine(self, rhs, InnerBound)
-    }
-}
-
-pub trait CombineInnerBound<T> {
-    type CombineInnerBound;
-
-    fn inner_bound(self, t: T) -> Self::CombineInnerBound;
-}
-
-impl<T, U> CombineInnerBound<U> for T
-where
-    T: Elysian + BitAnd<U>,
-{
-    type CombineInnerBound = T::Output;
-
-    fn inner_bound(self, t: U) -> Self::CombineInnerBound {
-        self.bitand(t)
+        fn inner_bound(self, rhs: R) -> Self::InnerBound {
+            Combine(self, rhs, InnerBoundS)
+        }
     }
 }

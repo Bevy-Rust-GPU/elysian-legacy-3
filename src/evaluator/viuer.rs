@@ -1,22 +1,16 @@
 use image::DynamicImage;
 use t_funk::{
     closure::{Compose, Composed, Curry2, Curry2A},
-    function::{Function, IntoF},
-    macros::Closure,
+    function::IntoF,
+    macros::lift,
 };
 use viuer::{Config, ViuResult};
 
 use crate::{Image, Rasterize, ToRgba8};
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure)]
-pub struct ViuerPrint;
-
-impl Function<(Config, DynamicImage)> for ViuerPrint {
-    type Output = ViuResult<(u32, u32)>;
-
-    fn call((config, image): (Config, DynamicImage)) -> Self::Output {
-        viuer::print(&image, &config)
-    }
+#[lift]
+pub fn viuer_print(config: Config, image: DynamicImage) -> ViuResult<(u32, u32)> {
+    viuer::print(&image, &config)
 }
 
 pub type Viuer<D, C, O, F> = Composed<

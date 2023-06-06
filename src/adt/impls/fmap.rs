@@ -1,51 +1,21 @@
 use t_funk::{
     closure::{Closure, OutputT},
+    macros::impl_adt,
     typeclass::functor::{Fmap, FmapT},
 };
 
-use crate::{Combine, Field, Input, Modify, Output, Sequence};
+use crate::{Combine, Modify, Sequence, Shape};
 
-impl<T, F> Fmap<F> for Input<T>
-where
-    F: Closure<T>,
-{
-    type Fmap = Input<OutputT<F, T>>;
+impl_adt! {
+    impl<T, F> Fmap<F> for Shape<T> | Modify<T>
+    where
+        F: Closure<T>,
+    {
+        type Fmap = This<OutputT<F, T>>;
 
-    fn fmap(self, f: F) -> Self::Fmap {
-        Input(f.call(self.0))
-    }
-}
-
-impl<T, F> Fmap<F> for Field<T>
-where
-    F: Closure<T>,
-{
-    type Fmap = Field<OutputT<F, T>>;
-
-    fn fmap(self, f: F) -> Self::Fmap {
-        Field(f.call(self.0))
-    }
-}
-
-impl<T, F> Fmap<F> for Output<T>
-where
-    F: Closure<T>,
-{
-    type Fmap = Output<OutputT<F, T>>;
-
-    fn fmap(self, f: F) -> Self::Fmap {
-        Output(f.call(self.0))
-    }
-}
-
-impl<T, F> Fmap<F> for Modify<T>
-where
-    F: Closure<T>,
-{
-    type Fmap = Modify<OutputT<F, T>>;
-
-    fn fmap(self, f: F) -> Self::Fmap {
-        Modify(f.call(self.0))
+        fn fmap(self, f: F) -> Self::Fmap {
+            This(f.call(self.0))
+        }
     }
 }
 

@@ -1,14 +1,12 @@
-use t_funk::{
-    closure::{Curry2, Curry2B},
-    collection::set::SetF,
-};
-
 use crate::{LiftParam, Set};
 
-impl<T> LiftParam for Set<T> {
-    type LiftParam = Curry2B<SetF, T>;
+impl<T, C> LiftParam<C> for Set<T>
+where
+    C: t_funk::collection::set::Set<T>,
+{
+    type LiftParam = C;
 
-    fn lift_param(self) -> Self::LiftParam {
-        SetF.suffix2(self.0)
+    fn lift_param(self, input: C) -> Self::LiftParam {
+        input.set(self.0)
     }
 }

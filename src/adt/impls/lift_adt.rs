@@ -1,57 +1,31 @@
-use crate::{Combine, Field, Input, Output, Sequence, Modify};
+use t_funk::{
+    macros::{functions, impl_adt},
+    r#do::{do_lift, DoUnit},
+    typeclass::category::ComposeF,
+};
 
+use crate::{Combine, Modify, Sequence, Shape};
+
+#[functions]
 pub trait LiftAdt {
     type LiftAdt;
 
-    fn adt(self) -> Self::LiftAdt;
+    fn lift_adt(self) -> Self::LiftAdt;
+}
+
+#[allow(non_snake_case)]
+pub fn Adt() -> DoUnit<LiftAdtF, ComposeF> {
+    do_lift(LiftAdtF, ComposeF)
 }
 
 pub type LiftAdtT<T> = <T as LiftAdt>::LiftAdt;
 
-impl<T> LiftAdt for Input<T> {
-    type LiftAdt = Self;
+impl_adt! {
+    impl<A, B, C> LiftAdt for Shape<A> | Modify<A> | Sequence<A, B> | Combine<A, B, C> {
+        type LiftAdt = Self;
 
-    fn adt(self) -> Self::LiftAdt {
-        self
-    }
-}
-
-impl<T> LiftAdt for Field<T> {
-    type LiftAdt = Self;
-
-    fn adt(self) -> Self::LiftAdt {
-        self
-    }
-}
-
-impl<T> LiftAdt for Output<T> {
-    type LiftAdt = Self;
-
-    fn adt(self) -> Self::LiftAdt {
-        self
-    }
-}
-
-impl<T> LiftAdt for Modify<T> {
-    type LiftAdt = Self;
-
-    fn adt(self) -> Self::LiftAdt {
-        self
-    }
-}
-
-impl<A, B> LiftAdt for Sequence<A, B> {
-    type LiftAdt = Self;
-
-    fn adt(self) -> Self::LiftAdt {
-        self
-    }
-}
-
-impl<A, B, F> LiftAdt for Combine<A, B, F> {
-    type LiftAdt = Self;
-
-    fn adt(self) -> Self::LiftAdt {
-        self
+        fn lift_adt(self) -> Self::LiftAdt {
+            self
+        }
     }
 }

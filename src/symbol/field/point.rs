@@ -1,6 +1,6 @@
 use crate::{
-    Distance, DistanceF32, DomainFunction, Field, Gradient, GradientF32, LiftAdt, Position,
-    PositionF32,
+    Distance, DistanceF32, DomainFunction, Field, Gradient, GradientF32, LiftShape, Nil,
+    Position, PositionF32,
 };
 
 use t_funk::{
@@ -22,11 +22,11 @@ impl<F> Fmap<F> for Point {
     }
 }
 
-impl LiftAdt for Point {
-    type LiftAdt = Field<Self>;
+impl LiftShape for Point {
+    type LiftShape = Field<Self, Nil>;
 
-    fn adt(self) -> Self::LiftAdt {
-        Field(self)
+    fn lift_shape(self) -> Self::LiftShape {
+        Field(self, Nil)
     }
 }
 

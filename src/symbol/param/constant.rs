@@ -5,15 +5,15 @@ use crate::{LiftAdt, LiftParam, Modify};
 impl<T> LiftAdt for Const<T> {
     type LiftAdt = Modify<Self>;
 
-    fn adt(self) -> Self::LiftAdt {
+    fn lift_adt(self) -> Self::LiftAdt {
         Modify(self)
     }
 }
 
-impl<T> LiftParam for Const<T> {
-    type LiftParam = Self;
+impl<T, C> LiftParam<C> for Const<T> {
+    type LiftParam = T;
 
-    fn lift_param(self) -> Self::LiftParam {
-        self
+    fn lift_param(self, _: C) -> Self::LiftParam {
+        self.0
     }
 }

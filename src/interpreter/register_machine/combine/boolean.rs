@@ -11,8 +11,8 @@ pub struct Boolean<F>(pub F);
 /// Simplified impl for distance-only domain
 impl<F, A, B, C> Closure<(A, B, C, PhantomData<(DistanceF32, ())>)> for Boolean<F>
 where
-    A: Clone + LiftEvaluate<(DistanceF32, ())>,
-    B: Clone + LiftEvaluate<(DistanceF32, ())>,
+    A: LiftEvaluate<(DistanceF32, ())>,
+    B: LiftEvaluate<(DistanceF32, ())>,
     LiftEvaluateT<A, (DistanceF32, ())>: Closure<C, Output = C>,
     LiftEvaluateT<B, (DistanceF32, ())>: Closure<C, Output = C>,
     C: Clone + Get<DistanceF32>,
@@ -21,8 +21,8 @@ where
     type Output = C;
 
     fn call(self, (a, b, c, _): (A, B, C, PhantomData<(DistanceF32, ())>)) -> Self::Output {
-        let da = LiftEvaluate::<(DistanceF32, ())>::lift_evaluate(a.clone()).call(c.clone());
-        let db = LiftEvaluate::<(DistanceF32, ())>::lift_evaluate(b.clone()).call(c.clone());
+        let da = LiftEvaluate::<(DistanceF32, ())>::lift_evaluate(a).call(c.clone());
+        let db = LiftEvaluate::<(DistanceF32, ())>::lift_evaluate(b).call(c.clone());
 
         if self.0.call((da.clone().get(), db.clone().get())) {
             da
