@@ -5,7 +5,7 @@ use t_funk::{
     typeclass::category::ComposeF,
 };
 
-use crate::{Combine, Field, Input, LiftAdtF, Modify, Output, Sequence, Shape};
+use crate::{Combine, Field, Input, LiftAdtF, Output, Sequence, Unit};
 
 #[functions]
 pub trait LiftShape {
@@ -30,7 +30,7 @@ impl_adt! {
 }
 
 impl_adt! {
-    impl<A, B, C> LiftShape for Shape<A> | Modify<A> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C> LiftShape for Unit<A> | Sequence<A, B> | Combine<A, B, C> {
         type LiftShape = Self;
 
         fn lift_shape(self) -> Self::LiftShape {

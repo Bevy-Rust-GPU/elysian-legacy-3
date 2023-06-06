@@ -1,13 +1,13 @@
-use t_funk::{function::Id, macros::impl_adt, typeclass::monoid::Mempty};
+use t_funk::{macros::impl_adt, typeclass::monoid::Mempty};
 
-use crate::{Combine, Modify, Sequence, Shape};
+use crate::{Combine, Sequence, Unit, Nil};
 
 impl_adt! {
-    impl<A, B, C> Mempty for Shape<A> | Modify<A> | Sequence<A, B> | Combine<A, B, C> {
-        type Mempty = Modify<Id>;
+    impl<A, B, C> Mempty for Unit<A> | Sequence<A, B> | Combine<A, B, C> {
+        type Mempty = Nil;
 
         fn mempty() -> Self::Mempty {
-            Modify(Id)
+            Nil
         }
     }
 }

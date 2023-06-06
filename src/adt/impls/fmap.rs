@@ -1,21 +1,18 @@
 use t_funk::{
     closure::{Closure, OutputT},
-    macros::impl_adt,
     typeclass::functor::{Fmap, FmapT},
 };
 
-use crate::{Combine, Modify, Sequence, Shape};
+use crate::{Combine, Sequence, Unit};
 
-impl_adt! {
-    impl<T, F> Fmap<F> for Shape<T> | Modify<T>
-    where
-        F: Closure<T>,
-    {
-        type Fmap = This<OutputT<F, T>>;
+impl<T, F> Fmap<F> for Unit<T>
+where
+    F: Closure<T>,
+{
+    type Fmap = Unit<OutputT<F, T>>;
 
-        fn fmap(self, f: F) -> Self::Fmap {
-            This(f.call(self.0))
-        }
+    fn fmap(self, f: F) -> Self::Fmap {
+        Unit(f.call(self.0))
     }
 }
 

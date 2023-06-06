@@ -1,6 +1,6 @@
 //! Bounding traits for the ADT
 
-use crate::{Field, Input, Output, Sequence, Modify};
+use crate::{Field, Input, Output, Sequence};
 
 pub trait NotNil {}
 impl<A, B> NotNil for Input<A, B> {}
@@ -14,5 +14,4 @@ pub trait NotCombine {}
 impl<A, B> NotCombine for Field<A, B> {}
 impl<A, B> NotCombine for Input<A, B> {}
 impl<A, B> NotCombine for Output<A, B> {}
-impl<A> NotCombine for Modify<A> {}
 impl<A, B> NotCombine for Sequence<A, B> {}

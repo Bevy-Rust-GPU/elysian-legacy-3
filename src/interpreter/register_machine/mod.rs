@@ -4,7 +4,6 @@ mod evaluate;
 mod lift_combine;
 mod lift_domains;
 mod lift_evaluate;
-mod lift_modifier;
 mod lift_param;
 
 pub use combine::*;
@@ -13,5 +12,4 @@ pub use evaluate::*;
 pub use lift_combine::*;
 pub use lift_domains::*;
 pub use lift_evaluate::*;
-pub use lift_modifier::*;
 pub use lift_param::*;

@@ -3,7 +3,7 @@ use t_funk::{
     r#do::DoUnit,
 };
 
-use crate::{symbol::Union as UnionS, Combine, LiftAdtF, Sequence, Shape};
+use crate::{symbol::Union as UnionS, Combine, LiftAdtF, Sequence, Unit};
 
 pub fn union() -> DoUnit<LiftAdtF, UnionF> {
     Default::default()
@@ -18,7 +18,7 @@ pub trait Union<T> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> Union<R> for Shape<A> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> Union<R> for Unit<A> | Sequence<A, B> | Combine<A, B, C> {
         type Union = Combine<Self, R, UnionS>;
 
         fn union(self, rhs: R) -> Self::Union {

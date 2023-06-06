@@ -4,18 +4,16 @@ use t_funk::{
     typeclass::foldable::{Foldr, FoldrT},
 };
 
-use crate::{Combine, Modify, Sequence, Shape};
+use crate::{Combine, Sequence, Unit};
 
-impl_adt! {
-    impl<T, F, Z> Foldr<F, Z> for Shape<T> | Modify<T>
-    where
-        F: Closure<(T, Z)>,
-    {
-        type Foldr = OutputT<F, (T, Z)>;
+impl<T, F, Z> Foldr<F, Z> for Unit<T>
+where
+    F: Closure<(T, Z)>,
+{
+    type Foldr = OutputT<F, (T, Z)>;
 
-        fn foldr(self, f: F, z: Z) -> Self::Foldr {
-            f.call((self.0, z))
-        }
+    fn foldr(self, f: F, z: Z) -> Self::Foldr {
+        f.call((self.0, z))
     }
 }
 

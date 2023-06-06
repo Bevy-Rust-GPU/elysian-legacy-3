@@ -4,7 +4,7 @@ use t_funk::{
     typeclass::category::ComposeF,
 };
 
-use crate::{Combine, Modify, Sequence, Shape};
+use crate::{Combine, Sequence, Unit};
 
 #[functions]
 pub trait LiftAdt {
@@ -14,14 +14,14 @@ pub trait LiftAdt {
 }
 
 #[allow(non_snake_case)]
-pub fn Adt() -> DoUnit<LiftAdtF, ComposeF> {
+pub fn adt() -> DoUnit<LiftAdtF, ComposeF> {
     do_lift(LiftAdtF, ComposeF)
 }
 
 pub type LiftAdtT<T> = <T as LiftAdt>::LiftAdt;
 
 impl_adt! {
-    impl<A, B, C> LiftAdt for Shape<A> | Modify<A> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C> LiftAdt for Unit<A> | Sequence<A, B> | Combine<A, B, C> {
         type LiftAdt = Self;
 
         fn lift_adt(self) -> Self::LiftAdt {

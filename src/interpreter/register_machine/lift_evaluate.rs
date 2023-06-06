@@ -6,8 +6,7 @@ use t_funk::{
 };
 
 use crate::{
-    Combine, Field, Input, LiftDomains, LiftDomainsT, LiftModifier, LiftModifierT, Modify, Nil,
-    NotNil, Output, Sequence, Shape,
+    Combine, Field, Input, LiftDomains, LiftDomainsT, Modify, Nil, NotNil, Output, Sequence, Unit,
 };
 
 #[functions]
@@ -45,7 +44,7 @@ impl_adt! {
     }
 }
 
-impl<T, D> LiftEvaluate<D> for Shape<T>
+impl<T, D> LiftEvaluate<D> for Modify<T>
 where
     T: LiftEvaluate<D>,
 {
@@ -56,14 +55,14 @@ where
     }
 }
 
-impl<T, D> LiftEvaluate<D> for Modify<T>
+impl<T, D> LiftEvaluate<D> for Unit<T>
 where
-    T: LiftModifier,
+    T: LiftEvaluate<D>,
 {
-    type LiftEvaluate = LiftModifierT<T>;
+    type LiftEvaluate = LiftEvaluateT<T, D>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        self.0.lift_modifier()
+        self.0.lift_evaluate()
     }
 }
 

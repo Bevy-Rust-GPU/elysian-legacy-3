@@ -1,8 +1,8 @@
 //! Transformations between ADT types
 
-use t_funk::typeclass::category::{Compose, ComposeT};
+use t_funk::typeclass::category::Compose;
 
-use crate::{Combine, Modify, Sequence, Shape};
+use crate::{Combine, Sequence, Unit};
 
 // Note: A and B are in reference to the output type flow of a domain operation
 // ex:
@@ -11,52 +11,15 @@ use crate::{Combine, Modify, Sequence, Shape};
 
 // Modify (C -> C) can compose another Modify,
 // or break an A out of C to begin an Input / Combine chain
-impl<A, B> Compose<Shape<B>> for Shape<A>
-where
-    A: Compose<B>,
-{
-    type Compose = Shape<ComposeT<A, B>>;
+impl<A, B> Compose<Unit<B>> for Unit<A> {
+    type Compose = Sequence<Self, Unit<B>>;
 
-    fn compose(self, rhs: Shape<B>) -> Self::Compose {
-        Shape(self.0.compose(rhs.0))
-    }
-}
-
-impl<A, B> Compose<Modify<B>> for Shape<A> {
-    type Compose = Sequence<Self, Modify<B>>;
-
-    fn compose(self, rhs: Modify<B>) -> Self::Compose {
+    fn compose(self, rhs: Unit<B>) -> Self::Compose {
         Sequence(self, rhs)
     }
 }
 
-impl<A, B, C, F> Compose<Combine<B, C, F>> for Shape<A> {
-    type Compose = Sequence<Self, Combine<B, C, F>>;
-
-    fn compose(self, rhs: Combine<B, C, F>) -> Self::Compose {
-        Sequence(self, rhs)
-    }
-}
-
-// Modify (C -> C) can compose another Modify,
-// or break an A out of C to begin an Input / Combine chain
-impl<A, B> Compose<Modify<B>> for Modify<A> {
-    type Compose = Sequence<Self, Modify<B>>;
-
-    fn compose(self, rhs: Modify<B>) -> Self::Compose {
-        Sequence(self, rhs)
-    }
-}
-
-impl<A, B> Compose<Shape<B>> for Modify<A> {
-    type Compose = Sequence<Self, Shape<B>>;
-
-    fn compose(self, rhs: Shape<B>) -> Self::Compose {
-        Sequence(self, rhs)
-    }
-}
-
-impl<A, B, C, F> Compose<Combine<B, C, F>> for Modify<A> {
+impl<A, B, C, F> Compose<Combine<B, C, F>> for Unit<A> {
     type Compose = Sequence<Self, Combine<B, C, F>>;
 
     fn compose(self, rhs: Combine<B, C, F>) -> Self::Compose {
@@ -81,18 +44,10 @@ where
 // i.e. Output
 // or a Modify, which occurs after B has been written back into C
 
-impl<A, B, F, C> Compose<Shape<C>> for Combine<A, B, F> {
-    type Compose = Sequence<Self, Shape<C>>;
+impl<A, B, F, C> Compose<Unit<C>> for Combine<A, B, F> {
+    type Compose = Sequence<Self, Unit<C>>;
 
-    fn compose(self, rhs: Shape<C>) -> Self::Compose {
-        Sequence(self, rhs)
-    }
-}
-
-impl<A, B, F, C> Compose<Modify<C>> for Combine<A, B, F> {
-    type Compose = Sequence<Self, Modify<C>>;
-
-    fn compose(self, rhs: Modify<C>) -> Self::Compose {
+    fn compose(self, rhs: Unit<C>) -> Self::Compose {
         Sequence(self, rhs)
     }
 }

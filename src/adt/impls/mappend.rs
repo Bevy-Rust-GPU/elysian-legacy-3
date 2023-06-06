@@ -6,10 +6,10 @@ use t_funk::{
     },
 };
 
-use crate::{Combine, Modify, Sequence, Shape};
+use crate::{Combine, Sequence, Unit};
 
 impl_adt! {
-    impl<A, B, C, T> Mappend<T> for Shape<A> | Modify<A> | Sequence<A, B> | Combine<A, B, C>
+    impl<A, B, C, T> Mappend<T> for Unit<A> | Sequence<A, B> | Combine<A, B, C>
     where
         Self: Compose<T>,
     {

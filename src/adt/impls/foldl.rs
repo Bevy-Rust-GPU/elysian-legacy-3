@@ -4,18 +4,16 @@ use t_funk::{
     typeclass::foldable::{Foldl, FoldlT},
 };
 
-use crate::{Combine, Modify, Sequence, Shape};
+use crate::{Combine, Sequence, Unit};
 
-impl_adt! {
-    impl<T, F, Z> Foldl<F, Z> for Shape<T> | Modify<T>
-    where
-        F: Closure<(Z, T)>,
-    {
-        type Foldl = OutputT<F, (Z, T)>;
+impl<T, F, Z> Foldl<F, Z> for Unit<T>
+where
+    F: Closure<(Z, T)>,
+{
+    type Foldl = OutputT<F, (Z, T)>;
 
-        fn foldl(self, f: F, z: Z) -> Self::Foldl {
-            f.call((z, self.0))
-        }
+    fn foldl(self, f: F, z: Z) -> Self::Foldl {
+        f.call((z, self.0))
     }
 }
 

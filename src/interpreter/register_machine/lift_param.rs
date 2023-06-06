@@ -4,7 +4,7 @@ use t_funk::{
     typeclass::functor::{Fmap, FmapT},
 };
 
-use crate::{Combine, Field, Input, Modify, Nil, Output, Sequence, Shape};
+use crate::{Combine, Field, Input, Modify, Nil, Output, Sequence, Unit};
 
 #[functions]
 #[types]
@@ -40,25 +40,26 @@ impl<C> LiftParam<C> for Nil {
     }
 }
 
-impl<T, C> LiftParam<C> for Shape<T>
-where
-    T: LiftParam<C>,
-{
-    type LiftParam = Shape<LiftParamT<T, C>>;
-
-    fn lift_param(self, input: C) -> Self::LiftParam {
-        Shape(self.0.lift_param(input))
-    }
-}
-
 impl<T, C> LiftParam<C> for Modify<T>
 where
     T: Fmap<Curry2B<LiftParamF, C>>,
+    C: Clone,
 {
     type LiftParam = Modify<FmapT<T, Curry2B<LiftParamF, C>>>;
 
     fn lift_param(self, input: C) -> Self::LiftParam {
-        Modify(self.0.fmap(LiftParamF.suffix2(input)))
+        Modify(self.0.fmap(LiftParamF.suffix2(input.clone())))
+    }
+}
+
+impl<T, C> LiftParam<C> for Unit<T>
+where
+    T: LiftParam<C>,
+{
+    type LiftParam = Unit<LiftParamT<T, C>>;
+
+    fn lift_param(self, input: C) -> Self::LiftParam {
+        Unit(self.0.lift_param(input))
     }
 }
 

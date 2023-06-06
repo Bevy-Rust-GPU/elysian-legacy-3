@@ -5,7 +5,7 @@ use t_funk::{
     typeclass::functor::Fmap,
 };
 
-use crate::{LiftAdt, LiftModifier, Modify};
+use crate::{LiftEvaluate, LiftModify, Modify};
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -22,18 +22,18 @@ where
     }
 }
 
-impl<T> LiftAdt for Set<T> {
-    type LiftAdt = Modify<Self>;
+impl<T> LiftModify for Set<T> {
+    type LiftModify = Modify<Self>;
 
-    fn lift_adt(self) -> Self::LiftAdt {
+    fn lift_modify(self) -> Self::LiftModify {
         Modify(self)
     }
 }
 
-impl<T> LiftModifier for Set<T> {
-    type LiftModifier = Curry2B<SetF, T>;
+impl<T, D> LiftEvaluate<D> for Set<T> {
+    type LiftEvaluate = Curry2B<SetF, T>;
 
-    fn lift_modifier(self) -> Self::LiftModifier {
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
         SetF.suffix2(self.0)
     }
 }

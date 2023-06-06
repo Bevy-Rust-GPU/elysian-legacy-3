@@ -36,9 +36,11 @@
 mod algebra;
 mod impls;
 mod shape;
+mod modify;
 
 pub use algebra::*;
 pub use impls::*;
+pub use modify::*;
 pub use shape::*;
 
 mod bounds;
@@ -49,8 +51,7 @@ use t_funk::macros::{define_adt, Copointed, Pointed};
 define_adt!(
     #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Pointed, Copointed)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    pub struct Shape<T>(pub T)
-             | Modify<T>(pub T)
+    pub struct Unit<T>(pub T)
              | Sequence<A, B>(pub A, pub B)
              | Combine<A, B, F>(pub A, pub B, pub F);
 );
@@ -65,8 +66,8 @@ mod test {
     };
 
     use crate::{
-        intersection, shape, union, Ascii, Circle, Distance, Done, LiftCombine, LiftEvaluate,
-        LiftParam, PosDist, Rasterize, Translate, ASCII_RAMP,
+        adt, intersection, shape, union, Ascii, Circle, Dist, Distance, Done, Evaluate, Get,
+        LiftCombine, LiftEvaluate, LiftParam, PosDist, Rasterize, Translate, ASCII_RAMP, modify,
     };
 
     #[test]
@@ -78,6 +79,12 @@ mod test {
 
         let combined =
             union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
+
+        let foo = adt() << combined >> modify() << Get::<Distance<f32>>::default() >> Done;
+
+        let _foo = Evaluate::<Dist<f32>, PosDist<f32>>::evaluate(foo, PosDist::<f32>::default());
+
+        panic!("{_foo:#?}");
 
         let _foo = LiftEvaluate::<(Distance<f32>, ())>::lift_evaluate(
             combined

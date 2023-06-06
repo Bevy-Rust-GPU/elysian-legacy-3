@@ -7,10 +7,10 @@ use t_funk::{
     },
 };
 
-use crate::{Combine, Modify, Sequence, Shape};
+use crate::{Combine, Sequence, Unit};
 
 impl_adt! {
-    impl<A, B, C> Mconcat for Shape<A> | Modify<A> | Sequence<A, B> | Combine<A, B, C>
+    impl<A, B, C> Mconcat for Unit<A> | Sequence<A, B> | Combine<A, B, C>
     where
         Self: Mempty + Foldl<MappendF, <Self as Mempty>::Mempty>,
     {

@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use t_funk::{collection::set::GetF, typeclass::functor::Fmap};
 
-use crate::{LiftAdt, LiftModifier, Modify};
+use crate::{LiftEvaluate, LiftModify, Modify};
 
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -30,18 +30,18 @@ impl<T, F> Fmap<F> for Get<T> {
     }
 }
 
-impl<T> LiftAdt for Get<T> {
-    type LiftAdt = Modify<Self>;
+impl<T> LiftModify for Get<T> {
+    type LiftModify = Modify<Self>;
 
-    fn lift_adt(self) -> Self::LiftAdt {
+    fn lift_modify(self) -> Self::LiftModify {
         Modify(self)
     }
 }
 
-impl<T> LiftModifier for Get<T> {
-    type LiftModifier = GetF<T>;
+impl<T, D> LiftEvaluate<D> for Get<T> {
+    type LiftEvaluate = GetF<T>;
 
-    fn lift_modifier(self) -> Self::LiftModifier {
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
         GetF::<T>::default()
     }
 }
