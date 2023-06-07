@@ -1,6 +1,6 @@
 use t_funk::macros::{impl_adt, types};
 
-use crate::{Combine, Field, Input, Output, Sequence, Unit};
+use crate::{Combine, Field, Input, Nil, Output, Sequence, Unit};
 
 #[types]
 pub trait LiftCombine {
@@ -10,7 +10,7 @@ pub trait LiftCombine {
 }
 
 impl_adt! {
-    impl<A, B> LiftCombine for Input<A, B> | Field<A, B> | Output<A, B> {
+    impl<A, B> LiftCombine for Input<A> | Field<A> | Output<A> {
         type LiftCombine = Self;
 
         fn lift_combine(self) -> Self::LiftCombine {
@@ -20,7 +20,7 @@ impl_adt! {
 }
 
 impl_adt! {
-    impl<T> LiftCombine for Unit<T> {
+    impl<T> LiftCombine for Nil | Unit<T> {
         type LiftCombine = Self;
 
         fn lift_combine(self) -> Self::LiftCombine {

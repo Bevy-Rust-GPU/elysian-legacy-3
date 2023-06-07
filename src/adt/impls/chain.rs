@@ -7,10 +7,10 @@ use t_funk::{
     },
 };
 
-use crate::{Combine, Sequence, Unit};
+use crate::{Combine, Sequence, Unit, Nil};
 
 impl_adt! {
-    impl<F, A, B, C> Chain<F> for Unit<A> | Sequence<A, B> | Combine<A, B, C>
+    impl<F, A, B, C> Chain<F> for Nil | Unit<A> | Sequence<A, B> | Combine<A, B, C>
     where
         Self: Fmap<F>,
         FmapT<Self, F>: Mconcat,
@@ -32,7 +32,7 @@ mod test {
         typeclass::monad::Chain,
     };
 
-    use crate::{adt, modify, shape, Distance, Done, Get, Isosurface, Point, Translate};
+    use crate::{adt, modify, shape, Distance, Done, Get, Isosurface, Point, Translate, LiftShapeF, LiftAdtF};
 
     #[lift]
     fn make_list<A>(a: A) -> Cons<A, Nil> {
@@ -45,7 +45,7 @@ mod test {
         let modifier = modify() << Get::<Distance<f32>>::default() >> Done;
         let foo = t_funk::typeclass::category::Compose::compose(shape, modifier);
 
-        let list = shape.chain(MakeList.compose_l(MakeList));
-        //let list = list.chain(LiftShapeF.compose_l(LiftAdtF));
+        let list = shape.chain(MakeList);
+        let list = list.chain(LiftShapeF.compose_l(LiftAdtF));
     }
 }

@@ -18,7 +18,7 @@ pub fn intersection() -> DoUnit<LiftAdtF, IntersectionF> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> Intersection<R> for Field<A, B> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> Intersection<R> for Field<A> | Sequence<A, B> | Combine<A, B, C> {
         type Intersection = Combine<Self, R, IntersectionS>;
 
         fn intersection(self, rhs: R) -> Self::Intersection {

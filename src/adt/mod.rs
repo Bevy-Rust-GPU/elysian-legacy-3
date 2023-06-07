@@ -52,8 +52,9 @@ define_adt!(
     #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Pointed, Copointed)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     pub struct Unit<T>(pub T)
+             | Combine<A, B, F>(pub A, pub B, pub F)
              | Sequence<A, B>(pub A, pub B)
-             | Combine<A, B, F>(pub A, pub B, pub F);
+             | Nil;
 );
 
 pub use t_funk::r#do::Done;
@@ -83,8 +84,6 @@ mod test {
         let foo = adt() << combined >> modify() << Get::<Distance<f32>>::default() >> Done;
 
         let _foo = Evaluate::<Dist<f32>, PosDist<f32>>::evaluate(foo, PosDist::<f32>::default());
-
-        panic!("{_foo:#?}");
 
         let _foo = LiftEvaluate::<(Distance<f32>, ())>::lift_evaluate(
             combined

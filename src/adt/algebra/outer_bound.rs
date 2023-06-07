@@ -18,7 +18,7 @@ pub fn outer_bound() -> DoUnit<LiftAdtF, OuterBoundF> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> OuterBound<R> for Field<A, B> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> OuterBound<R> for Field<A> | Sequence<A, B> | Combine<A, B, C> {
         type OuterBound = Combine<Self, R, OuterBoundS>;
 
         fn outer_bound(self, rhs: R) -> Self::OuterBound {

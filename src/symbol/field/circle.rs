@@ -1,6 +1,6 @@
 use crate::{
     DistanceF, DistanceF32, DistanceT, DomainF, DomainFunction, Field, FunctionT, GradientF32,
-    Isosurface, LiftShape, Nil, Point, PositionF32,
+    Isosurface, LiftShape, Point, PositionF32,
 };
 
 use t_funk::{
@@ -16,10 +16,10 @@ use t_funk::{
 pub struct Circle<T>(pub T);
 
 impl<T> LiftShape for Circle<T> {
-    type LiftShape = Field<Self, Nil>;
+    type LiftShape = Field<Self>;
 
     fn lift_shape(self) -> Self::LiftShape {
-        Field(self, Nil)
+        Field(self)
     }
 }
 

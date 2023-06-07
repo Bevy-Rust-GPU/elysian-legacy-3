@@ -4,7 +4,7 @@ use t_funk::{
     typeclass::category::ComposeF,
 };
 
-use crate::{Combine, Sequence, Unit};
+use crate::{Combine, Sequence, Unit, Nil};
 
 #[functions]
 pub trait LiftAdt {
@@ -21,7 +21,7 @@ pub fn adt() -> DoUnit<LiftAdtF, ComposeF> {
 pub type LiftAdtT<T> = <T as LiftAdt>::LiftAdt;
 
 impl_adt! {
-    impl<A, B, C> LiftAdt for Unit<A> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C> LiftAdt for Nil | Unit<A> | Sequence<A, B> | Combine<A, B, C> {
         type LiftAdt = Self;
 
         fn lift_adt(self) -> Self::LiftAdt {

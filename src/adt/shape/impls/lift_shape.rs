@@ -20,7 +20,7 @@ pub fn shape() -> DoUnit<ComposeLT<LiftShapeF, LiftAdtF>, ComposeF> {
 }
 
 impl_adt! {
-    impl<A, B> LiftShape for Input<A, B> | Field<A, B> | Output<A, B> {
+    impl<A> LiftShape for Input<A> | Field<A> | Output<A> {
         type LiftShape = Self;
 
         fn lift_shape(self) -> Self::LiftShape {

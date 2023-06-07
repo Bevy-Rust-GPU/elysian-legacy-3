@@ -18,7 +18,7 @@ pub fn subtraction() -> DoUnit<LiftAdtF, SubtractionF> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> Subtraction<R> for Field<A, B> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> Subtraction<R> for Field<A> | Sequence<A, B> | Combine<A, B, C> {
         type Subtraction = Combine<Self, R, SubtractionS>;
 
         fn subtraction(self, rhs: R) -> Self::Subtraction {

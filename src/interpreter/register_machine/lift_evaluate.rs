@@ -18,21 +18,7 @@ pub trait LiftEvaluate<D> {
 }
 
 impl_adt! {
-    impl<A, B, D> LiftEvaluate<D> for Input<A, B> | Field<A, B> | Output<A, B>
-    where
-        D: LiftDomains<A>,
-        B: NotNil + LiftEvaluate<D>,
-    {
-        type LiftEvaluate = ComposeLT<LiftDomainsT<D, A>, LiftEvaluateT<B, D>>;
-
-        fn lift_evaluate(self) -> Self::LiftEvaluate {
-            D::lift_domains(self.0).compose_l(self.1.lift_evaluate())
-        }
-    }
-}
-
-impl_adt! {
-    impl<A, D> LiftEvaluate<D> for Input<A, Nil> | Field<A, Nil> | Output<A,Nil>
+    impl<A, D> LiftEvaluate<D> for Input<A> | Field<A> | Output<A>
     where
         D: LiftDomains<A>,
     {
@@ -71,11 +57,23 @@ where
     A: LiftEvaluate<D>,
     B: LiftEvaluate<D>,
     LiftEvaluateT<A, D>: Compose<LiftEvaluateT<B, D>>,
+    B: NotNil,
 {
     type LiftEvaluate = ComposeLT<LiftEvaluateT<A, D>, LiftEvaluateT<B, D>>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
         self.0.lift_evaluate().compose_l(self.1.lift_evaluate())
+    }
+}
+
+impl<A, D> LiftEvaluate<D> for Sequence<A, Nil>
+where
+    A: LiftEvaluate<D>,
+{
+    type LiftEvaluate = LiftEvaluateT<A, D>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        self.0.lift_evaluate()
     }
 }
 

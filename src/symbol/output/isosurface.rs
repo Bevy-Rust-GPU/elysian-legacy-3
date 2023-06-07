@@ -1,6 +1,6 @@
 use core::ops::Sub;
 
-use crate::{Distance, DistanceF32, DomainFunction, GradientF32, LiftShape, Nil, Output};
+use crate::{Distance, DistanceF32, DomainFunction, GradientF32, LiftShape, Output};
 
 use t_funk::{
     closure::Closure,
@@ -17,10 +17,10 @@ use t_funk::{
 pub struct Isosurface<T>(pub T);
 
 impl<T> LiftShape for Isosurface<T> {
-    type LiftShape = Output<Self, Nil>;
+    type LiftShape = Output<Self>;
 
     fn lift_shape(self) -> Self::LiftShape {
-        Output(self, Nil)
+        Output(self)
     }
 }
 

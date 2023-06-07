@@ -18,7 +18,7 @@ pub fn inner_bound() -> DoUnit<LiftAdtF, InnerBoundF> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> InnerBound<R> for Field<A, B> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> InnerBound<R> for Field<A> | Sequence<A, B> | Combine<A, B, C> {
         type InnerBound = Combine<Self, R, InnerBoundS>;
 
         fn inner_bound(self, rhs: R) -> Self::InnerBound {

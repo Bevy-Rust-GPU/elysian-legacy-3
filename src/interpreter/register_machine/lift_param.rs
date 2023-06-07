@@ -15,18 +15,16 @@ pub trait LiftParam<C> {
 }
 
 impl_adt! {
-    impl<A, B, C> LiftParam<C> for Input<A, B> | Field<A, B> | Output<A, B>
+    impl<A, C> LiftParam<C> for Input<A> | Field<A> | Output<A>
     where
         A: Fmap<Curry2B<LiftParamF, C>>,
-        B: LiftParam<C>,
         C: Clone,
     {
-        type LiftParam = This<FmapT<A, Curry2B<LiftParamF, C>>, LiftParamT<B, C>>;
+        type LiftParam = This<FmapT<A, Curry2B<LiftParamF, C>>>;
 
         fn lift_param(self, input: C) -> Self::LiftParam {
             This(
                 self.0.fmap(LiftParamF.suffix2(input.clone())),
-                self.1.lift_param(input),
             )
         }
     }

@@ -1,5 +1,5 @@
 use crate::{
-    DistanceF32, DomainFunction, GradientF32, Input, LiftShape, Nil, Position, PositionF32,
+    DistanceF32, DomainFunction, GradientF32, Input, LiftShape, Position, PositionF32,
 };
 
 use t_funk::{
@@ -17,10 +17,10 @@ use t_funk::{
 pub struct Scale<T>(pub T);
 
 impl<T> LiftShape for Scale<T> {
-    type LiftShape = Input<Self, Nil>;
+    type LiftShape = Input<Self>;
 
     fn lift_shape(self) -> Self::LiftShape {
-        Input(self, Nil)
+        Input(self)
     }
 }
 
