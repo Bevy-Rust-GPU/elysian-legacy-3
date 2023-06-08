@@ -1,11 +1,12 @@
 use t_funk::{
     closure::{Closure, OutputT},
+    macros::impl_adt,
     typeclass::functor::{Fmap, FmapT},
 };
 
-use crate::{Combine, Nil, Sequence, Unit};
+use crate::{Combine, Field, Input, Modify, End, Output, Then};
 
-impl<F> Fmap<F> for Nil {
+impl<F> Fmap<F> for End {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -13,27 +14,16 @@ impl<F> Fmap<F> for Nil {
     }
 }
 
-impl<T, F> Fmap<F> for Unit<T>
-where
-    F: Closure<T>,
-{
-    type Fmap = Unit<OutputT<F, T>>;
-
-    fn fmap(self, f: F) -> Self::Fmap {
-        Unit(f.call(self.0))
-    }
-}
-
-impl<T, N, F> Fmap<F> for Sequence<T, N>
+impl<T, N, F> Fmap<F> for Then<T, N>
 where
     T: Fmap<F>,
     N: Fmap<F>,
     F: Clone,
 {
-    type Fmap = Sequence<FmapT<T, F>, FmapT<N, F>>;
+    type Fmap = Then<FmapT<T, F>, FmapT<N, F>>;
 
     fn fmap(self, f: F) -> Self::Fmap {
-        Sequence(self.0.fmap(f.clone()), self.1.fmap(f))
+        Then(self.0.fmap(f.clone()), self.1.fmap(f))
     }
 }
 
@@ -50,19 +40,33 @@ where
     }
 }
 
+impl_adt! {
+    impl<A, F> Fmap<F> for Input<A> | Field<A> | Output<A> | Modify<A>
+    where
+        F: Clone + Closure<A>,
+    {
+        type Fmap = This<OutputT<F, A>>;
+
+        fn fmap(self, f: F) -> Self::Fmap {
+            This(f.clone().call(self.0))
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use t_funk::{closure::Const, r#do::Done, typeclass::functor::Fmap};
+    use glam::Vec2;
+    use t_funk::{closure::Const, op_chain::Done, typeclass::functor::Fmap};
 
-    use crate::{shape, Isosurface, Nil, Point, Sequence, Translate, Unit};
+    use crate::{adt, Field, Input, Isosurface, End, Output, Point, Then, Translate};
 
     #[test]
     fn test_adt_fmap() {
-        let adt = shape() << Translate(Const(0.0), Const(0.0)) << Point << Isosurface(0.0) >> Done;
+        let adt = adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> Done;
         let mapped = adt.fmap(Const(()));
         assert_eq!(
             mapped,
-            Sequence(Unit(()), Sequence(Unit(()), Sequence(Unit(()), Nil)))
+            Then(Input(()), Then(Field(()), Then(Output(()), End)))
         );
     }
 }

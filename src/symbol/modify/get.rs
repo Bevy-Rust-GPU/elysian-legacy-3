@@ -1,26 +1,18 @@
 use std::marker::PhantomData;
 
-use t_funk::{collection::set::GetF, typeclass::functor::Fmap};
+use t_funk::{
+    collection::set::GetF,
+    macros::phantom::{PhantomClone, PhantomCopy, PhantomDefault},
+    typeclass::functor::Fmap,
+};
 
-use crate::{LiftEvaluate, LiftModify, Modify};
+use crate::{LiftAdt, LiftEvaluate, Modify};
 
-#[derive(Debug)]
+#[derive(
+    Debug, PhantomDefault, PhantomClone, PhantomCopy, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Get<T>(pub PhantomData<T>);
-
-impl<T> Default for Get<T> {
-    fn default() -> Self {
-        Self(PhantomData)
-    }
-}
-
-impl<T> Clone for Get<T> {
-    fn clone(&self) -> Self {
-        Self(PhantomData)
-    }
-}
-
-impl<T> Copy for Get<T> {}
 
 impl<T, F> Fmap<F> for Get<T> {
     type Fmap = Self;
@@ -30,10 +22,10 @@ impl<T, F> Fmap<F> for Get<T> {
     }
 }
 
-impl<T> LiftModify for Get<T> {
-    type LiftModify = Modify<Self>;
+impl<T> LiftAdt for Get<T> {
+    type LiftAdt = Modify<Self>;
 
-    fn lift_modify(self) -> Self::LiftModify {
+    fn lift_adt(self) -> Self::LiftAdt {
         Modify(self)
     }
 }

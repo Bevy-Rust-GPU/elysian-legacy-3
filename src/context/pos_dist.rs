@@ -5,31 +5,31 @@ use crate::{Distance, Position};
 
 /// Evaluation context containing position and distance
 #[derive(Debug, Default, Copy, Clone)]
-pub struct PosDist<T> {
-    pub pos: Position<T>,
-    pub dist: Distance<T>,
+pub struct PosDist<P, D> {
+    pub pos: Position<P>,
+    pub dist: Distance<D>,
 }
 
-impl<T> Get<Position<T>> for PosDist<T> {
-    fn get(self) -> Position<T> {
+impl<P, D> Get<Position<P>> for PosDist<P, D> {
+    fn get(self) -> Position<P> {
         self.pos
     }
 }
 
-impl<T> Get<Distance<T>> for PosDist<T> {
-    fn get(self) -> Distance<T> {
+impl<P, D> Get<Distance<D>> for PosDist<P, D> {
+    fn get(self) -> Distance<D> {
         self.dist
     }
 }
 
-impl<T> Set<Position<T>> for PosDist<T> {
-    fn set(self, t: Position<T>) -> Self {
+impl<P, D> Set<Position<P>> for PosDist<P, D> {
+    fn set(self, t: Position<P>) -> Self {
         Self { pos: t, ..self }
     }
 }
 
-impl<T> Set<Distance<T>> for PosDist<T> {
-    fn set(self, t: Distance<T>) -> Self {
+impl<P, D> Set<Distance<D>> for PosDist<P, D> {
+    fn set(self, t: Distance<D>) -> Self {
         Self { dist: t, ..self }
     }
 }

@@ -9,6 +9,8 @@ std = ["dep:image", "dep:viuer"]
 serde = ["dep:serde"]
 
 [dependencies]
+glam = "0.24.0"
+
 t-funk = { git = "https://github.com/bevy-rust-gpu/t-funk" }
 
 image = { version = "0.24.6", optional = true }

@@ -1,67 +1,57 @@
-use crate::{
-    DistanceF32, DomainFunction, GradientF32, Input, LiftShape, Position, PositionF32,
-};
+use crate::{Distance, DomainFunction, Gradient, Input, LiftAdt, Position};
 
+use glam::Vec2;
 use t_funk::{
-    closure::{Closure, OutputT},
-    macros::{arrow::Arrow, category::Category},
-    typeclass::functor::Fmap,
+    closure::Closure,
+    macros::{
+        applicative::Applicative, arrow::Arrow, category::Category, functor::Functor, monad::Monad,
+    },
 };
 
 // Translation input modifier symbol
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Functor, Applicative, Monad,
+)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Translate<T>(pub T, pub T);
+pub struct Translate<T>(pub T);
 
-impl<T, F> Fmap<F> for Translate<T>
-where
-    F: Clone + Closure<T>,
-{
-    type Fmap = Translate<OutputT<F, T>>;
+impl<T> LiftAdt for Translate<T> {
+    type LiftAdt = Input<Self>;
 
-    fn fmap(self, f: F) -> Self::Fmap {
-        Translate(f.clone().call(self.0), f.call(self.1))
-    }
-}
-
-impl<T> LiftShape for Translate<T> {
-    type LiftShape = Input<Self>;
-
-    fn lift_shape(self) -> Self::LiftShape {
+    fn lift_adt(self) -> Self::LiftAdt {
         Input(self)
     }
 }
 
-impl<T> DomainFunction<DistanceF32> for Translate<T> {
-    type Inputs = PositionF32;
+impl<T> DomainFunction<Distance<f32>> for Translate<T> {
+    type Inputs = Position<Vec2>;
     type Function = TranslateF<T>;
 
     fn domain(self) -> Self::Function {
-        TranslateF(self.0, self.1)
+        TranslateF(self.0)
     }
 }
 
-impl<T> DomainFunction<GradientF32> for Translate<T> {
-    type Inputs = PositionF32;
+impl<T> DomainFunction<Gradient<Vec2>> for Translate<T> {
+    type Inputs = Position<Vec2>;
     type Function = TranslateF<T>;
 
     fn domain(self) -> Self::Function {
-        TranslateF(self.0, self.1)
+        TranslateF(self.0)
     }
 }
 
 // General translation function
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Category, Arrow)]
-pub struct TranslateF<T>(pub T, pub T);
+pub struct TranslateF<T>(pub T);
 
-impl<T> Closure<Position<T>> for TranslateF<T>
+impl<P> Closure<Position<P>> for TranslateF<P>
 where
-    T: core::ops::Sub<Output = T>,
+    P: core::ops::Sub<Output = P>,
 {
-    type Output = Position<T>;
+    type Output = Position<P>;
 
-    fn call(self, Position(x, y): Position<T>) -> Self::Output {
-        let TranslateF(dx, dy) = self;
-        Position(x - dx, y - dy)
+    fn call(self, Position(p): Position<P>) -> Self::Output {
+        Position(p - self.0)
     }
 }

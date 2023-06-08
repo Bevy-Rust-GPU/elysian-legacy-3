@@ -3,8 +3,9 @@
 use core::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
-use crate::{Evaluate, EvaluateT, Position, PositionF32};
+use crate::{Evaluate, EvaluateT, Position};
 
+use glam::Vec2;
 use t_funk::{
     closure::Closure, closure::OutputT, collection::set::Set, typeclass::copointed::Copointed,
     typeclass::functor::Fmap, typeclass::pointed::Pointed,
@@ -80,13 +81,13 @@ pub type RasterRGB32<const W: usize, const H: usize> = Raster<(f32, f32, f32)>;
 pub type RasterU8<const W: usize, const H: usize> = Raster<u8>;
 pub type RasterRGB8<const W: usize, const H: usize> = Raster<(u8, u8, u8)>;
 
-pub struct Rasterize<D, C> {
+pub struct Rasterize<D> {
     pub width: usize,
     pub height: usize,
-    pub phantom: PhantomData<(D, C)>,
+    pub phantom: PhantomData<D>,
 }
 
-impl<D, C> Default for Rasterize<D, C> {
+impl<D> Default for Rasterize<D> {
     fn default() -> Self {
         Self {
             width: 32,
@@ -96,7 +97,7 @@ impl<D, C> Default for Rasterize<D, C> {
     }
 }
 
-impl<D, C> Clone for Rasterize<D, C> {
+impl<D> Clone for Rasterize<D> {
     fn clone(&self) -> Self {
         Self {
             width: self.width,
@@ -106,24 +107,26 @@ impl<D, C> Clone for Rasterize<D, C> {
     }
 }
 
-impl<D, C> Copy for Rasterize<D, C> {}
+impl<D> Copy for Rasterize<D> {}
 
-impl<D, C, S> Closure<S> for Rasterize<D, C>
+impl<D, C, S> Closure<(C, S)> for Rasterize<D>
 where
     S: Clone + Evaluate<D, C>,
     EvaluateT<S, D, C>: Default + Clone,
-    C: Default + Set<PositionF32>,
+    C: Clone + Set<Position<Vec2>>,
 {
     type Output = Raster<EvaluateT<S, D, C>>;
 
-    fn call(self, shape: S) -> Self::Output {
+    fn call(self, (ctx, shape): (C, S)) -> Self::Output {
         let mut out: Self::Output = Raster::new(self.width, self.height);
         for (y, row) in out.iter_mut().enumerate() {
             for (x, col) in row.iter_mut().enumerate() {
                 let nx = ((x as f32 + 0.5) / self.width as f32) * 2.0 - 1.0;
                 let ny = ((y as f32 + 0.5) / self.height as f32) * 2.0 - 1.0;
-                *col =
-                    Evaluate::<D, C>::evaluate(shape.clone(), C::default().set(Position(nx, ny)));
+                *col = Evaluate::<D, C>::evaluate(
+                    shape.clone(),
+                    ctx.clone().set(Position(Vec2::new(nx, ny))),
+                );
             }
         }
         out

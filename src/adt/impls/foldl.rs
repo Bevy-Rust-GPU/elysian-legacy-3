@@ -4,9 +4,9 @@ use t_funk::{
     typeclass::foldable::{Foldl, FoldlT},
 };
 
-use crate::{Combine, Nil, Sequence, Unit};
+use crate::{Combine, Field, Input, Modify, End, Output, Then};
 
-impl<F, Z> Foldl<F, Z> for Nil {
+impl<F, Z> Foldl<F, Z> for End {
     type Foldl = Z;
 
     fn foldl(self, _: F, z: Z) -> Self::Foldl {
@@ -14,19 +14,21 @@ impl<F, Z> Foldl<F, Z> for Nil {
     }
 }
 
-impl<T, F, Z> Foldl<F, Z> for Unit<T>
-where
-    F: Closure<(Z, T)>,
-{
-    type Foldl = OutputT<F, (Z, T)>;
+impl_adt! {
+    impl<A, F, Z> Foldl<F, Z> for Input<A> | Field<A> | Output<A> | Modify<A>
+    where
+        F: Closure<(Z, A)>
+    {
+        type Foldl = OutputT<F, (Z, A)>;
 
-    fn foldl(self, f: F, z: Z) -> Self::Foldl {
-        f.call((z, self.0))
+        fn foldl(self, f: F, z: Z) -> Self::Foldl {
+            f.call((z, self.0))
+        }
     }
 }
 
 impl_adt! {
-    impl<A, B, C, F, Z> Foldl<F, Z> for Sequence<A, B> | Combine<A, B, C>
+    impl<A, B, C, F, Z> Foldl<F, Z> for Then<A, B> | Combine<A, B, C>
     where
         A: Foldl<F, Z>,
         B: Foldl<F, FoldlT<A, F, Z>>,
@@ -42,15 +44,13 @@ impl_adt! {
 
 #[cfg(test)]
 mod test {
+    use glam::Vec2;
     use t_funk::{
-        closure::Const,
-        function::FormatDebug,
-        macros::lift,
-        r#do::Done,
-        typeclass::{foldable::Foldl, functor::Fmap},
+        function::FormatDebug, macros::lift, op_chain::Done,
+        typeclass::foldable::Foldl, typeclass::functor::Fmap,
     };
 
-    use crate::{shape, Isosurface, Point, Translate};
+    use crate::{Isosurface, Point, Translate, adt};
 
     #[lift]
     fn concat(a: String, b: String) -> String {
@@ -59,12 +59,12 @@ mod test {
 
     #[test]
     fn test_adt_foldl() {
-        let adt = shape() << Translate(Const(0.0), Const(0.0)) << Point << Isosurface(0.0) >> Done;
+        let adt = adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> Done;
         let folded = adt.fmap(FormatDebug).foldl(Concat, String::default());
 
         assert_eq!(
             folded,
-            "Input(Translate(Const(0.0), Const(0.0)))Field(Point)Output(Isosurface(0.0))"
+            "Translate(Vec2(0.0, 0.0))PointIsosurface(0.0)"
         )
     }
 }

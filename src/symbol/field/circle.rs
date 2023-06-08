@@ -1,8 +1,9 @@
 use crate::{
-    DistanceF, DistanceF32, DistanceT, DomainF, DomainFunction, Field, FunctionT, GradientF32,
-    Isosurface, LiftShape, Point, PositionF32,
+    Distance, DistanceF, DistanceT, DomainF, DomainFunction, Field, FunctionT, Gradient,
+    Isosurface, LiftAdt, Point, Position,
 };
 
+use glam::Vec2;
 use t_funk::{
     closure::{Closure, Compose, Composed},
     macros::{applicative::Applicative, functor::Functor, monad::Monad},
@@ -15,16 +16,16 @@ use t_funk::{
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Circle<T>(pub T);
 
-impl<T> LiftShape for Circle<T> {
-    type LiftShape = Field<Self>;
+impl<T> LiftAdt for Circle<T> {
+    type LiftAdt = Field<Self>;
 
-    fn lift_shape(self) -> Self::LiftShape {
+    fn lift_adt(self) -> Self::LiftAdt {
         Field(self)
     }
 }
 
-impl<T> DomainFunction<DistanceF32> for Circle<T> {
-    type Inputs = PositionF32;
+impl<T> DomainFunction<Distance<f32>> for Circle<T> {
+    type Inputs = Position<Vec2>;
     type Function = Composed<DistanceT<Isosurface<T>>, DistanceT<Point>>;
 
     fn domain(self) -> Self::Function {
@@ -34,11 +35,11 @@ impl<T> DomainFunction<DistanceF32> for Circle<T> {
     }
 }
 
-impl<T> DomainFunction<GradientF32> for Circle<T> {
-    type Inputs = PositionF32;
-    type Function = FunctionT<Point, GradientF32>;
+impl<T> DomainFunction<Gradient<Vec2>> for Circle<T> {
+    type Inputs = Position<Vec2>;
+    type Function = FunctionT<Point, Gradient<Vec2>>;
 
     fn domain(self) -> Self::Function {
-        DomainF::<GradientF32>::default().call(Point)
+        DomainF::<Gradient<Vec2>>::default().call(Point)
     }
 }

@@ -1,9 +1,9 @@
 use t_funk::{
     macros::{functions, impl_adt, types},
-    r#do::DoUnit,
+    op_chain::OpChain,
 };
 
-use crate::{symbol::InnerBound as InnerBoundS, Combine, Field, LiftAdtF, Sequence};
+use crate::{symbol::InnerBound as InnerBoundS, Combine, Field, LiftAdtF, Then};
 
 #[functions]
 #[types]
@@ -13,12 +13,12 @@ pub trait InnerBound<R> {
     fn inner_bound(self, rhs: R) -> Self::InnerBound;
 }
 
-pub fn inner_bound() -> DoUnit<LiftAdtF, InnerBoundF> {
+pub fn inner_bound() -> OpChain<LiftAdtF, InnerBoundF> {
     Default::default()
 }
 
 impl_adt! {
-    impl<A, B, C, R> InnerBound<R> for Field<A> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> InnerBound<R> for Field<A> | Then<A, B> | Combine<A, B, C> {
         type InnerBound = Combine<Self, R, InnerBoundS>;
 
         fn inner_bound(self, rhs: R) -> Self::InnerBound {

@@ -6,7 +6,7 @@ use t_funk::{
 };
 
 use crate::{
-    Combine, Field, Input, LiftDomains, LiftDomainsT, Modify, Nil, NotNil, Output, Sequence, Unit,
+    Combine, Field, Input, LiftDomains, LiftDomainsT, Modify, End, NotEnd, Output, Then,
 };
 
 #[functions]
@@ -41,23 +41,12 @@ where
     }
 }
 
-impl<T, D> LiftEvaluate<D> for Unit<T>
-where
-    T: LiftEvaluate<D>,
-{
-    type LiftEvaluate = LiftEvaluateT<T, D>;
-
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        self.0.lift_evaluate()
-    }
-}
-
-impl<A, B, D> LiftEvaluate<D> for Sequence<A, B>
+impl<A, B, D> LiftEvaluate<D> for Then<A, B>
 where
     A: LiftEvaluate<D>,
     B: LiftEvaluate<D>,
     LiftEvaluateT<A, D>: Compose<LiftEvaluateT<B, D>>,
-    B: NotNil,
+    B: NotEnd,
 {
     type LiftEvaluate = ComposeLT<LiftEvaluateT<A, D>, LiftEvaluateT<B, D>>;
 
@@ -66,7 +55,7 @@ where
     }
 }
 
-impl<A, D> LiftEvaluate<D> for Sequence<A, Nil>
+impl<A, D> LiftEvaluate<D> for Then<A, End>
 where
     A: LiftEvaluate<D>,
 {

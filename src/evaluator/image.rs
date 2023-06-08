@@ -10,21 +10,21 @@ use t_funk::{
 };
 
 #[derive(Closure)]
-pub struct Image<D, F>(PhantomData<(D, F)>);
+pub struct Image<C, F>(PhantomData<(C, F)>);
 
-impl<D, F> Default for Image<D, F> {
+impl<C, F> Default for Image<C, F> {
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
-impl<D, F> Clone for Image<D, F> {
+impl<C, F> Clone for Image<C, F> {
     fn clone(&self) -> Self {
         Self(PhantomData)
     }
 }
 
-impl<D, F> Copy for Image<D, F> {}
+impl<C, F> Copy for Image<C, F> {}
 
 impl<D, F> Closure<Raster<D>> for Image<D, F>
 where

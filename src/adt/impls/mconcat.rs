@@ -7,9 +7,9 @@ use t_funk::{
     },
 };
 
-use crate::{Combine, Nil, Sequence, Unit};
+use crate::{Combine, Field, Input, Modify, End, Output, Then};
 
-impl Mconcat for Nil {
+impl Mconcat for End {
     type Mconcat = Self;
 
     fn mconcat(self) -> Self::Mconcat {
@@ -18,7 +18,7 @@ impl Mconcat for Nil {
 }
 
 impl_adt! {
-    impl<A, B, C> Mconcat for Unit<A> | Sequence<A, B>
+    impl<A, B, C> Mconcat for Input<A> | Field<A> | Output<A> | Modify<A> | Then<A, B>
     where
         A: Mempty,
         Self: Foldl<MappendF, MemptyT<A>>,
@@ -46,28 +46,23 @@ where
 
 #[cfg(test)]
 mod test {
+    use glam::Vec2;
     use t_funk::{
         closure::Const,
-        r#do::Done,
-        typeclass::{
-            foldable::Foldl,
-            functor::Fmap,
-            monoid::Mconcat,
-            monoid::Mempty,
-            semigroup::{MappendF, Sum},
-        },
+        collection::hlist::{Cons, Nil},
+        op_chain::Done,
+        typeclass::{functor::Fmap, monoid::Mconcat, semigroup::Sum},
     };
 
-    use crate::{shape, Isosurface, Nil, Point, Sequence, Translate};
+    use crate::{adt, Isosurface, Point, Translate};
 
     #[test]
     fn test_adt_mconcat() {
-        let adt = shape() << Translate(Const(0.0), Const(0.0)) << Point << Isosurface(0.0) >> Done;
+        let adt = adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> Done;
         let foo = adt.fmap(Const(t_funk::collection::hlist::Cons(
             Sum(1),
             t_funk::collection::hlist::Nil,
         )));
-        let baz = foo.foldl(MappendF, t_funk::collection::hlist::Nil::mempty());
-        let bar = foo.mconcat();
+        assert_eq!(foo.mconcat(), Cons(Sum(1), Cons(Sum(1), Cons(Sum(1), Nil))));
     }
 }

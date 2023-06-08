@@ -1,22 +1,22 @@
 use elysian::{
-    intersection, make_viuer, shape, subtraction, union, Circle, DistGrad, Distance, DistanceF32,
-    Done, Evaluate, Gradient, GradientF32, Invert, Isosurface, Manifold, PosDistGrad, Saturate,
-    Scale, Translate,
+    adt, intersection, make_viuer, subtraction, union, Circle, DistGrad, Distance, Done, Evaluate,
+    Gradient, Invert, Isosurface, Manifold, PosDistGrad, Saturate, Scale, Translate,
 };
+use glam::Vec2;
 use image::{Luma, Pixel, Rgb};
 use t_funk::{
-    closure::{Closure, Compose, Const},
+    closure::{Closure, Compose},
     collection::set::Get,
     function::{FormatDebugMultiline, PrintLn, ResultUnwrap, Snd},
     macros::lift,
-    r#do::tap,
+    op_chain::tap,
     typeclass::{arrow::Fanout, copointed::Copointed, functor::Fmap},
 };
 
 #[lift]
 pub fn dist_to_luma<C>(c: C) -> Luma<f32>
 where
-    C: Get<DistanceF32>,
+    C: Get<Distance<f32>>,
 {
     *Pixel::from_slice(&[c.get().fmap(Saturate).fmap(Invert).copoint()])
 }
@@ -24,66 +24,65 @@ where
 #[lift]
 pub fn dist_grad_to_rgb<C>(c: C) -> Rgb<f32>
 where
-    C: Get<(DistanceF32, GradientF32)>,
+    C: Get<(Distance<f32>, Gradient<Vec2>)>,
 {
-    let (Distance(dist), Gradient(gx, gy)) = c.get();
+    let (Distance(dist), Gradient(g)) = c.get();
 
     let c = if dist <= 0.0 {
-        [gx * 0.5 + 0.5, gy * 0.5 + 0.5, 1.0 - dist]
+        [g.x * 0.5 + 0.5, g.y * 0.5 + 0.5, 1.0 - dist]
     } else {
-        [gx * 0.5 + 0.5, gy * 0.5 + 0.5, 0.0]
+        [g.x * 0.5 + 0.5, g.y * 0.5 + 0.5, 0.0]
     };
 
     *Pixel::from_slice(&c)
 }
 
 #[lift]
-pub fn viuer<T>(t: T)
+pub fn viuer<S>(s: S)
 where
-    T: core::fmt::Debug
+    S: core::fmt::Debug
         + Clone
-        + Evaluate<DistGrad<f32>, PosDistGrad<f32>, Evaluate = PosDistGrad<f32>>,
+        + Evaluate<
+            DistGrad<f32, Vec2>,
+            PosDistGrad<Vec2, f32, Vec2>,
+            Evaluate = PosDistGrad<Vec2, f32, Vec2>,
+        >,
 {
     FormatDebugMultiline
         .compose_l(PrintLn)
         /*
         .fanout(
-            make_viuer::<Dist, PosDistGrad, PosDistGrad, DistToLuma>(48, 48)
+            make_viuer::<Dist, PosDistGrad, DistToLuma>(48, 48)
                 .compose_l(ResultUnwrap),
         )
         */
         .fanout(
-            make_viuer::<DistGrad<f32>, PosDistGrad<f32>, PosDistGrad<f32>, DistGradToRgb>(48, 48)
+            make_viuer::<DistGrad<f32, Vec2>, PosDistGrad<Vec2, f32, Vec2>, DistGradToRgb>(48, 48)
                 .compose_l(ResultUnwrap),
         )
         .compose_l(Snd)
-        .call(t);
+        .call((PosDistGrad::default(), s));
 }
 
 fn main() {
     let shape_a =
-        shape() << Translate(Const(-0.5), Const(-0.5)) << Circle(Const(1.2)) >> tap(Viuer) >> Done;
-
-    let shape_b =
-        shape() << Translate(Const(0.5), Const(0.5)) << Circle(Const(1.1)) >> tap(Viuer) >> Done;
-
-    let shape_c =
-        shape() << Translate(Const(0.0), Const(0.5)) << Circle(Const(1.3)) >> tap(Viuer) >> Done;
-
+        adt() << Translate(Vec2::new(-0.5, -0.5)) << Circle(1.2_f32) >> tap(Viuer) >> Done;
+    let shape_b = adt() << Translate(Vec2::new(0.5, 0.5)) << Circle(1.1_f32) >> tap(Viuer) >> Done;
+    let shape_c = adt() << Translate(Vec2::new(0.0, 0.5)) << Circle(1.3_f32) >> tap(Viuer) >> Done;
     let shape_d =
-        shape() << Translate(Const(0.0), Const(-0.5)) << Circle(Const(1.15)) >> tap(Viuer) >> Done;
+        adt() << Translate(Vec2::new(0.0, -0.5)) << Circle(1.15_f32) >> tap(Viuer) >> Done;
 
     let combined = intersection() << shape_a >> union() << shape_b << shape_c >> subtraction()
         << shape_d
         >> tap(Viuer)
         >> Done;
 
-    let _shape = shape()
-        << Translate(Const(0.25), Const(0.25))
-        << Scale(Const(0.5))
+    let _shape = adt()
+        << Translate(Vec2::new(0.25, 0.25))
+        << Scale(0.5_f32)
         << combined
         << Manifold
-        << Isosurface(Const(0.2))
+        << Isosurface(0.2_f32)
         >> tap(Viuer)
         >> Done;
 }

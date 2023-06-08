@@ -1,31 +1,28 @@
-use t_funk::typeclass::monoid::{Mempty, MemptyT};
+use t_funk::{
+    macros::impl_adt,
+    typeclass::monoid::{Mempty, MemptyT},
+};
 
-use crate::{Combine, Nil, Sequence, Unit};
+use crate::{Combine, Field, Input, Modify, End, Output, Then};
 
-impl Mempty for Nil {
-    type Mempty = Nil;
+impl Mempty for End {
+    type Mempty = End;
 
     fn mempty() -> Self::Mempty {
-        Nil
+        End
     }
 }
 
-impl<A, B> Mempty for Sequence<A, B> {
-    type Mempty = Nil;
+impl_adt! {
+    impl<A, B> Mempty for Input<A> | Field<A> | Output<A> | Modify<A> | Then<A, B>
+    where
+        A: Mempty,
+    {
+        type Mempty = MemptyT<A>;
 
-    fn mempty() -> Self::Mempty {
-        Nil
-    }
-}
-
-impl<A> Mempty for Unit<A>
-where
-    A: Mempty,
-{
-    type Mempty = MemptyT<A>;
-
-    fn mempty() -> Self::Mempty {
-        A::mempty()
+        fn mempty() -> Self::Mempty {
+            A::mempty()
+        }
     }
 }
 

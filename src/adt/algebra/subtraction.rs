@@ -1,9 +1,9 @@
 use t_funk::{
     macros::{functions, impl_adt, types},
-    r#do::DoUnit,
+    op_chain::OpChain,
 };
 
-use crate::{symbol::Subtraction as SubtractionS, Combine, Field, LiftAdtF, Sequence};
+use crate::{symbol::Subtraction as SubtractionS, Combine, Field, LiftAdtF, Then};
 
 #[functions]
 #[types]
@@ -13,12 +13,12 @@ pub trait Subtraction<R> {
     fn subtraction(self, rhs: R) -> Self::Subtraction;
 }
 
-pub fn subtraction() -> DoUnit<LiftAdtF, SubtractionF> {
+pub fn subtraction() -> OpChain<LiftAdtF, SubtractionF> {
     Default::default()
 }
 
 impl_adt! {
-    impl<A, B, C, R> Subtraction<R> for Field<A> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> Subtraction<R> for Field<A> | Then<A, B> | Combine<A, B, C> {
         type Subtraction = Combine<Self, R, SubtractionS>;
 
         fn subtraction(self, rhs: R) -> Self::Subtraction {

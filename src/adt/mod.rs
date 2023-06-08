@@ -35,13 +35,9 @@
 
 mod algebra;
 mod impls;
-mod shape;
-mod modify;
 
 pub use algebra::*;
 pub use impls::*;
-pub use modify::*;
-pub use shape::*;
 
 mod bounds;
 pub(crate) use bounds::*;
@@ -51,56 +47,63 @@ use t_funk::macros::{define_adt, Copointed, Pointed};
 define_adt!(
     #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Pointed, Copointed)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    pub struct Unit<T>(pub T)
+    pub struct Input<A>(pub A)
+             | Field<A>(pub A)
+             | Output<A>(pub A)
+             | Modify<A>(pub A)
+             | Then<A, B>(pub A, pub B)
              | Combine<A, B, F>(pub A, pub B, pub F)
-             | Sequence<A, B>(pub A, pub B)
-             | Nil;
+             | End;
 );
 
-pub use t_funk::r#do::Done;
+pub use t_funk::op_chain::Done;
 
 #[cfg(test)]
 mod test {
+    use glam::Vec2;
     use t_funk::{
-        closure::{Closure, Compose, Const, Curry2},
+        closure::{Closure, Compose, Curry2},
         function::PrintLn,
     };
 
     use crate::{
-        adt, intersection, shape, union, Ascii, Circle, Dist, Distance, Done, Evaluate, Get,
-        LiftCombine, LiftEvaluate, LiftParam, PosDist, Rasterize, Translate, ASCII_RAMP, modify,
+        adt, intersection, union, Ascii, Circle, Dist, Distance, Done, Evaluate, Get, LiftCombine,
+        LiftEvaluate, LiftParam, PosDist, Rasterize, Translate, ASCII_RAMP,
     };
 
     #[test]
     fn test_adt() {
-        let shape_a = shape() << Translate(Const(-0.8), Const(-0.8)) << Circle(Const(0.2)) >> Done;
-        let shape_b = shape() << Translate(Const(0.8), Const(0.8)) << Circle(Const(0.1)) >> Done;
-        let shape_c = shape() << Translate(Const(0.0), Const(0.8)) << Circle(Const(0.3)) >> Done;
-        let shape_d = shape() << Translate(Const(0.0), Const(-0.8)) << Circle(Const(0.15)) >> Done;
+        let shape_a = adt() << Translate(Vec2::new(-0.8, -0.8)) << Circle(0.2_f32) >> Done;
+        let shape_b = adt() << Translate(Vec2::new(0.8, 0.8)) << Circle(0.1_f32) >> Done;
+        let shape_c = adt() << Translate(Vec2::new(0.0, 0.8)) << Circle(0.3_f32) >> Done;
+        let shape_d = adt() << Translate(Vec2::new(0.0, -0.8)) << Circle(0.15_f32) >> Done;
 
         let combined =
             union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
 
-        let foo = adt() << combined >> modify() << Get::<Distance<f32>>::default() >> Done;
+        let foo = adt() << combined << Get::<Distance<f32>>::default() >> Done;
 
-        let _foo = Evaluate::<Dist<f32>, PosDist<f32>>::evaluate(foo, PosDist::<f32>::default());
+        let _foo = Evaluate::<Dist<f32>, PosDist<Vec2, f32>>::evaluate(
+            foo,
+            PosDist::<Vec2, f32>::default(),
+        );
 
         let _foo = LiftEvaluate::<(Distance<f32>, ())>::lift_evaluate(
             combined
-                .lift_param(PosDist::<f32>::default())
+                .lift_param(PosDist::<Vec2, f32>::default())
                 .lift_combine(),
         )
-        .call(PosDist::<f32>::default());
+        .call(PosDist::<Vec2, f32>::default());
 
-        let _foo = Rasterize::<(Distance<f32>, ()), PosDist<f32>>::default().call(combined);
+        let _foo = Rasterize::<(Distance<f32>, ())>::default().call((PosDist::default(), combined));
 
-        Rasterize::<(Distance<f32>, ()), PosDist<f32>> {
+        Rasterize::<(Distance<f32>, ())> {
             width: 32,
             height: 32,
             ..Default::default()
         }
         .compose_l(Ascii.prefix2(ASCII_RAMP))
         .compose_l(PrintLn)
-        .call(combined);
+        .call((PosDist::default(), combined));
     }
 }

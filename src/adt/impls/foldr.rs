@@ -4,9 +4,9 @@ use t_funk::{
     typeclass::foldable::{Foldr, FoldrT},
 };
 
-use crate::{Combine, Nil, Sequence, Unit};
+use crate::{Combine, Field, Input, Modify, End, Output, Then};
 
-impl<F, Z> Foldr<F, Z> for Nil {
+impl<F, Z> Foldr<F, Z> for End {
     type Foldr = Z;
 
     fn foldr(self, _: F, z: Z) -> Self::Foldr {
@@ -14,19 +14,21 @@ impl<F, Z> Foldr<F, Z> for Nil {
     }
 }
 
-impl<T, F, Z> Foldr<F, Z> for Unit<T>
-where
-    F: Closure<(T, Z)>,
-{
-    type Foldr = OutputT<F, (T, Z)>;
+impl_adt! {
+    impl<A, F, Z> Foldr<F, Z> for Input<A> | Field<A> | Output<A> | Modify<A>
+    where
+        F: Closure<(A, Z)>
+    {
+        type Foldr = OutputT<F, (A, Z)>;
 
-    fn foldr(self, f: F, z: Z) -> Self::Foldr {
-        f.call((self.0, z))
+        fn foldr(self, f: F, z: Z) -> Self::Foldr {
+            f.call((self.0, z))
+        }
     }
 }
 
 impl_adt! {
-    impl<A, B, C, F, Z> Foldr<F, Z> for Sequence<A, B> | Combine<A, B, C>
+    impl<A, B, C, F, Z> Foldr<F, Z> for Then<A, B> | Combine<A, B, C>
     where
         A: Foldr<F, Z>,
         B: Foldr<F, FoldrT<A, F, Z>>,
@@ -42,15 +44,15 @@ impl_adt! {
 
 #[cfg(test)]
 mod test {
+    use glam::Vec2;
     use t_funk::{
-        closure::Const,
         function::FormatDebug,
         macros::lift,
-        r#do::Done,
+        op_chain::Done,
         typeclass::{foldable::Foldr, functor::Fmap},
     };
 
-    use crate::{shape, Isosurface, Point, Translate};
+    use crate::{Isosurface, Point, Translate, adt};
 
     #[lift]
     fn concat(a: String, b: String) -> String {
@@ -59,12 +61,12 @@ mod test {
 
     #[test]
     fn test_adt_foldr() {
-        let adt = shape() << Translate(Const(0.0), Const(0.0)) << Point << Isosurface(0.0) >> Done;
+        let adt = adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> Done;
         let folded = adt.fmap(FormatDebug).foldr(Concat, String::default());
 
         assert_eq!(
             folded,
-            "Output(Isosurface(0.0))Field(Point)Input(Translate(Const(0.0), Const(0.0)))"
+            "Isosurface(0.0)PointTranslate(Vec2(0.0, 0.0))"
         )
     }
 }

@@ -1,9 +1,9 @@
 use t_funk::{
     macros::{functions, impl_adt, types},
-    r#do::DoUnit,
+    op_chain::OpChain,
 };
 
-use crate::{symbol::OuterBound as OuterBoundS, Combine, Field, LiftAdtF, Sequence};
+use crate::{symbol::OuterBound as OuterBoundS, Combine, Field, LiftAdtF, Then};
 
 #[functions]
 #[types]
@@ -13,12 +13,12 @@ pub trait OuterBound<R> {
     fn outer_bound(self, rhs: R) -> Self::OuterBound;
 }
 
-pub fn outer_bound() -> DoUnit<LiftAdtF, OuterBoundF> {
+pub fn outer_bound() -> OpChain<LiftAdtF, OuterBoundF> {
     Default::default()
 }
 
 impl_adt! {
-    impl<A, B, C, R> OuterBound<R> for Field<A> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> OuterBound<R> for Field<A> | Then<A, B> | Combine<A, B, C> {
         type OuterBound = Combine<Self, R, OuterBoundS>;
 
         fn outer_bound(self, rhs: R) -> Self::OuterBound {

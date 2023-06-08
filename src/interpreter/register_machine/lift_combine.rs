@@ -1,6 +1,6 @@
 use t_funk::macros::{impl_adt, types};
 
-use crate::{Combine, Field, Input, Nil, Output, Sequence, Unit};
+use crate::{Combine, Field, Input, End, Output, Then, Modify};
 
 #[types]
 pub trait LiftCombine {
@@ -10,7 +10,7 @@ pub trait LiftCombine {
 }
 
 impl_adt! {
-    impl<A, B> LiftCombine for Input<A> | Field<A> | Output<A> {
+    impl<A, B> LiftCombine for Input<A> | Field<A> | Output<A> | Modify<A> {
         type LiftCombine = Self;
 
         fn lift_combine(self) -> Self::LiftCombine {
@@ -20,7 +20,7 @@ impl_adt! {
 }
 
 impl_adt! {
-    impl<T> LiftCombine for Nil | Unit<T> {
+    impl<T> LiftCombine for End {
         type LiftCombine = Self;
 
         fn lift_combine(self) -> Self::LiftCombine {
@@ -29,15 +29,15 @@ impl_adt! {
     }
 }
 
-impl<A, B> LiftCombine for Sequence<A, B>
+impl<A, B> LiftCombine for Then<A, B>
 where
     A: LiftCombine,
     B: LiftCombine,
 {
-    type LiftCombine = Sequence<LiftCombineT<A>, LiftCombineT<B>>;
+    type LiftCombine = Then<LiftCombineT<A>, LiftCombineT<B>>;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        Sequence(self.0.lift_combine(), self.1.lift_combine())
+        Then(self.0.lift_combine(), self.1.lift_combine())
     }
 }
 

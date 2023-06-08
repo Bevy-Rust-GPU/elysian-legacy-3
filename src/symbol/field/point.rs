@@ -1,8 +1,6 @@
-use crate::{
-    Distance, DistanceF32, DomainFunction, Field, Gradient, GradientF32, LiftShape, Position,
-    PositionF32,
-};
+use crate::{Distance, DomainFunction, Field, Gradient, LiftAdt, Position};
 
+use glam::Vec2;
 use t_funk::{
     function::Function,
     macros::{arrow::Arrow, category::Category, Closure},
@@ -22,16 +20,16 @@ impl<F> Fmap<F> for Point {
     }
 }
 
-impl LiftShape for Point {
-    type LiftShape = Field<Self>;
+impl LiftAdt for Point {
+    type LiftAdt = Field<Self>;
 
-    fn lift_shape(self) -> Self::LiftShape {
+    fn lift_adt(self) -> Self::LiftAdt {
         Field(self)
     }
 }
 
-impl DomainFunction<DistanceF32> for Point {
-    type Inputs = PositionF32;
+impl DomainFunction<Distance<f32>> for Point {
+    type Inputs = Position<Vec2>;
     type Function = PointDistance;
 
     fn domain(self) -> Self::Function {
@@ -39,8 +37,8 @@ impl DomainFunction<DistanceF32> for Point {
     }
 }
 
-impl DomainFunction<GradientF32> for Point {
-    type Inputs = PositionF32;
+impl DomainFunction<Gradient<Vec2>> for Point {
+    type Inputs = Position<Vec2>;
     type Function = PointGradient;
 
     fn domain(self) -> Self::Function {
@@ -53,11 +51,11 @@ impl DomainFunction<GradientF32> for Point {
 )]
 pub struct PointDistance;
 
-impl Function<PositionF32> for PointDistance {
-    type Output = DistanceF32;
+impl Function<Position<Vec2>> for PointDistance {
+    type Output = Distance<f32>;
 
-    fn call(Position(x, y): PositionF32) -> Self::Output {
-        Distance((x * x + y * y).sqrt())
+    fn call(Position(p): Position<Vec2>) -> Self::Output {
+        Distance(p.length())
     }
 }
 
@@ -66,11 +64,10 @@ impl Function<PositionF32> for PointDistance {
 )]
 pub struct PointGradient;
 
-impl Function<PositionF32> for PointGradient {
-    type Output = GradientF32;
+impl Function<Position<Vec2>> for PointGradient {
+    type Output = Gradient<Vec2>;
 
-    fn call(Position(x, y): Position<f32>) -> Self::Output {
-        let l = (x * x + y * y).sqrt();
-        Gradient(x / l, y / l)
+    fn call(Position(p): Position<Vec2>) -> Self::Output {
+        Gradient(p.normalize())
     }
 }

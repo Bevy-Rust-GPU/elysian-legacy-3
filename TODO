@@ -102,30 +102,65 @@
 
   DONE: Implemented as t_funk::macros::lift, refactored existing impls accordingly
 
-=======================================================================================================================
+* Try to unify lifting functions so monad instance is transparent
+  * i.e. Should be able to chain from ADT -> List -> ADT
+         Should also be able to compose ADTs with a single Do function
+  
+  DONE: All ADT elements now lift in a unified manner.
+        In addition, various core rust types can now lift transparently into paramters.
 
-* Investigate Monad / Applicative instances for ADT
-  * List is monadic, so the ADT should be too
+* Finalize Semigroup / Monoid instances for ADT
 
-* Investigate Semigroup / Monoid instances for ADT
-  * Intuitive binary operation over shape subtypes is composition
-  * Intuitive binary operation over Shape wrapper is union
+  DONE: Formalized Compose impls with doctests, so Semigroup and Monoid
+        strictly offload to other classes, so are in and of themselves robust.
 
-* Investigate refactoring LiftDomain and co into a State monad impl
-  * Effectively equivalent - drags a state (i.e. context) through a chain of functions,
-    which can be lifted to operate on the state
-  * Haskell RWST transformer is of interest, if Elysian can be a Monad
-  * This is effectively model for the register machine,
-    which should be split into its own abstraction
+* Finalize Monad instance for ADT
 
-* Improve functions macro
-  * Should be able to cover all cases present in t-funk and elysian
+  DONE: ADT can freely chain to a const list representation and back
 
-* Better list abstraction for t-funk
-  * Need a unified set of interfaces that can be implemented by HList and nested tuples
-  * Ideally also regular tuples, though that may raise conflicts between approaches
+* Investigate Applicative instance for ADT
+
+  DONE: Implemented based on list instance, using Modify for Pure
+
+* Refactor * -> Sequence composition to match on compatible types
+  
+  DONE: Implemented bounds on existing traits
+
+* Investigate monad transformers
+  * Using independently-provable building blocks seems idiomatic to FP
+  * May be able to reduce explicit / arbitrary ADT into fundamental typeclasses and instances
+
+  DONE: Seems useful for extending an explicit ADT with the properties of a given monad,
+        but potentially clunky if used with primitives like Tagged as a first-class building block.
+        Explicit ADT seems preferable for the sake of readable API,
+        but a primitive building block approach has potential for IR transformations.
 
 * Replace tuple-based vectors / points with glam structs
+
+  DONE: Refactored associated wrappers to be unary, integrated glam types
+
+=======================================================================================================================
+
+* Rework Input / Field / Output as a free-standing abstraction,
+  host inside Modify when lifting to ADT
+  * Already semantically equavalent to Modify - i.e. a C -> C - just with stronger encoding
+
+* Rework rasterize, ascii, viuer as functions that operate on a context
+  * Intent is to make them part of the ADT, since rasterize takes a base context
+  * Store Raster in context and operate on it instead of simply producing it
+  * Modify(Rasterize(SHAPE_ADT)) << Modify(Ascii) << Modify(PrintLn)?
+    * Would require storing String in context to hold Ascii output
+    * Likewise with image types for Viuer
+    * Notably, this would be a separate domain-specific context in each case
+    * Allows composition, i.e. sampling the raster as a texture using the UVs of some parent shape
+      * However, this would only make sense if statically evaluating the raster or providing a pre-baked texture,
+        since evaluating the child ADT directly from the parent would produce better results.
+    * As with the existing code, this layer should be free, i.e. symbol-based
+      * Allows exotic interpretations like rasterizing into a texture,
+        then feeding it into a shader rendering a shape ADT
+        that would normally consume the rasterization as child data
+
+* Distance + Color evaluation
 
 * Simple lighting model for rendering 2D fields
   * Concrete case for use of normal and color
@@ -135,6 +170,41 @@
     Generating a series of images for ascii / viuer printing
     Generating an animated GIF for viuer printing
   * Can use a parameter function to retrieve time from context and parametrize
+  * This is higher-order operation over image-generating contexts
+    * Uses another distinct context of its own, likely containing a list / array of outputs
+
+* Investigate refactoring register machine interpreter into a State monad impl
+  * Effectively equivalent - drags a state (i.e. context) through a chain of functions,
+    which can be lifted to operate on the state
+  * May need a StateT transformer to make this ergonomic
+    * Maybe not - need to puzzle out the types involved and see what's ideal
+  * If any notable code remains after refactor,
+    it should be split into a free-standing register machine abstraction
+
+* Improve functions macro
+  * Should be able to cover all cases present in t-funk and elysian
+
+* Revisit autogenerated type suffixes
+  * FooT conflicts with the T suffix for monad transformers
+    * Perhaps better as FooR or FooO to indicate that it represents return / output
+
+* Consider extending impl_adt! to resemble match syntax
+  * pub struct Elysian {
+        Foo | Bar | Baz => {
+        } where
+            Foo: Clone,
+        Nil => {}
+    }
+  * Move existing Foo | Bar | Baz parse to the left of => and the corresponding impl to the right,
+    parse multiple blocks
+  * Unsure about where clause, needs to be per-block, but seems unergonomic
+
+* Improve lift macro to use PhantomData for handling non-bound types
+  * Still a valid Function impl, since a self receiver is not needed
+
+* Better list abstraction for t-funk
+  * Need a unified set of interfaces that can be implemented by HList and nested tuples
+  * Ideally also regular tuples, though that may raise conflicts between approaches
 
 * R&D for proxy application
   * Semantically, this is a combine operation that
@@ -194,6 +264,9 @@
                 and eases implementation for coupled cases
                 (i.e. via type alias or function call wrapping)
           * Code should be shareable between runtime and static evaluation
+
+* Investigate Alternative and MonadPlus
+  * Combine subtypes seem like they have a strong relation to these typeclasses
 
 * ADT parsing via nom
   * Opens the door to creating a specialized CLI REPL

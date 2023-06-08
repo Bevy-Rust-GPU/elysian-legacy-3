@@ -4,31 +4,31 @@ use t_funk::collection::set::{Get, Set};
 use crate::{Distance, Gradient, PosDist, Position};
 
 #[derive(Debug, Default, Copy, Clone)]
-pub struct PosDistGrad<T> {
-    pub pos_dist: PosDist<T>,
-    pub grad: Gradient<T>,
+pub struct PosDistGrad<P, D, G> {
+    pub pos_dist: PosDist<P, D>,
+    pub grad: Gradient<G>,
 }
 
-impl<T> Get<Position<T>> for PosDistGrad<T> {
-    fn get(self) -> Position<T> {
+impl<P, D, G> Get<Position<P>> for PosDistGrad<P, D, G> {
+    fn get(self) -> Position<P> {
         self.pos_dist.get()
     }
 }
 
-impl<T> Get<Distance<T>> for PosDistGrad<T> {
-    fn get(self) -> Distance<T> {
+impl<P, D, G> Get<Distance<D>> for PosDistGrad<P, D, G> {
+    fn get(self) -> Distance<D> {
         self.pos_dist.get()
     }
 }
 
-impl<T> Get<Gradient<T>> for PosDistGrad<T> {
-    fn get(self) -> Gradient<T> {
+impl<P, D, G> Get<Gradient<G>> for PosDistGrad<P, D, G> {
+    fn get(self) -> Gradient<G> {
         self.grad
     }
 }
 
-impl<T> Set<Position<T>> for PosDistGrad<T> {
-    fn set(self, t: Position<T>) -> Self {
+impl<P, D, G> Set<Position<P>> for PosDistGrad<P, D, G> {
+    fn set(self, t: Position<P>) -> Self {
         Self {
             pos_dist: self.pos_dist.set(t),
             ..self
@@ -36,8 +36,8 @@ impl<T> Set<Position<T>> for PosDistGrad<T> {
     }
 }
 
-impl<T> Set<Distance<T>> for PosDistGrad<T> {
-    fn set(self, t: Distance<T>) -> Self {
+impl<P, D, G> Set<Distance<D>> for PosDistGrad<P, D, G> {
+    fn set(self, t: Distance<D>) -> Self {
         Self {
             pos_dist: self.pos_dist.set(t),
             ..self
@@ -45,8 +45,8 @@ impl<T> Set<Distance<T>> for PosDistGrad<T> {
     }
 }
 
-impl<T> Set<Gradient<T>> for PosDistGrad<T> {
-    fn set(self, t: Gradient<T>) -> Self {
+impl<P, D, G> Set<Gradient<G>> for PosDistGrad<P, D, G> {
+    fn set(self, t: Gradient<G>) -> Self {
         Self { grad: t, ..self }
     }
 }

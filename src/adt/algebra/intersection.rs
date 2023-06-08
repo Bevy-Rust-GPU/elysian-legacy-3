@@ -1,9 +1,9 @@
 use t_funk::{
     macros::{functions, impl_adt, types},
-    r#do::DoUnit,
+    op_chain::OpChain,
 };
 
-use crate::{symbol::Intersection as IntersectionS, Combine, Field, LiftAdtF, Sequence};
+use crate::{symbol::Intersection as IntersectionS, Combine, Field, LiftAdtF, Then};
 
 #[functions]
 #[types]
@@ -13,12 +13,12 @@ pub trait Intersection<R> {
     fn intersection(self, rhs: R) -> Self::Intersection;
 }
 
-pub fn intersection() -> DoUnit<LiftAdtF, IntersectionF> {
+pub fn intersection() -> OpChain<LiftAdtF, IntersectionF> {
     Default::default()
 }
 
 impl_adt! {
-    impl<A, B, C, R> Intersection<R> for Field<A> | Sequence<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> Intersection<R> for Field<A> | Then<A, B> | Combine<A, B, C> {
         type Intersection = Combine<Self, R, IntersectionS>;
 
         fn intersection(self, rhs: R) -> Self::Intersection {

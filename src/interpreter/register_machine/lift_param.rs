@@ -1,10 +1,11 @@
+use glam::{DVec2, DVec3, DVec4, IVec2, IVec3, IVec4, UVec2, UVec3, UVec4, Vec2, Vec3, Vec4};
 use t_funk::{
     closure::{Curry2, Curry2B},
     macros::{functions, impl_adt, types},
     typeclass::functor::{Fmap, FmapT},
 };
 
-use crate::{Combine, Field, Input, Modify, Nil, Output, Sequence, Unit};
+use crate::{Combine, Field, Input, Modify, End, Output, Then};
 
 #[functions]
 #[types]
@@ -30,11 +31,39 @@ impl_adt! {
     }
 }
 
-impl<C> LiftParam<C> for Nil {
-    type LiftParam = Self;
+impl_adt! {
+    impl<C> LiftParam<C> for
+        bool
+            | u8
+            | u16
+            | u32
+            | u64
+            | i8
+            | i16
+            | i32
+            | i64
+            | f32
+            | f64
+            | String
+            | Vec2
+            | Vec3
+            | Vec4
+            | DVec2
+            | DVec3
+            | DVec4
+            | UVec2
+            | UVec3
+            | UVec4
+            | IVec2
+            | IVec3
+            | IVec4
+            | End
+    {
+        type LiftParam = Self;
 
-    fn lift_param(self, _: C) -> Self::LiftParam {
-        self
+        fn lift_param(self, _: C) -> Self::LiftParam {
+            self
+        }
     }
 }
 
@@ -50,27 +79,16 @@ where
     }
 }
 
-impl<T, C> LiftParam<C> for Unit<T>
-where
-    T: LiftParam<C>,
-{
-    type LiftParam = Unit<LiftParamT<T, C>>;
-
-    fn lift_param(self, input: C) -> Self::LiftParam {
-        Unit(self.0.lift_param(input))
-    }
-}
-
-impl<A, B, C> LiftParam<C> for Sequence<A, B>
+impl<A, B, C> LiftParam<C> for Then<A, B>
 where
     A: LiftParam<C>,
     B: LiftParam<C>,
     C: Clone,
 {
-    type LiftParam = Sequence<LiftParamT<A, C>, LiftParamT<B, C>>;
+    type LiftParam = Then<LiftParamT<A, C>, LiftParamT<B, C>>;
 
     fn lift_param(self, input: C) -> Self::LiftParam {
-        Sequence(self.0.lift_param(input.clone()), self.1.lift_param(input))
+        Then(self.0.lift_param(input.clone()), self.1.lift_param(input))
     }
 }
 

@@ -1,19 +1,19 @@
 use elysian::{
-    intersection, make_ascii, shape, union, Circle, Done, Isosurface, Manifold, Scale, Translate,
+    adt, intersection, make_ascii, union, Circle, Done, Isosurface, Manifold, Scale, Translate,
 };
-use t_funk::{closure::Const, r#do::tap};
+use glam::Vec2;
+use t_funk::op_chain::tap;
 
 fn main() {
     let ascii = || make_ascii(48, 24);
 
-    let shape_a = shape() << Translate(Const(-0.8), Const(-0.8)) << Circle(Const(0.2))
-        >> tap(ascii())
-        >> Done;
+    let shape_a =
+        adt() << Translate(Vec2::new(0.8, -0.8)) << Circle(0.2_f32) >> tap(ascii()) >> Done;
     let shape_b =
-        shape() << Translate(Const(0.8), Const(0.8)) << Circle(Const(0.1)) >> tap(ascii()) >> Done;
+        adt() << Translate(Vec2::new(0.8, 0.8)) << Circle(0.1_f32) >> tap(ascii()) >> Done;
     let shape_c =
-        shape() << Translate(Const(0.0), Const(0.8)) << Circle(Const(0.3)) >> tap(ascii()) >> Done;
-    let shape_d = shape() << Translate(Const(0.0), Const(-0.8)) << Circle(Const(0.15))
+        adt() << Translate(Vec2::new(0.0, 0.8)) << Circle(0.3_f32) >> tap(ascii()) >> Done;
+    let shape_d = adt() << Translate(Vec2::new(0.0, -0.8)) << Circle(0.15_f32)
         >> tap(ascii())
         >> Done;
 
@@ -21,11 +21,11 @@ fn main() {
         >> tap(ascii())
         >> Done;
 
-    let _shape = shape()
-        << Translate(Const(0.25), Const(0.25))
-        << Scale(Const(0.5))
+    let _shape = adt()
+        << Translate(Vec2::new(0.25, 0.25))
+        << Scale(0.5_f32)
         << combined
-        << Isosurface(Const(0.2))
+        << Isosurface(0.2_f32)
         << Manifold
         >> tap(ascii())
         >> Done;

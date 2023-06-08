@@ -1,4 +1,4 @@
 use crate::{Distance, Gradient};
 
-pub type Dist<T> = (Distance<T>, ());
-pub type DistGrad<T> = (Distance<T>, (Gradient<T>, ()));
+pub type Dist<D> = (Distance<D>, ());
+pub type DistGrad<D, G> = (Distance<D>, (Gradient<G>, ()));
