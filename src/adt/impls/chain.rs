@@ -7,10 +7,10 @@ use t_funk::{
     },
 };
 
-use crate::{Combine, Field, Input, Modify, End, Output, Then};
+use crate::{AdtEnd, Combine, Run, Then};
 
 impl_adt! {
-    impl<F, A, B, C> Chain<F> for End | Input<A> | Field<A> | Output<A> | Modify<A> | Then<A, B> | Combine<A, B, C>
+    impl<F, A, B, C> Chain<F> for AdtEnd | Run<A> | Then<A, B> | Combine<A, B, C>
     where
         Self: Fmap<F>,
         FmapT<Self, F>: Mconcat,
@@ -25,6 +25,8 @@ impl_adt! {
 
 #[cfg(test)]
 mod test {
+    use std::marker::PhantomData;
+
     use glam::Vec2;
     use t_funk::{
         collection::hlist::{Cons as HCons, Nil as HNil},
@@ -33,8 +35,8 @@ mod test {
     };
 
     use crate::{
-        adt, union, Distance, Done, Field, Get, Input, Isosurface, LiftAdtF, Modify, End, Output,
-        Point, Then, Translate,
+        adt, union, AdtEnd, ContextGet, Distance, Done, Field, Input, Isosurface, LiftAdtF, Run,
+        Output, Point, ShapeEnd, Then, Translate,
     };
 
     #[lift]
@@ -45,66 +47,60 @@ mod test {
     #[test]
     fn test_adt_monad() {
         // Destructive transform from shape w/Combine to list
-        let shape = adt() << Translate(Vec2::new(0.5, 0.5)) << Point << Isosurface(0.2) >> union()
+        let from_shape = adt() << Translate(Vec2::new(0.5, 0.5)) << Point << Isosurface(0.2)
+            >> union()
             << (adt() << Point >> Done)
-            >> adt()
-            << Get::<Distance<f32>>::default()
+            << ContextGet::<Distance<f32>>::default()
             >> Done;
 
-        let list = shape.chain(MakeList);
+        let to_list = from_shape.chain(MakeList);
 
         assert_eq!(
-            list,
+            to_list,
             HCons(
-                Translate(Vec2::new(0.5, 0.5)),
+                Input(
+                    Translate(Vec2::new(0.5, 0.5)),
+                    Field(Point, Output(Isosurface(0.2), ShapeEnd),),
+                ),
                 HCons(
-                    Point,
-                    HCons(
-                        Isosurface(0.2),
-                        HCons(Point, HCons(Get::<Distance::<f32>>::default(), HNil,),),
-                    ),
+                    Field(Point, ShapeEnd),
+                    HCons(ContextGet(PhantomData::<Distance::<f32>>), HNil),
                 ),
             )
         );
 
         // Nondestructive transform from shape w/no Combine to list and back
-        let shape = adt()
-            << Translate(Vec2::new(0.5, 0.5))
-            << Point
-            << Isosurface(0.2)
-            << Get::<Distance<f32>>::default()
+        let from_shape = adt() << Translate(Vec2::new(0.5, 0.5)) << Point << Isosurface(0.2)
+            >> adt()
+            << ContextGet::<Distance<f32>>::default()
             >> Done;
 
-        let list = shape.chain(MakeList);
+        let to_list = from_shape.chain(MakeList);
 
         assert_eq!(
-            list,
+            to_list,
             HCons(
-                Translate(Vec2::new(0.5, 0.5)),
-                HCons(
-                    Point,
-                    HCons(
-                        Isosurface(0.2),
-                        HCons(Get::<Distance::<f32>>::default(), HNil,),
-                    ),
+                Input(
+                    Translate(Vec2::new(0.5, 0.5)),
+                    Field(Point, Output(Isosurface(0.2), ShapeEnd),),
                 ),
+                HCons(ContextGet(PhantomData::<Distance<f32>>), HNil),
             )
         );
 
-        let shape = list.chain(LiftAdtF);
+        let to_shape = to_list.chain(LiftAdtF);
 
         assert_eq!(
-            shape,
+            to_shape,
             Then(
-                Input(Translate(Vec2::new(0.5, 0.5))),
-                Then(
-                    Field(Point),
-                    Then(
-                        Output(Isosurface(0.2)),
-                        Then(Modify(Get::<Distance::<f32>>::default()), End),
-                    ),
-                ),
+                Run(Input(
+                    Translate(Vec2::new(0.5, 0.5)),
+                    Field(Point, Output(Isosurface(0.2), ShapeEnd),),
+                ),),
+                Then(Run(ContextGet(PhantomData::<Distance::<f32>>)), AdtEnd,),
             )
         );
+
+        assert_eq!(from_shape, to_shape);
     }
 }

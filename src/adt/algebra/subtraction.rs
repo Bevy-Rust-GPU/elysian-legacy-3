@@ -3,7 +3,7 @@ use t_funk::{
     op_chain::OpChain,
 };
 
-use crate::{symbol::Subtraction as SubtractionS, Combine, Field, LiftAdtF, Then};
+use crate::{symbol::Subtraction as SubtractionS, Combine, LiftAdtF, Then};
 
 #[functions]
 #[types]
@@ -18,7 +18,7 @@ pub fn subtraction() -> OpChain<LiftAdtF, SubtractionF> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> Subtraction<R> for Field<A> | Then<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> Subtraction<R> for Then<A, B> | Combine<A, B, C> {
         type Subtraction = Combine<Self, R, SubtractionS>;
 
         fn subtraction(self, rhs: R) -> Self::Subtraction {

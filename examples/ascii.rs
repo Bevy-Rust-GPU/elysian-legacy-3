@@ -13,9 +13,8 @@ fn main() {
         adt() << Translate(Vec2::new(0.8, 0.8)) << Circle(0.1_f32) >> tap(ascii()) >> Done;
     let shape_c =
         adt() << Translate(Vec2::new(0.0, 0.8)) << Circle(0.3_f32) >> tap(ascii()) >> Done;
-    let shape_d = adt() << Translate(Vec2::new(0.0, -0.8)) << Circle(0.15_f32)
-        >> tap(ascii())
-        >> Done;
+    let shape_d =
+        adt() << Translate(Vec2::new(0.0, -0.8)) << Circle(0.15_f32) >> tap(ascii()) >> Done;
 
     let combined = union() << shape_a << shape_b << shape_c >> intersection() << shape_d
         >> tap(ascii())

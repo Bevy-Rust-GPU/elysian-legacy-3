@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use crate::{Distance, DomainFunction, Gradient, LiftAdt, Output};
+use crate::{Distance, DomainFunction, Gradient, LiftAdt, Output, ShapeEnd};
 use glam::Vec2;
 use t_funk::{
     closure::{Closure, Curry2},
@@ -23,10 +23,10 @@ impl<F> Fmap<F> for Manifold {
 }
 
 impl LiftAdt for Manifold {
-    type LiftAdt = Output<Self>;
+    type LiftAdt = Output<Self, ShapeEnd>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Output(self)
+        Output(self, ShapeEnd)
     }
 }
 

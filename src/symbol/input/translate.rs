@@ -1,4 +1,4 @@
-use crate::{Distance, DomainFunction, Gradient, Input, LiftAdt, Position};
+use crate::{Distance, DomainFunction, Gradient, Input, LiftAdt, Position, ShapeEnd};
 
 use glam::Vec2;
 use t_funk::{
@@ -16,10 +16,10 @@ use t_funk::{
 pub struct Translate<T>(pub T);
 
 impl<T> LiftAdt for Translate<T> {
-    type LiftAdt = Input<Self>;
+    type LiftAdt = Input<Self, ShapeEnd>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Input(self)
+        Input(self, ShapeEnd)
     }
 }
 

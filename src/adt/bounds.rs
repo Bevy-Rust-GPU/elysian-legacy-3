@@ -2,13 +2,13 @@
 
 use t_funk::macros::impl_adt;
 
-use crate::{Combine, Field, Input, Modify, Output, Then};
+use crate::{Combine, Run, Then};
 
 // Traits identifying identifying all but one ADT member
 // Used to emulate negative type bounds
 
-pub trait NotEnd {}
+pub trait NotAdtEnd {}
 
 impl_adt! {
-    impl<A, B, C> NotEnd for Input<A> | Field<A> | Output<A> | Modify<A> | Then<A, B> | Combine<A, B, C> {}
+    impl<A, B, C> NotAdtEnd for Run<A> | Then<A, B> | Combine<A, B, C> {}
 }

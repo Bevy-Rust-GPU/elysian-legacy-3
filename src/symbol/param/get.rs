@@ -1,8 +1,21 @@
-use crate::{Get, LiftParam};
+use std::marker::PhantomData;
 
-impl<T, C> LiftParam<C> for Get<T>
+use t_funk::{
+    collection::set::Get,
+    macros::phantom::{PhantomClone, PhantomCopy, PhantomDefault},
+};
+
+use crate::LiftParam;
+
+#[derive(
+    Debug, PhantomDefault, PhantomClone, PhantomCopy, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ParamGet<T>(pub PhantomData<T>);
+
+impl<T, C> LiftParam<C> for ParamGet<T>
 where
-    C: t_funk::collection::set::Get<T>,
+    C: Get<T>,
 {
     type LiftParam = T;
 

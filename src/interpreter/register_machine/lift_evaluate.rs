@@ -6,7 +6,8 @@ use t_funk::{
 };
 
 use crate::{
-    Combine, Field, Input, LiftDomains, LiftDomainsT, Modify, End, NotEnd, Output, Then,
+    AdtEnd, Combine, Field, Input, LiftDomains, LiftDomainsT, Run, NotAdtEnd, NotShapeEnd,
+    Output, ShapeEnd, Then,
 };
 
 #[functions]
@@ -18,19 +19,54 @@ pub trait LiftEvaluate<D> {
 }
 
 impl_adt! {
-    impl<A, D> LiftEvaluate<D> for Input<A> | Field<A> | Output<A>
+    impl<A, B, D> LiftEvaluate<D> for Input<A, B> | Field<A, B> | Output<A, B>
     where
         D: LiftDomains<A>,
+        B: LiftEvaluate<D>,
+        B: NotShapeEnd,
     {
-        type LiftEvaluate = LiftDomainsT<D, A>;
+        type LiftEvaluate = ComposeLT<LiftDomainsT<D, A>, LiftEvaluateT<B, D>>;
 
         fn lift_evaluate(self) -> Self::LiftEvaluate {
-            D::lift_domains(self.0)
+            D::lift_domains(self.0).compose_l(self.1.lift_evaluate())
         }
     }
 }
 
-impl<T, D> LiftEvaluate<D> for Modify<T>
+impl<A, D> LiftEvaluate<D> for Input<A, ShapeEnd>
+where
+    D: LiftDomains<A>,
+{
+    type LiftEvaluate = LiftDomainsT<D, A>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        D::lift_domains(self.0)
+    }
+}
+
+impl<A, D> LiftEvaluate<D> for Field<A, ShapeEnd>
+where
+    D: LiftDomains<A>,
+{
+    type LiftEvaluate = LiftDomainsT<D, A>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        D::lift_domains(self.0)
+    }
+}
+
+impl<A, D> LiftEvaluate<D> for Output<A, ShapeEnd>
+where
+    D: LiftDomains<A>,
+{
+    type LiftEvaluate = LiftDomainsT<D, A>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        D::lift_domains(self.0)
+    }
+}
+
+impl<T, D> LiftEvaluate<D> for Run<T>
 where
     T: LiftEvaluate<D>,
 {
@@ -46,7 +82,7 @@ where
     A: LiftEvaluate<D>,
     B: LiftEvaluate<D>,
     LiftEvaluateT<A, D>: Compose<LiftEvaluateT<B, D>>,
-    B: NotEnd,
+    B: NotAdtEnd,
 {
     type LiftEvaluate = ComposeLT<LiftEvaluateT<A, D>, LiftEvaluateT<B, D>>;
 
@@ -55,7 +91,7 @@ where
     }
 }
 
-impl<A, D> LiftEvaluate<D> for Then<A, End>
+impl<A, D> LiftEvaluate<D> for Then<A, AdtEnd>
 where
     A: LiftEvaluate<D>,
 {

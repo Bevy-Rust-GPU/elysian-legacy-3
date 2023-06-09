@@ -1,8 +1,14 @@
-use crate::{LiftParam, Set};
+use t_funk::collection::set::Set;
 
-impl<T, C> LiftParam<C> for Set<T>
+use crate::LiftParam;
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ParamSet<T>(pub T);
+
+impl<T, C> LiftParam<C> for ParamSet<T>
 where
-    C: t_funk::collection::set::Set<T>,
+    C: Set<T>,
 {
     type LiftParam = C;
 

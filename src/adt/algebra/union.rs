@@ -3,7 +3,7 @@ use t_funk::{
     op_chain::OpChain,
 };
 
-use crate::{symbol::Union as UnionS, Combine, LiftAdtF, Then, Field, Input, Output, Modify};
+use crate::{symbol::Union as UnionS, Combine, LiftAdtF, Run, Then};
 
 pub fn union() -> OpChain<LiftAdtF, UnionF> {
     Default::default()
@@ -18,7 +18,7 @@ pub trait Union<T> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> Union<R> for Input<A> | Field<A> | Output<A> | Modify<A> | Then<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> Union<R> for Run<A> | Then<A, B> | Combine<A, B, C> {
         type Union = Combine<Self, R, UnionS>;
 
         fn union(self, rhs: R) -> Self::Union {

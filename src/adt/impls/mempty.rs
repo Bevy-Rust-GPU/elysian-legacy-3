@@ -3,18 +3,18 @@ use t_funk::{
     typeclass::monoid::{Mempty, MemptyT},
 };
 
-use crate::{Combine, Field, Input, Modify, End, Output, Then};
+use crate::{AdtEnd, Combine, Run, Then};
 
-impl Mempty for End {
-    type Mempty = End;
+impl Mempty for AdtEnd {
+    type Mempty = AdtEnd;
 
     fn mempty() -> Self::Mempty {
-        End
+        AdtEnd
     }
 }
 
 impl_adt! {
-    impl<A, B> Mempty for Input<A> | Field<A> | Output<A> | Modify<A> | Then<A, B>
+    impl<A, B> Mempty for Run<A> | Then<A, B>
     where
         A: Mempty,
     {

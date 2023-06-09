@@ -139,11 +139,37 @@
 
   DONE: Refactored associated wrappers to be unary, integrated glam types
 
-=======================================================================================================================
-
 * Rework Input / Field / Output as a free-standing abstraction,
   host inside Modify when lifting to ADT
   * Already semantically equavalent to Modify - i.e. a C -> C - just with stronger encoding
+
+  DONE: Implementing double-lifting to go from symbol -> Shape -> ADT,
+        refactored composition accordingly
+
+* Investigate Alternative and MonadPlus
+  * Combine subtypes seem like they have a strong relation to these typeclasses
+
+  DONE: Useful to know about, but only useful in cases where the binary op is intuitive.
+        This would be the case for Combine if it was just <A, B>,
+        but being parametrized over an additional F prevents it.
+
+=======================================================================================================================
+
+* Refactor context lifting to be transparent
+  * Currently occurs inside LiftDomainFunctions, which is called by LiftDomains
+    * This makes it specific to shapes, when it should be specific to context modifiers
+  * Run is the intuitive place to put it, but doesn't line up with existing idioms
+    * GetContext / SetContext specifically
+      * These specialize around using the t-funk Get / Set functions directly
+    * Looked at splitting Run into Read / Write / Modify, but doesn't make sense.
+      * Read is equivalent to piping the output of Get into some function
+      * Write would have nowhere to get parameters from except the context
+    * Primary goal here is to allow general modifiers the same
+      automatic context lifting interface as shape functions,
+      rather than having to use the Get / Set traits directly
+      * In which case, reintroducing a Modify newtype as a sibling of Shape
+        may be the best solution, since the levels of wrapping are currently lopsided
+        w.r.t. open types.
 
 * Rework rasterize, ascii, viuer as functions that operate on a context
   * Intent is to make them part of the ADT, since rasterize takes a base context
@@ -264,9 +290,6 @@
                 and eases implementation for coupled cases
                 (i.e. via type alias or function call wrapping)
           * Code should be shareable between runtime and static evaluation
-
-* Investigate Alternative and MonadPlus
-  * Combine subtypes seem like they have a strong relation to these typeclasses
 
 * ADT parsing via nom
   * Opens the door to creating a specialized CLI REPL

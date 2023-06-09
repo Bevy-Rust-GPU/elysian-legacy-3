@@ -1,6 +1,6 @@
 use crate::{
     Distance, DistanceF, DistanceT, DomainF, DomainFunction, Field, FunctionT, Gradient,
-    Isosurface, LiftAdt, Point, Position,
+    Isosurface, LiftAdt, Point, Position, ShapeEnd,
 };
 
 use glam::Vec2;
@@ -17,10 +17,10 @@ use t_funk::{
 pub struct Circle<T>(pub T);
 
 impl<T> LiftAdt for Circle<T> {
-    type LiftAdt = Field<Self>;
+    type LiftAdt = Field<Self, ShapeEnd>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Field(self)
+        Field(self, ShapeEnd)
     }
 }
 

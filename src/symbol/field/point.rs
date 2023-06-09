@@ -1,4 +1,4 @@
-use crate::{Distance, DomainFunction, Field, Gradient, LiftAdt, Position};
+use crate::{Distance, DomainFunction, Field, Gradient, LiftAdt, Position, ShapeEnd};
 
 use glam::Vec2;
 use t_funk::{
@@ -21,10 +21,10 @@ impl<F> Fmap<F> for Point {
 }
 
 impl LiftAdt for Point {
-    type LiftAdt = Field<Self>;
+    type LiftAdt = Field<Self, ShapeEnd>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Field(self)
+        Field(self, ShapeEnd)
     }
 }
 

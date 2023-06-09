@@ -4,9 +4,9 @@ use t_funk::{
     typeclass::foldable::{Foldl, FoldlT},
 };
 
-use crate::{Combine, Field, Input, Modify, End, Output, Then};
+use crate::{AdtEnd, Combine, Run, Then};
 
-impl<F, Z> Foldl<F, Z> for End {
+impl<F, Z> Foldl<F, Z> for AdtEnd {
     type Foldl = Z;
 
     fn foldl(self, _: F, z: Z) -> Self::Foldl {
@@ -14,16 +14,14 @@ impl<F, Z> Foldl<F, Z> for End {
     }
 }
 
-impl_adt! {
-    impl<A, F, Z> Foldl<F, Z> for Input<A> | Field<A> | Output<A> | Modify<A>
-    where
-        F: Closure<(Z, A)>
-    {
-        type Foldl = OutputT<F, (Z, A)>;
+impl<A, F, Z> Foldl<F, Z> for Run<A>
+where
+    F: Closure<(Z, A)>,
+{
+    type Foldl = OutputT<F, (Z, A)>;
 
-        fn foldl(self, f: F, z: Z) -> Self::Foldl {
-            f.call((z, self.0))
-        }
+    fn foldl(self, f: F, z: Z) -> Self::Foldl {
+        f.call((z, self.0))
     }
 }
 
@@ -46,11 +44,11 @@ impl_adt! {
 mod test {
     use glam::Vec2;
     use t_funk::{
-        function::FormatDebug, macros::lift, op_chain::Done,
-        typeclass::foldable::Foldl, typeclass::functor::Fmap,
+        function::FormatDebug, macros::lift, op_chain::Done, typeclass::foldable::Foldl,
+        typeclass::functor::Fmap,
     };
 
-    use crate::{Isosurface, Point, Translate, adt};
+    use crate::{adt, Isosurface, Point, Translate};
 
     #[lift]
     fn concat(a: String, b: String) -> String {
@@ -59,12 +57,9 @@ mod test {
 
     #[test]
     fn test_adt_foldl() {
-        let adt = adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> Done;
+        let adt = adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> adt() >> Done;
         let folded = adt.fmap(FormatDebug).foldl(Concat, String::default());
 
-        assert_eq!(
-            folded,
-            "Translate(Vec2(0.0, 0.0))PointIsosurface(0.0)"
-        )
+        assert_eq!(folded, "Input(Translate(Vec2(0.0, 0.0)), Field(Point, Output(Isosurface(0.0), ShapeEnd)))")
     }
 }

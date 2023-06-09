@@ -81,8 +81,7 @@ fn main() {
         << Translate(Vec2::new(0.25, 0.25))
         << Scale(0.5_f32)
         << combined
-        << Manifold
-        << Isosurface(0.2_f32)
+        << Manifold << Isosurface(0.2_f32) 
         >> tap(Viuer)
         >> Done;
 }

@@ -6,10 +6,10 @@ use t_funk::{
     },
 };
 
-use crate::{Combine, Field, Input, Modify, End, Output, Then};
+use crate::{AdtEnd, Combine, Run, Then};
 
 impl_adt! {
-    impl<A, B, C, T> Mappend<T> for End | Input<A> | Field<A> | Output<A> | Modify<A> | Then<A, B> | Combine<A, B, C>
+    impl<A, B, C, T> Mappend<T> for AdtEnd | Run<A> | Then<A, B> | Combine<A, B, C>
     where
         Self: Compose<T>,
     {

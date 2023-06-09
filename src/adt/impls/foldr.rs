@@ -4,9 +4,9 @@ use t_funk::{
     typeclass::foldable::{Foldr, FoldrT},
 };
 
-use crate::{Combine, Field, Input, Modify, End, Output, Then};
+use crate::{AdtEnd, Combine, Run, Then};
 
-impl<F, Z> Foldr<F, Z> for End {
+impl<F, Z> Foldr<F, Z> for AdtEnd {
     type Foldr = Z;
 
     fn foldr(self, _: F, z: Z) -> Self::Foldr {
@@ -14,16 +14,14 @@ impl<F, Z> Foldr<F, Z> for End {
     }
 }
 
-impl_adt! {
-    impl<A, F, Z> Foldr<F, Z> for Input<A> | Field<A> | Output<A> | Modify<A>
-    where
-        F: Closure<(A, Z)>
-    {
-        type Foldr = OutputT<F, (A, Z)>;
+impl<A, F, Z> Foldr<F, Z> for Run<A>
+where
+    F: Closure<(A, Z)>,
+{
+    type Foldr = OutputT<F, (A, Z)>;
 
-        fn foldr(self, f: F, z: Z) -> Self::Foldr {
-            f.call((self.0, z))
-        }
+    fn foldr(self, f: F, z: Z) -> Self::Foldr {
+        f.call((self.0, z))
     }
 }
 
@@ -52,7 +50,7 @@ mod test {
         typeclass::{foldable::Foldr, functor::Fmap},
     };
 
-    use crate::{Isosurface, Point, Translate, adt};
+    use crate::{adt, Isosurface, Point, Translate};
 
     #[lift]
     fn concat(a: String, b: String) -> String {
@@ -61,12 +59,13 @@ mod test {
 
     #[test]
     fn test_adt_foldr() {
-        let adt = adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> Done;
+        let adt =
+            adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> adt() >> Done;
         let folded = adt.fmap(FormatDebug).foldr(Concat, String::default());
 
         assert_eq!(
             folded,
-            "Isosurface(0.0)PointTranslate(Vec2(0.0, 0.0))"
+            "Input(Translate(Vec2(0.0, 0.0)), Field(Point, Output(Isosurface(0.0), ShapeEnd)))"
         )
     }
 }

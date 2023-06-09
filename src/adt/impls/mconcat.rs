@@ -7,9 +7,9 @@ use t_funk::{
     },
 };
 
-use crate::{Combine, Field, Input, Modify, End, Output, Then};
+use crate::{AdtEnd, Combine, Run, Then};
 
-impl Mconcat for End {
+impl Mconcat for AdtEnd {
     type Mconcat = Self;
 
     fn mconcat(self) -> Self::Mconcat {
@@ -18,7 +18,7 @@ impl Mconcat for End {
 }
 
 impl_adt! {
-    impl<A, B, C> Mconcat for Input<A> | Field<A> | Output<A> | Modify<A> | Then<A, B>
+    impl<A, B, C> Mconcat for Run<A> | Then<A, B>
     where
         A: Mempty,
         Self: Foldl<MappendF, MemptyT<A>>,
@@ -63,6 +63,6 @@ mod test {
             Sum(1),
             t_funk::collection::hlist::Nil,
         )));
-        assert_eq!(foo.mconcat(), Cons(Sum(1), Cons(Sum(1), Cons(Sum(1), Nil))));
+        assert_eq!(foo.mconcat(), Cons(Sum(1), Nil));
     }
 }

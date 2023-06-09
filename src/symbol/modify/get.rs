@@ -6,15 +6,15 @@ use t_funk::{
     typeclass::functor::Fmap,
 };
 
-use crate::{LiftAdt, LiftEvaluate, Modify};
+use crate::{LiftAdt, LiftEvaluate, Run, LiftParam};
 
 #[derive(
     Debug, PhantomDefault, PhantomClone, PhantomCopy, PartialEq, Eq, PartialOrd, Ord, Hash,
 )]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Get<T>(pub PhantomData<T>);
+pub struct ContextGet<T>(pub PhantomData<T>);
 
-impl<T, F> Fmap<F> for Get<T> {
+impl<T, F> Fmap<F> for ContextGet<T> {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -22,18 +22,27 @@ impl<T, F> Fmap<F> for Get<T> {
     }
 }
 
-impl<T> LiftAdt for Get<T> {
-    type LiftAdt = Modify<Self>;
+impl<T> LiftAdt for ContextGet<T> {
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Modify(self)
+        Run(self)
     }
 }
 
-impl<T, D> LiftEvaluate<D> for Get<T> {
+impl<T, D> LiftEvaluate<D> for ContextGet<T> {
     type LiftEvaluate = GetF<T>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
         GetF::<T>::default()
+    }
+}
+
+impl<T, C> LiftParam<C> for ContextGet<T>
+{
+    type LiftParam = Self;
+
+    fn lift_param(self, _: C) -> Self::LiftParam {
+        self
     }
 }

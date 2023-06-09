@@ -4,7 +4,7 @@ use t_funk::{
     typeclass::category::ComposeF,
 };
 
-use crate::{Input, Field, Output, Modify, Combine, Then, End};
+use crate::{Run, Combine, Then, AdtEnd};
 
 #[functions]
 pub trait LiftAdt {
@@ -21,7 +21,7 @@ pub fn adt() -> OpChain<LiftAdtF, ComposeF> {
 pub type LiftAdtT<T> = <T as LiftAdt>::LiftAdt;
 
 impl_adt! {
-    impl<A, B, C> LiftAdt for End | Input<A> | Field<A> | Output<A> | Modify<A> | Then<A, B> | Combine<A, B, C> {
+    impl<A, B, C> LiftAdt for AdtEnd | Run<A> | Then<A, B> | Combine<A, B, C> {
         type LiftAdt = Self;
 
         fn lift_adt(self) -> Self::LiftAdt {

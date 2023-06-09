@@ -1,12 +1,12 @@
 use t_funk::closure::Const;
 
-use crate::{LiftAdt, LiftParam, Modify};
+use crate::{LiftAdt, LiftParam, Run};
 
 impl<T> LiftAdt for Const<T> {
-    type LiftAdt = Modify<Self>;
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Modify(self)
+        Run(self)
     }
 }
 
