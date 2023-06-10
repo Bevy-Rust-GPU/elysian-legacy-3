@@ -1,36 +1,34 @@
 use std::marker::PhantomData;
 
 use elysian::{
-    adt, intersection, union, AdtEnd, Circle, ContextRasterString, DistGrad, Done, Evaluate,
-    Isosurface, Manifold, Modify, PosDistGrad, Print, RasterToAscii, Rasterizer, Run, Scale, Then,
-    Translate, ASCII_RAMP,
+    adt, intersection, union, AdtEnd, Circle, ContextRasterString, Done, Evaluate,
+    Isosurface, Manifold, Modify, Print, RasterToAscii, Rasterizer, Run, Scale, Then,
+    Translate, ASCII_RAMP, Dist, PosDist,
 };
 use glam::Vec2;
 use t_funk::{macros::lift, op_chain::tap};
 
 fn main() {
-    pub type ShapeCtx = PosDistGrad<Vec2, f32, Vec2>;
+    pub type ShapeCtx = PosDist<Vec2, f32>;
     pub type RasterCtx = ContextRasterString<ShapeCtx, ShapeCtx>;
+    pub type Domain = Dist<f32>;
 
     #[lift]
     fn ascii<T>(t: T)
     where
         Then<
-            Run<Modify<Rasterizer<T, PosDistGrad<Vec2, f32, Vec2>>>>,
-            Then<
-                Run<Modify<RasterToAscii<11, PosDistGrad<Vec2, f32, Vec2>>>>,
-                Then<Run<Modify<Print>>, AdtEnd>,
-            >,
-        >: Evaluate<DistGrad<f32, Vec2>, RasterCtx>,
+            Run<Modify<Rasterizer<T, ShapeCtx>>>,
+            Then<Run<Modify<RasterToAscii<11, ShapeCtx>>>, Then<Run<Modify<Print>>, AdtEnd>>,
+        >: Evaluate<Domain, RasterCtx>,
     {
         let comp = adt()
-            << Rasterizer::<T, PosDistGrad<Vec2, f32, Vec2>> {
+            << Rasterizer::<T, ShapeCtx> {
                 width: 48,
                 height: 24,
                 shape: t,
                 context: Default::default(),
             }
-            << RasterToAscii(ASCII_RAMP, PhantomData::<PosDistGrad<Vec2, f32, Vec2>>)
+            << RasterToAscii(ASCII_RAMP, PhantomData::<ShapeCtx>)
             << Print
             >> Done;
 

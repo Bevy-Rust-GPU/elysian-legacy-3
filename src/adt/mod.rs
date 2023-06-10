@@ -117,9 +117,9 @@ mod test {
             >> Done;
 
         let foo = combined.lift_param(context.clone());
-        let foo = foo.lift_combine();
+        let foo = LiftCombine::<DistGrad<f32, Vec2>>::lift_combine(foo);
         let foo = LiftEvaluate::<DistGrad<f32, Vec2>>::lift_evaluate(foo);
-        let foo = foo.call(ShapeCtx::default());
+        let _foo = foo.call(ShapeCtx::default());
         //panic!("{foo:#?}");
 
         Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);

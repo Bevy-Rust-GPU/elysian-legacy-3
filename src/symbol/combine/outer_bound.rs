@@ -11,7 +11,7 @@ use crate::{Bounding, Distance, LiftCombine};
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OuterBound;
 
-impl LiftCombine for OuterBound {
+impl<D> LiftCombine<D> for OuterBound {
     type LiftCombine = Bounding<ComposeLT<SplitT<GetF<Distance<f32>>, GetF<Distance<f32>>>, Gt>>;
 
     fn lift_combine(self) -> Self::LiftCombine {

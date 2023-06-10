@@ -1,31 +1,26 @@
-use std::marker::PhantomData;
+use t_funk::closure::Closure;
 
-use t_funk::{closure::Closure, collection::set::Get};
+use crate::{Dist, LiftEvaluate, LiftEvaluateT};
 
-use crate::{Distance, LiftEvaluate, LiftEvaluateT, Pair};
-
-/// Combine two shapes using a boolean function
+/// Evaluate two shapes in full, then pick one based on the output of a binary function
+/// Primarily useful in single-domain contexts to avoid the double evaluation of PreBoolean.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Boolean<F>(pub F);
+pub struct PostBoolean<F>(pub F);
 
-/*
-/// Simplified impl for distance-only domain
-impl<F, A, B, C> Closure<(A, B, C, PhantomData<(Distance<f32>, ())>)> for Boolean<F>
+impl<F, A, B, C, FA, FB> Closure<(A, B, C, FA, FB)> for PostBoolean<F>
 where
-    A: LiftEvaluate<(Distance<f32>, ())>,
-    B: LiftEvaluate<(Distance<f32>, ())>,
-    LiftEvaluateT<A, (Distance<f32>, ())>: Closure<C, Output = C>,
-    LiftEvaluateT<B, (Distance<f32>, ())>: Closure<C, Output = C>,
-    C: Clone + Get<Distance<f32>>,
-    F: Closure<(Distance<f32>, Distance<f32>), Output = bool>,
+    C: Clone,
+    FA: Closure<C, Output = C>,
+    FB: Closure<C, Output = C>,
+    F: Closure<(C, C), Output = bool>,
 {
     type Output = C;
 
-    fn call(self, (a, b, c, _): (A, B, C, PhantomData<(Distance<f32>, ())>)) -> Self::Output {
-        let da = LiftEvaluate::<(Distance<f32>, ())>::lift_evaluate(a).call(c.clone());
-        let db = LiftEvaluate::<(Distance<f32>, ())>::lift_evaluate(b).call(c.clone());
+    fn call(self, (_, _, c, fa, fb): (A, B, C, FA, FB)) -> Self::Output {
+        let da = fa.call(c.clone());
+        let db = fb.call(c.clone());
 
-        if self.0.call((da.clone().get(), db.clone().get())) {
+        if self.0.call((da.clone(), db.clone())) {
             da
         } else {
             db
@@ -33,40 +28,19 @@ where
     }
 }
 
-/// Evaluate distance, run boolean test, then evaluate the full domain of the resulting side
-impl<F, A, B, C, D> Closure<(A, B, C, PhantomData<(Distance<f32>, D)>)> for Boolean<F>
-where
-    D: Pair,
-    A: Clone + LiftEvaluate<(Distance<f32>, ())> + LiftEvaluate<(Distance<f32>, D)>,
-    B: Clone + LiftEvaluate<(Distance<f32>, ())> + LiftEvaluate<(Distance<f32>, D)>,
-    LiftEvaluateT<A, (Distance<f32>, ())>: Closure<C, Output = C>,
-    LiftEvaluateT<B, (Distance<f32>, ())>: Closure<C, Output = C>,
-    LiftEvaluateT<A, (Distance<f32>, D)>: Closure<C, Output = C>,
-    LiftEvaluateT<B, (Distance<f32>, D)>: Closure<C, Output = C>,
-    C: Clone + Get<Distance<f32>>,
-    F: Closure<(Distance<f32>, Distance<f32>), Output = bool>,
-{
-    type Output = C;
-
-    fn call(self, (a, b, c, _): (A, B, C, PhantomData<(Distance<f32>, D)>)) -> Self::Output {
-        let da = LiftEvaluate::<(Distance<f32>, ())>::lift_evaluate(a.clone()).call(c.clone());
-        let db = LiftEvaluate::<(Distance<f32>, ())>::lift_evaluate(b.clone()).call(c.clone());
-
-        if self.0.call((da.clone().get(), db.clone().get())) {
-            LiftEvaluate::<(Distance<f32>, D)>::lift_evaluate(a).call(c)
-        } else {
-            LiftEvaluate::<(Distance<f32>, D)>::lift_evaluate(b).call(c)
-        }
-    }
-}
-*/
+/// Evaluate the Distance domain of the given shapes,
+/// and call the provided continuations based on the output of a binary function.
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PreBoolean<F>(pub F);
 
 /// Evaluate distance, run boolean test, then evaluate the full domain of the resulting side
-impl<F, A, B, C, FA, FB> Closure<(A, B, C, FA, FB)> for Boolean<F>
+impl<F, A, B, C, FA, FB> Closure<(A, B, C, FA, FB)> for PreBoolean<F>
 where
-    C: Clone + Get<Distance<f32>>,
-    A: Closure<C, Output = C>,
-    B: Closure<C, Output = C>,
+    C: Clone,
+    A: LiftEvaluate<Dist<f32>>,
+    LiftEvaluateT<A, Dist<f32>>: Closure<C, Output = C>,
+    B: LiftEvaluate<Dist<f32>>,
+    LiftEvaluateT<B, Dist<f32>>: Closure<C, Output = C>,
     F: Closure<(C, C), Output = bool>,
     FA: Closure<C, Output = C>,
     FB: Closure<C, Output = C>,
@@ -74,8 +48,8 @@ where
     type Output = C;
 
     fn call(self, (a, b, c, fa, fb): (A, B, C, FA, FB)) -> Self::Output {
-        let da = a.call(c.clone());
-        let db = b.call(c.clone());
+        let da = LiftEvaluate::<Dist<f32>>::lift_evaluate(a).call(c.clone());
+        let db = LiftEvaluate::<Dist<f32>>::lift_evaluate(b).call(c.clone());
 
         if self.0.call((da, db)) {
             fa.call(c)

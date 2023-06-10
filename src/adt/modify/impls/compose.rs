@@ -1,4 +1,4 @@
-use crate::{AdtEnd, Combine, LiftAdt, LiftAdtT, Modify, Run, Then};
+use crate::{Combine, LiftAdt, LiftAdtT, Modify, Run, Then};
 use t_funk::typeclass::category::{Compose, ComposeT};
 
 impl<A, B> Compose<Modify<B>> for Modify<A>

@@ -6,11 +6,8 @@ use elysian::{
 use glam::Vec2;
 use image::{ImageBuffer, Rgb};
 use t_funk::{
-    closure::{Closure, Compose},
-    function::{FormatDebugMultiline, PrintLn, ResultUnwrap, Snd},
     macros::lift,
     op_chain::tap,
-    typeclass::arrow::Fanout,
 };
 
 // TODO: Reimplement printing behaviour

@@ -198,20 +198,24 @@
 
  DONE: Evaluators have been factored out in favor of Modify subtypes that compose evaluable ADTs
 
-=======================================================================================================================
-
 * Formalize Combine behaviour
   * Boolean shouldn't care about any evaluation downstream of Distance
   * Instead, it should evaluate Distance, then call one of two functions
     * Downstream evaluations can be provided via EvaluateF::<D>::default().prefix(...)
+
+ DONE: Combiners now take (A, B, C, FA, FB) where A / B are distance eval closures,
+      FA / FB are full eval closures, and any composed functions (ex. Lt, Gt) are lifted to read from a context
+
+
+=======================================================================================================================
+
+* Distance + Color evaluation
 
 * Amend Combine typeclass impls
   * Foldr / Foldl / Mappend should produce a single value for each Combine,
     rather than aggregating its A / B types as per Then.
   * To wit, Combine should call F(A, B) in order to produce this single value
     * Should allow for proper behaviour, possibly open the door to ADT-based evaluation
-
-* Distance + Color evaluation
 
 * Simple lighting model for rendering 2D fields
   * Concrete case for use of normal and color

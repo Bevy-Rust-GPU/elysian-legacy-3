@@ -1,4 +1,7 @@
-use t_funk::{closure::{Closure, OutputT}, macros::{types, functions}};
+use t_funk::{
+    closure::{Closure, OutputT},
+    macros::{functions, types},
+};
 
 use crate::{LiftCombine, LiftCombineT, LiftEvaluate, LiftEvaluateT, LiftParam, LiftParamT};
 
@@ -16,11 +19,11 @@ impl<T, D, C> Evaluate<D, C> for T
 where
     C: Clone,
     T: LiftParam<C>,
-    LiftParamT<T, C>: LiftCombine,
-    LiftCombineT<LiftParamT<T, C>>: LiftEvaluate<D>,
-    LiftEvaluateT<LiftCombineT<LiftParamT<T, C>>, D>: Closure<C>,
+    LiftParamT<T, C>: LiftCombine<D>,
+    LiftCombineT<LiftParamT<T, C>, D>: LiftEvaluate<D>,
+    LiftEvaluateT<LiftCombineT<LiftParamT<T, C>, D>, D>: Closure<C>,
 {
-    type Evaluate = OutputT<LiftEvaluateT<LiftCombineT<LiftParamT<T, C>>, D>, C>;
+    type Evaluate = OutputT<LiftEvaluateT<LiftCombineT<LiftParamT<T, C>, D>, D>, C>;
 
     fn evaluate(self, input: C) -> Self::Evaluate {
         self.lift_param(input.clone())

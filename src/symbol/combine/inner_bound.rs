@@ -11,7 +11,7 @@ use crate::{Bounding, Distance, LiftCombine};
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct InnerBound;
 
-impl LiftCombine for InnerBound {
+impl<D> LiftCombine<D> for InnerBound {
     type LiftCombine = Bounding<ComposeLT<SplitT<GetF<Distance<f32>>, GetF<Distance<f32>>>, Lt>>;
 
     fn lift_combine(self) -> Self::LiftCombine {
