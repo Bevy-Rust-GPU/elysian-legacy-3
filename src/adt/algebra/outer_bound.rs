@@ -3,7 +3,7 @@ use t_funk::{
     op_chain::OpChain,
 };
 
-use crate::{symbol::OuterBound as OuterBoundS, Combine, LiftAdtF, Then};
+use crate::{symbol::OuterBound as OuterBoundS, Combine, LiftAdtF, Then, Run};
 
 #[functions]
 #[types]
@@ -18,7 +18,7 @@ pub fn outer_bound() -> OpChain<LiftAdtF, OuterBoundF> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> OuterBound<R> for Then<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> OuterBound<R> for Run<A> | Then<A, B> | Combine<A, B, C> {
         type OuterBound = Combine<Self, R, OuterBoundS>;
 
         fn outer_bound(self, rhs: R) -> Self::OuterBound {

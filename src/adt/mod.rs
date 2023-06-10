@@ -70,9 +70,12 @@ mod test {
     use glam::Vec2;
     use image::{ImageBuffer, Rgb};
 
+    use t_funk::closure::Closure;
+
     use crate::{
         adt, intersection, union, Circle, ContextRasterImage, DistGrad, DistGradToRgb, Done,
-        Evaluate, InvertGradient, PosDistGrad, RasterToImage, Rasterizer, Translate, ViuerPrinter,
+        Evaluate, InvertGradient, LiftCombine, LiftEvaluate, LiftParam, PosDistGrad, RasterToImage,
+        Rasterizer, Translate, ViuerPrinter,
     };
 
     #[test]
@@ -82,8 +85,12 @@ mod test {
         let shape_c = adt() << Translate(Vec2::new(0.0, 0.8)) << Circle(0.3_f32) >> Done;
         let shape_d = adt() << Translate(Vec2::new(0.0, -0.8)) << Circle(0.15_f32) >> Done;
 
+        /*
         let combined =
             union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
+        */
+
+        let combined = union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
 
         let flipped = adt() << combined << InvertGradient >> Done;
 
@@ -108,6 +115,12 @@ mod test {
             << Print
         */
             >> Done;
+
+        let foo = combined.lift_param(context.clone());
+        let foo = foo.lift_combine();
+        let foo = LiftEvaluate::<DistGrad<f32, Vec2>>::lift_evaluate(foo);
+        let foo = foo.call(ShapeCtx::default());
+        //panic!("{foo:#?}");
 
         Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
         //panic!("{foo:#?}");

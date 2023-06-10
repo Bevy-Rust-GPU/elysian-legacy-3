@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    closure::{CallF, Closure, Compose, ComposeLT},
+    closure::{CallF, Closure, Compose, ComposeLT, Curry2, Curry2A},
     collection::set::{LiftContext, LiftContextT},
     function::Id,
     macros::{functions, impl_adt, types},
@@ -9,9 +9,9 @@ use t_funk::{
 };
 
 use crate::{
-    interpreter::register_machine::modify_function::FunctionT, AdtEnd, Combine, Field, Input,
-    LiftDomains, LiftDomainsT, Modify, ModifyFunction, NotAdtEnd, NotShapeEnd, Output, Run,
-    ShapeEnd, Then,
+    interpreter::register_machine::modify_function::FunctionT, AdtEnd, Combine, Dist, EvaluateF,
+    Field, Input, LiftDomains, LiftDomainsT, Modify, ModifyFunction, NotAdtEnd, NotShapeEnd,
+    Output, Run, ShapeEnd, Then,
 };
 
 use super::modify_function::InputsT;
@@ -138,11 +138,28 @@ pub struct LiftEvaluateCombine<A, B, F, D>(pub A, pub B, pub F, pub PhantomData<
 
 impl<A, B, F, D, C> Closure<C> for LiftEvaluateCombine<A, B, F, D>
 where
-    F: Closure<(A, B, C, PhantomData<D>), Output = C>,
+    A: Clone + LiftEvaluate<Dist<f32>> + LiftEvaluate<D>,
+    B: Clone + LiftEvaluate<Dist<f32>> + LiftEvaluate<D>,
+    F: Closure<
+        (
+            LiftEvaluateT<A, Dist<f32>>,
+            LiftEvaluateT<B, Dist<f32>>,
+            C,
+            LiftEvaluateT<A, D>,
+            LiftEvaluateT<B, D>,
+        ),
+        Output = C,
+    >,
 {
     type Output = C;
 
     fn call(self, input: C) -> Self::Output {
-        self.2.call((self.0, self.1, input, PhantomData))
+        self.2.call((
+            LiftEvaluate::<Dist<f32>>::lift_evaluate(self.0.clone()),
+            LiftEvaluate::<Dist<f32>>::lift_evaluate(self.1.clone()),
+            input,
+            LiftEvaluate::<D>::lift_evaluate(self.0),
+            LiftEvaluate::<D>::lift_evaluate(self.1),
+        ))
     }
 }
