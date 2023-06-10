@@ -9,7 +9,7 @@ use t_funk::{
 
 impl<D, N, T> LiftDomains<T> for (D, N)
 where
-    Self: LiftDomainList<T> + FanoutSetters + ComposeSetters,
+    Self: LiftDomainsList<T> + FanoutSetters + ComposeSetters,
     LiftDomainListT<Self, T>: Closure<T>,
     FanoutSettersT<Self>: Closure<OutputT<LiftDomainListT<Self, T>, T>>,
 {
@@ -37,27 +37,27 @@ where
 /// Given a list of domain types and an ADT implementing those domains,
 /// produce a fanout structure of context-lifted domain functions
 #[types]
-pub trait LiftDomainList<T> {
+pub trait LiftDomainsList<T> {
     type LiftDomainList;
 
     fn lift_domain_list() -> Self::LiftDomainList;
 }
 
-impl<D, N, T> LiftDomainList<T> for (D, N)
+impl<D, N, T> LiftDomainsList<T> for (D, N)
 where
     T: DomainFunction<D>,
-    N: LiftDomainList<T>,
+    N: LiftDomainsList<T>,
     LiftDomainFunctionF<D>: Fanout<LiftDomainListT<N, T>>,
     N: Pair,
 {
     type LiftDomainList = FanoutT<LiftDomainFunctionF<D>, LiftDomainListT<N, T>>;
 
     fn lift_domain_list() -> Self::LiftDomainList {
-        LiftDomainFunctionF::<D>::default().fanout(<N as LiftDomainList<T>>::lift_domain_list())
+        LiftDomainFunctionF::<D>::default().fanout(<N as LiftDomainsList<T>>::lift_domain_list())
     }
 }
 
-impl<D, T> LiftDomainList<T> for (D, ())
+impl<D, T> LiftDomainsList<T> for (D, ())
 where
     T: DomainFunction<D>,
 {

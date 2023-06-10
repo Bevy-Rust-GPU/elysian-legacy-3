@@ -35,10 +35,12 @@
 
 mod algebra;
 mod impls;
+mod modify;
 mod shape;
 
 pub use algebra::*;
 pub use impls::*;
+pub use modify::*;
 pub use shape::*;
 
 mod bounds;
@@ -64,30 +66,13 @@ pub use t_funk::op_chain::Done;
 
 #[cfg(test)]
 mod test {
+
     use glam::Vec2;
-    use t_funk::{
-        closure::{Closure, Compose, ComposeLF, Curry2},
-        collection::{
-            hlist::{Cons, Nil},
-            set::LiftContextF,
-        },
-        function::{Id, PrintLn},
-        macros::lift,
-        typeclass::{
-            applicative::Apply,
-            arrow::{Fanout, FanoutF},
-            copointed::CopointF,
-            functor::{Fmap, FmapF},
-            monad::Chain,
-            monoid::{Endo, MconcatF},
-        },
-    };
+    use image::{ImageBuffer, Rgb};
 
     use crate::{
-        adt, intersection, union, AdtEnd, Ascii, Circle, Combine, ContextGet, Dist, Distance, Done,
-        Evaluate, Gradient, LiftCombine, LiftDomainFunctionF, /*LiftDomainFunctions,*/ LiftDomainsF,
-        LiftEvaluate, LiftParam, PosDist, PosDistGrad, Rasterize, Run, ShapeEnd, Then, Translate,
-        ASCII_RAMP,
+        adt, intersection, union, Circle, ContextRasterImage, DistGrad, DistGradToRgb, Done,
+        Evaluate, InvertGradient, PosDistGrad, RasterToImage, Rasterizer, Translate, ViuerPrinter,
     };
 
     #[test]
@@ -100,79 +85,39 @@ mod test {
         let combined =
             union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
 
-        /*
-        let foo = adt() << combined << ContextGet::<Distance<f32>>::default() >> Done;
+        let flipped = adt() << combined << InvertGradient >> Done;
 
-        let _foo = Evaluate::<Dist<f32>, PosDist<Vec2, f32>>::evaluate(
-            foo,
-            PosDist::<Vec2, f32>::default(),
+        pub type ShapeCtx = PosDistGrad<Vec2, f32, Vec2>;
+
+        //pub type RasterCtx = ContextRasterString<ShapeCtx, ShapeCtx>;
+        pub type RasterCtx = ContextRasterImage<ShapeCtx, ShapeCtx, Rgb<f32>, Vec<f32>>;
+
+        let context = RasterCtx::default();
+
+        let rasterizer = adt()
+            << Rasterizer::<_, PosDistGrad<Vec2, f32, Vec2>> {
+                width: 48,
+                height: 48,
+                shape: flipped,
+                ..Default::default()
+            }
+            << RasterToImage::<PosDistGrad<Vec2, f32, Vec2>, DistGradToRgb>::default()
+            << ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default()
+        /*
+            << RasterToAscii(ASCII_RAMP, PhantomData::<PosDistGrad<Vec2, f32, Vec2>>)
+            << Print
+        */
+            >> Done;
+
+        Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
+        //panic!("{foo:#?}");
+        panic!();
+
+        /*
+        Evaluate::<Dist<f32>, ContextRaster<PosDist<Vec2, f32>, PosDist<Vec2, f32>>>::evaluate(
+            rasterizer,
+            context,
         );
-        */
-
-        #[lift]
-        fn make_cons<A>(a: A) -> Cons<A, Nil> {
-            Cons(a, Nil)
-        }
-
-        #[lift]
-        fn make_cons_pair<A, B>(a: A, b: B) -> Cons<A, Cons<B, Nil>> {
-            Cons(a, Cons(b, Nil))
-        }
-
-        /*
-        // Lift parameters so functions will be valid on creation
-        let _foo = combined.lift_param(PosDist::<Vec2, f32>::default());
-
-        // Lift symbols into sets of functions
-        let _foo = _foo.fmap(FmapF.suffix2(LiftDomainFunctions::<
-            Distance<f32>,
-            LiftDomainFunctions<Gradient<Vec2>, ()>,
-        >::default()));
-
-        // Lift functions to context I/O
-        let _foo =
-            _foo.fmap(FmapF.suffix2(FmapF.suffix2(
-                LiftContextF::<PosDistGrad<Vec2, f32, Vec2>>::default(),
-            )));
-
-        // Fold sets of functions into a fan structure that takes a single context
-
-        // Apply context to fan structure to create setters
-
-        // Compose setters
-        
-        // Apply setters to create new context
-        */
-
-        /*
-        #[lift]
-        fn make_endo<A>(a: A) -> Endo<A> {
-            Endo(a)
-        }
-
-        let _foo = _foo.lift_combine();
-        */
-
-        //panic!("{_foo:#?}");
-
-        /*
-        let _foo = LiftEvaluate::<(Distance<f32>, ())>::lift_evaluate(
-            combined
-                .lift_param(PosDist::<Vec2, f32>::default())
-                .lift_combine(),
-        )
-        .call(PosDist::<Vec2, f32>::default());
-
-        let _foo = Rasterize::<(Distance<f32>, ())>::default().call((PosDist::default(), combined));
-
-        Rasterize::<(Distance<f32>, ())> {
-            width: 32,
-            height: 32,
-            ..Default::default()
-        }
-        .compose_l(Ascii.prefix2(ASCII_RAMP))
-        .compose_l(PrintLn)
-        .call((PosDist::default(), combined));
         */
     }
 }

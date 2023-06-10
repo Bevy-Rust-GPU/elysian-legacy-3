@@ -5,7 +5,7 @@ use t_funk::{
     typeclass::functor::{Fmap, FmapT},
 };
 
-use crate::{AdtEnd, Combine, Field, Input, Run, Output, ShapeEnd, Then};
+use crate::{AdtEnd, Combine, Field, Input, Modify, Output, Run, ShapeEnd, Then};
 
 #[functions]
 #[types]
@@ -38,6 +38,17 @@ impl_adt! {
                 self.1.lift_param(input)
             )
         }
+    }
+}
+
+impl<A, B> LiftParam<B> for Modify<A>
+where
+    A: Fmap<Curry2B<LiftParamF, B>>,
+{
+    type LiftParam = Modify<FmapT<A, Curry2B<LiftParamF, B>>>;
+
+    fn lift_param(self, input: B) -> Self::LiftParam {
+        Modify(self.0.fmap(LiftParamF.suffix2(input)))
     }
 }
 

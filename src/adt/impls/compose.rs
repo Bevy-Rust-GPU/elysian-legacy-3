@@ -6,7 +6,8 @@ use t_funk::{
 };
 
 use crate::{
-    AdtEnd, Combine, Field, Input, LiftAdt, LiftAdtT, NotAdtEnd, Output, Run, ShapeEnd, Then,
+    AdtEnd, Combine, Field, Input, LiftAdt, LiftAdtT, Modify, NotAdtEnd, Output, Run, ShapeEnd,
+    Then,
 };
 
 // AdtEnd is the compositional identity
@@ -192,6 +193,18 @@ where
     }
 }
 
+impl<A, C> Compose<Modify<C>> for Run<A>
+where
+    Modify<C>: LiftAdt,
+    Self: Compose<LiftAdtT<Modify<C>>>,
+{
+    type Compose = ComposeT<Self, LiftAdtT<Modify<C>>>;
+
+    fn compose(self, f: Modify<C>) -> Self::Compose {
+        self.compose(f.lift_adt())
+    }
+}
+
 impl<A> Compose<ShapeEnd> for Run<A>
 where
     ShapeEnd: LiftAdt,
@@ -204,7 +217,7 @@ where
     }
 }
 
-// Sequence
+// Then
 
 impl<A, B, C, D> Compose<Input<C, D>> for Then<A, B>
 where
@@ -238,6 +251,18 @@ where
     type Compose = ComposeT<Self, LiftAdtT<Output<C, D>>>;
 
     fn compose(self, f: Output<C, D>) -> Self::Compose {
+        self.compose(f.lift_adt())
+    }
+}
+
+impl<A, B, C> Compose<Modify<C>> for Then<A, B>
+where
+    Modify<C>: LiftAdt,
+    Self: Compose<LiftAdtT<Modify<C>>>,
+{
+    type Compose = ComposeT<Self, LiftAdtT<Modify<C>>>;
+
+    fn compose(self, f: Modify<C>) -> Self::Compose {
         self.compose(f.lift_adt())
     }
 }
@@ -292,6 +317,18 @@ where
     }
 }
 
+impl<A, B, F, C> Compose<Modify<C>> for Combine<A, B, F>
+where
+    Modify<C>: LiftAdt,
+    Self: Compose<LiftAdtT<Modify<C>>>,
+{
+    type Compose = ComposeT<Self, LiftAdtT<Modify<C>>>;
+
+    fn compose(self, f: Modify<C>) -> Self::Compose {
+        self.compose(f.lift_adt())
+    }
+}
+
 impl<A, B, F> Compose<ShapeEnd> for Combine<A, B, F>
 where
     ShapeEnd: LiftAdt,
@@ -338,6 +375,18 @@ where
     type Compose = ComposeT<Self, LiftAdtT<Output<C, D>>>;
 
     fn compose(self, f: Output<C, D>) -> Self::Compose {
+        self.compose(f.lift_adt())
+    }
+}
+
+impl<C> Compose<Modify<C>> for AdtEnd
+where
+    Modify<C>: LiftAdt,
+    Self: Compose<LiftAdtT<Modify<C>>>,
+{
+    type Compose = ComposeT<Self, LiftAdtT<Modify<C>>>;
+
+    fn compose(self, f: Modify<C>) -> Self::Compose {
         self.compose(f.lift_adt())
     }
 }

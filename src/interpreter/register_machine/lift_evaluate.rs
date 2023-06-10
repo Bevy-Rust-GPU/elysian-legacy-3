@@ -1,14 +1,20 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    closure::{Closure, Compose, ComposeLT},
+    closure::{CallF, Closure, Compose, ComposeLT},
+    collection::set::{LiftContext, LiftContextT},
+    function::Id,
     macros::{functions, impl_adt, types},
+    typeclass::arrow::{Fanout, FanoutT},
 };
 
 use crate::{
-    AdtEnd, Combine, Field, Input, LiftDomains, LiftDomainsT, Run, NotAdtEnd, NotShapeEnd,
-    Output, ShapeEnd, Then,
+    interpreter::register_machine::modify_function::FunctionT, AdtEnd, Combine, Field, Input,
+    LiftDomains, LiftDomainsT, Modify, ModifyFunction, NotAdtEnd, NotShapeEnd, Output, Run,
+    ShapeEnd, Then,
 };
+
+use super::modify_function::InputsT;
 
 #[functions]
 #[types]
@@ -66,6 +72,23 @@ where
     }
 }
 
+impl<A, D> LiftEvaluate<D> for Modify<A>
+where
+    A: ModifyFunction<D>,
+    FunctionT<A, D>: LiftContext<InputsT<A, D>>,
+    LiftContextT<FunctionT<A, D>, InputsT<A, D>>: Fanout<Id>,
+{
+    type LiftEvaluate = ComposeLT<FanoutT<LiftContextT<FunctionT<A, D>, InputsT<A, D>>, Id>, CallF>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        self.0
+            .modify_function()
+            .lift_context()
+            .fanout(Id)
+            .compose_l(CallF)
+    }
+}
+
 impl<T, D> LiftEvaluate<D> for Run<T>
 where
     T: LiftEvaluate<D>,
@@ -111,7 +134,7 @@ impl<A, B, F, D> LiftEvaluate<D> for Combine<A, B, F> {
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct LiftEvaluateCombine<A, B, F, D>(A, B, F, PhantomData<D>);
+pub struct LiftEvaluateCombine<A, B, F, D>(pub A, pub B, pub F, pub PhantomData<D>);
 
 impl<A, B, F, D, C> Closure<C> for LiftEvaluateCombine<A, B, F, D>
 where
