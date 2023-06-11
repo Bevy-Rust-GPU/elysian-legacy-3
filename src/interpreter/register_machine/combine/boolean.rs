@@ -29,11 +29,10 @@ where
 }
 
 /// Evaluate the Distance domain of the given shapes,
-/// and call the provided continuations based on the output of a binary function.
+/// and call one of the provided continuations based on the output of a binary function.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PreBoolean<F>(pub F);
 
-/// Evaluate distance, run boolean test, then evaluate the full domain of the resulting side
 impl<F, A, B, C, FA, FB> Closure<(A, B, C, FA, FB)> for PreBoolean<F>
 where
     C: Clone,

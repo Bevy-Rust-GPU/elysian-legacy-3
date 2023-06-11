@@ -33,12 +33,10 @@
 //! ]
 //!
 
-mod algebra;
 mod impls;
 mod modify;
 mod shape;
 
-pub use algebra::*;
 pub use impls::*;
 pub use modify::*;
 pub use shape::*;
@@ -68,37 +66,36 @@ pub use t_funk::op_chain::Done;
 mod test {
 
     use glam::{Vec2, Vec3};
-    use image::{ImageBuffer, Rgb, Luma};
+    use image::{ImageBuffer, Rgb};
 
     use t_funk::closure::{Closure, Const};
 
     use crate::{
-        adt, intersection, union, Circle, Color, ContextRasterImage, Set, Dist, DistColor,
-        DistColorToRgb, DistGrad, DistGradToRgb, Done, Evaluate, InvertGradient, LiftCombine,
-        LiftEvaluate, LiftParam, PosDistColor, PosDistGrad, RasterToImage, Rasterizer, Translate,
-        ViuerPrinter, DistToLuma,
+        adt, smooth_union, union, Circle, Color, ContextRasterImage, Dist, DistColorToRgb, Done, Evaluate,
+        InvertGradient, LiftCombine, LiftEvaluate, LiftParam, PosDistColor, RasterToImage,
+        Rasterizer, Set, Translate, ViuerPrinter,
     };
 
     #[test]
     fn test_adt() {
         let shape_a = adt()
-            << Translate(Vec2::new(-0.8, -0.8))
-            << Circle(0.2_f32)
+            << Translate(Vec2::new(-0.8, -0.4))
+            << Circle(0.8_f32)
             << Set(Const(Color(Vec3::X)))
             >> Done;
         let shape_b = adt()
-            << Translate(Vec2::new(0.8, 0.8))
-            << Circle(0.1_f32)
+            << Translate(Vec2::new(0.8, 0.4))
+            << Circle(0.8_f32)
             << Set(Const(Color(Vec3::Y)))
             >> Done;
         let shape_c = adt()
-            << Translate(Vec2::new(0.0, 0.8))
-            << Circle(0.3_f32)
+            << Translate(Vec2::new(0.0, 0.4))
+            << Circle(0.8_f32)
             << Set(Const(Color(Vec3::Z)))
             >> Done;
         let shape_d = adt()
-            << Translate(Vec2::new(0.0, -0.8))
-            << Circle(0.15_f32)
+            << Translate(Vec2::new(0.0, -0.4))
+            << Circle(0.8_f32)
             << Set(Const(Color(Vec3::ONE)))
             >> Done;
 
@@ -107,8 +104,7 @@ mod test {
             union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
         */
 
-        let combined =
-            union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
+        let combined = smooth_union() << shape_a << shape_b << shape_c << shape_d >> Done;
 
         let flipped = adt() << combined << InvertGradient >> Done;
 

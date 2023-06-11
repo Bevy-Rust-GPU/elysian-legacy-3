@@ -211,17 +211,33 @@
   DONE: Color can be injected for a given field without needing domain impls,
         working as a passthrough w.r.t. boolean etc.
 
+* R&D for proxy application
+  * Semantically, this is a combine operation that
+    evaluates shapes A and B, and replaces or blends
+    some subset of shape B's context into shape A's context
+  * In theory, this is a superset of distance boolean / bounding operators
+    i.e. Replacing distance in the case of regular boolean,
+         and blending it in the case of smooth boolean
+    * Could generalize Boolean to arbitrary domain types, make combine functions composable
+      * How to handle dragging the rest of the context through?
+        * Seems like an additional semantic on top of the binary op
+          i.e. whichever succeeds also brings the rest of its context
+
+ DONE: Now iterating on solutions
 
 =======================================================================================================================
 
-* Amend Combine typeclass impls
-  * Foldr / Foldl / Mappend should produce a single value for each Combine,
-    rather than aggregating its A / B types as per Then.
-  * To wit, Combine should call F(A, B) in order to produce this single value
-    * Should allow for proper behaviour, possibly open the door to ADT-based evaluation
+* Further generalization for Boolean and SmoothBoolean
+  * Combiner / blending functions should be (C, C) -> C rather than (C, C) -> bool
 
-* Simple lighting model for rendering 2D fields
-  * Concrete case for use of normal and color
+* Composability for combination functions
+  * Need to be able to define per-context-member combination strategies
+    ex. Boolean distance, lerp color with k = 0.5, always take normal from left side, etc
+  * Similar strategy to domain function composition
+    * Fanout context across lifted (C, C) -> C functions to create setters,
+      compose setters, then apply setters to context
+    * Seems like it may be generalizable in some sense,
+      though the difference in signatures necessitates abstraction
 
 * Abstract over multi-frame evaluation
   * ex:
@@ -238,6 +254,15 @@
     * Maybe not - need to puzzle out the types involved and see what's ideal
   * If any notable code remains after refactor,
     it should be split into a free-standing register machine abstraction
+
+* Amend Combine typeclass impls
+  * Foldr / Foldl / Mappend should produce a single value for each Combine,
+    rather than aggregating its A / B types as per Then.
+  * To wit, Combine should call F(A, B) in order to produce this single value
+    * Should allow for proper behaviour, possibly open the door to ADT-based evaluation
+
+* Simple lighting model for rendering 2D fields
+  * Concrete case for use of normal and color
 
 * Improve functions macro
   * Should be able to cover all cases present in t-funk and elysian
@@ -263,18 +288,6 @@
 * Better list abstraction for t-funk
   * Need a unified set of interfaces that can be implemented by HList and nested tuples
   * Ideally also regular tuples, though that may raise conflicts between approaches
-
-* R&D for proxy application
-  * Semantically, this is a combine operation that
-    evaluates shapes A and B, and replaces or blends
-    some subset of shape B's context into shape A's context
-  * In theory, this is a superset of distance boolean / bounding operators
-    i.e. Replacing distance in the case of regular boolean,
-         and blending it in the case of smooth boolean
-    * Could generalize Boolean to arbitrary domain types, make combine functions composable
-      * How to handle dragging the rest of the context through?
-        * Seems like an additional semantic on top of the binary op
-          i.e. whichever succeeds also brings the rest of its context
 
 * Haskell diagrams R&D
   * Lots of food for thought in the documentation
