@@ -1,5 +1,5 @@
 //! Evaluation context containing Position and Distance
-use t_funk::collection::set::{Get, Set};
+use t_funk::collection::set::{Get, Remove, Set};
 
 use crate::{Distance, Position};
 
@@ -31,5 +31,35 @@ impl<P, D> Set<Position<P>> for PosDist<P, D> {
 impl<P, D> Set<Distance<D>> for PosDist<P, D> {
     fn set(self, t: Distance<D>) -> Self {
         Self { dist: t, ..self }
+    }
+}
+
+impl<P, D> Remove<Distance<D>> for PosDist<P, D> {
+    type Remove = PosDist<P, ()>;
+
+    fn remove(self) -> (Self::Remove, Distance<D>) {
+        let PosDist { pos, dist } = self;
+        (
+            PosDist {
+                pos,
+                dist: Distance(()),
+            },
+            dist,
+        )
+    }
+}
+
+impl<P, D> Remove<Position<P>> for PosDist<P, D> {
+    type Remove = PosDist<(), D>;
+
+    fn remove(self) -> (Self::Remove, Position<P>) {
+        let PosDist { pos, dist } = self;
+        (
+            PosDist {
+                pos: Position(()),
+                dist,
+            },
+            pos,
+        )
     }
 }

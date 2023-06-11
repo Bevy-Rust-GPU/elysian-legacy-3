@@ -71,33 +71,27 @@ mod test {
     use t_funk::closure::{Closure, Const};
 
     use crate::{
-        adt, smooth_union, union, Circle, Color, ContextRasterImage, Dist, DistColorToRgb, Done, Evaluate,
-        InvertGradient, LiftCombine, LiftEvaluate, LiftParam, PosDistColor, RasterToImage,
-        Rasterizer, Set, Translate, ViuerPrinter,
+        adt, smooth_union, union, Circle, Color, ContextRasterImage, Dist, DistColorToRgb, Done,
+        Evaluate, InvertGradient, LiftCombine, LiftEvaluate, LiftParam, PosDistColor,
+        RasterToImage, Rasterizer, Set, Translate, ViuerPrinter,
     };
 
     #[test]
     fn test_adt() {
-        let shape_a = adt()
-            << Translate(Vec2::new(-0.8, -0.4))
-            << Circle(0.8_f32)
-            << Set(Const(Color(Vec3::X)))
-            >> Done;
-        let shape_b = adt()
-            << Translate(Vec2::new(0.8, 0.4))
-            << Circle(0.8_f32)
-            << Set(Const(Color(Vec3::Y)))
-            >> Done;
-        let shape_c = adt()
-            << Translate(Vec2::new(0.0, 0.4))
-            << Circle(0.8_f32)
-            << Set(Const(Color(Vec3::Z)))
-            >> Done;
-        let shape_d = adt()
-            << Translate(Vec2::new(0.0, -0.4))
-            << Circle(0.8_f32)
-            << Set(Const(Color(Vec3::ONE)))
-            >> Done;
+        let shape_a =
+            adt() << Translate(Vec2::new(-0.8, -0.4)) << Circle(0.8_f32) << Set(Color(Vec3::X))
+                >> Done;
+        let shape_b =
+            adt() << Translate(Vec2::new(0.8, 0.4)) << Circle(0.8_f32) << Set(Color(Vec3::Y))
+                >> Done;
+        let shape_c =
+            adt() << Translate(Vec2::new(0.0, 0.4)) << Circle(0.8_f32) << Set(Color(Vec3::Z))
+                >> Done;
+        let shape_d =
+            adt() << Translate(Vec2::new(0.0, -0.4)) << Circle(0.8_f32) << Set(Color(Vec3::ONE))
+                >> Done;
+
+        panic!("{shape_a:#?}");
 
         /*
         let combined =

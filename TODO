@@ -227,6 +227,35 @@
 
 =======================================================================================================================
 
+* Formalize wrapping operations
+  * Operations that need control before and after child evaluation,
+    or those that need a manual evaluation strategy
+    ex. Scale requires a reciprocal multiply after shape evaluation for correctness
+        Local differencing averages multiple evaluations
+  * Implement as wrapper types that sit between Run and its subtypes
+    ex. adt() << Scale(adt() << Circle(1.0) >> Done) >> Done
+        adt() << DeriveNormals {
+            shape: adt() << Circle(1.0) >> Done) >> Done,
+            k: 0.01,
+        }
+  * Scale example is challenging, since it's at odds with the Input / Field / Output model
+    * For instance, both (Scale(Input << Field) << Output) and (Input << Scale(Field << Output))
+      are algorithmically valid, but not semantically valid since Input and Output
+      aren't meant to be free-standing.
+    * This would suggest that Input / Field / Output doesn't properly model the problem
+      * Practically speaking, they're just syntax aids to try and enforce program correctness
+      * But that's not useful if they prevent some subset of correct programs
+      * Would need Run subtypes to be first-class in order for wrapping to work seamlessly
+      * May be a better idea to rely on the context to determine program correctness,
+        given that any modification of valid values is technically a correct program
+        * In this context, encoding operations in a semantically strong fashion (ex. Scale as a wrapper)
+          is the better approach, since it shifts responsibility for correctness from the execution model
+          to the EDSL model.
+      * So, start from something like PosDistGrad<Vec2, (), ()> and have the missing data inserted
+        by commands rather than existing from the start in default form
+        * Incorrect programs are prevented from compiling, as their Ctx: Get<T> bound would be unfulfilled
+        * However, this would require context lifting to occur ad-hoc during evaluation instead of as a prepass
+
 * Further generalization for Boolean and SmoothBoolean
   * Combiner / blending functions should be (C, C) -> C rather than (C, C) -> bool
 
@@ -234,7 +263,7 @@
   * Need to be able to define per-context-member combination strategies
     ex. Boolean distance, lerp color with k = 0.5, always take normal from left side, etc
   * Similar strategy to domain function composition
-    * Fanout context across lifted (C, C) -> C functions to create setters,
+    * Fanout A / B contexts across lifted (C, C) -> C functions to create setters,
       compose setters, then apply setters to context
     * Seems like it may be generalizable in some sense,
       though the difference in signatures necessitates abstraction

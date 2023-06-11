@@ -1,7 +1,8 @@
-use t_funk::macros::functions;
+use t_funk::macros::{functions, types};
 
 /// A symbol type that can produce a function corresponding to a `Domain<T>`
 #[functions]
+#[types]
 pub trait DomainFunction<T> {
     type Inputs;
     type Function;
@@ -9,5 +10,3 @@ pub trait DomainFunction<T> {
     fn domain(self) -> Self::Function;
 }
 
-pub type FunctionT<T, D> = <T as DomainFunction<D>>::Function;
-pub type InputsT<T, D> = <T as DomainFunction<D>>::Inputs;
