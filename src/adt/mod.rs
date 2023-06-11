@@ -67,34 +67,52 @@ pub use t_funk::op_chain::Done;
 #[cfg(test)]
 mod test {
 
-    use glam::Vec2;
-    use image::{ImageBuffer, Rgb};
+    use glam::{Vec2, Vec3};
+    use image::{ImageBuffer, Rgb, Luma};
 
-    use t_funk::closure::Closure;
+    use t_funk::closure::{Closure, Const};
 
     use crate::{
-        adt, intersection, union, Circle, ContextRasterImage, DistGrad, DistGradToRgb, Done,
-        Evaluate, InvertGradient, LiftCombine, LiftEvaluate, LiftParam, PosDistGrad, RasterToImage,
-        Rasterizer, Translate, ViuerPrinter,
+        adt, intersection, union, Circle, Color, ContextRasterImage, Set, Dist, DistColor,
+        DistColorToRgb, DistGrad, DistGradToRgb, Done, Evaluate, InvertGradient, LiftCombine,
+        LiftEvaluate, LiftParam, PosDistColor, PosDistGrad, RasterToImage, Rasterizer, Translate,
+        ViuerPrinter, DistToLuma,
     };
 
     #[test]
     fn test_adt() {
-        let shape_a = adt() << Translate(Vec2::new(-0.8, -0.8)) << Circle(0.2_f32) >> Done;
-        let shape_b = adt() << Translate(Vec2::new(0.8, 0.8)) << Circle(0.1_f32) >> Done;
-        let shape_c = adt() << Translate(Vec2::new(0.0, 0.8)) << Circle(0.3_f32) >> Done;
-        let shape_d = adt() << Translate(Vec2::new(0.0, -0.8)) << Circle(0.15_f32) >> Done;
+        let shape_a = adt()
+            << Translate(Vec2::new(-0.8, -0.8))
+            << Circle(0.2_f32)
+            << Set(Const(Color(Vec3::X)))
+            >> Done;
+        let shape_b = adt()
+            << Translate(Vec2::new(0.8, 0.8))
+            << Circle(0.1_f32)
+            << Set(Const(Color(Vec3::Y)))
+            >> Done;
+        let shape_c = adt()
+            << Translate(Vec2::new(0.0, 0.8))
+            << Circle(0.3_f32)
+            << Set(Const(Color(Vec3::Z)))
+            >> Done;
+        let shape_d = adt()
+            << Translate(Vec2::new(0.0, -0.8))
+            << Circle(0.15_f32)
+            << Set(Const(Color(Vec3::ONE)))
+            >> Done;
 
         /*
         let combined =
             union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
         */
 
-        let combined = union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
+        let combined =
+            union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
 
         let flipped = adt() << combined << InvertGradient >> Done;
 
-        pub type ShapeCtx = PosDistGrad<Vec2, f32, Vec2>;
+        pub type ShapeCtx = PosDistColor<Vec2, f32, Vec3>;
 
         //pub type RasterCtx = ContextRasterString<ShapeCtx, ShapeCtx>;
         pub type RasterCtx = ContextRasterImage<ShapeCtx, ShapeCtx, Rgb<f32>, Vec<f32>>;
@@ -102,13 +120,13 @@ mod test {
         let context = RasterCtx::default();
 
         let rasterizer = adt()
-            << Rasterizer::<_, PosDistGrad<Vec2, f32, Vec2>> {
+            << Rasterizer::<_, ShapeCtx> {
                 width: 48,
                 height: 48,
-                shape: flipped,
+                shape: combined,
                 ..Default::default()
             }
-            << RasterToImage::<PosDistGrad<Vec2, f32, Vec2>, DistGradToRgb>::default()
+            << RasterToImage::<ShapeCtx, DistColorToRgb>::default()
             << ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default()
         /*
             << RasterToAscii(ASCII_RAMP, PhantomData::<PosDistGrad<Vec2, f32, Vec2>>)
@@ -117,12 +135,11 @@ mod test {
             >> Done;
 
         let foo = combined.lift_param(context.clone());
-        let foo = LiftCombine::<DistGrad<f32, Vec2>>::lift_combine(foo);
-        let foo = LiftEvaluate::<DistGrad<f32, Vec2>>::lift_evaluate(foo);
-        let _foo = foo.call(ShapeCtx::default());
-        //panic!("{foo:#?}");
+        let foo = LiftCombine::<Dist<f32>>::lift_combine(foo);
+        let foo = LiftEvaluate::<Dist<f32>>::lift_evaluate(foo);
+        let foo = foo.call(ShapeCtx::default());
 
-        Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
+        Evaluate::<Dist<f32>, RasterCtx>::evaluate(rasterizer, context);
         //panic!("{foo:#?}");
         panic!();
 

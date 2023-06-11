@@ -12,9 +12,9 @@ use crate::{LiftAdt, LiftEvaluate, Run, LiftParam};
     Debug, PhantomDefault, PhantomClone, PhantomCopy, PartialEq, Eq, PartialOrd, Ord, Hash,
 )]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ContextGet<T>(pub PhantomData<T>);
+pub struct Get<T>(pub PhantomData<T>);
 
-impl<T, F> Fmap<F> for ContextGet<T> {
+impl<T, F> Fmap<F> for Get<T> {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -22,7 +22,7 @@ impl<T, F> Fmap<F> for ContextGet<T> {
     }
 }
 
-impl<T> LiftAdt for ContextGet<T> {
+impl<T> LiftAdt for Get<T> {
     type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -30,7 +30,7 @@ impl<T> LiftAdt for ContextGet<T> {
     }
 }
 
-impl<T, D> LiftEvaluate<D> for ContextGet<T> {
+impl<T, D> LiftEvaluate<D> for Get<T> {
     type LiftEvaluate = GetF<T>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
@@ -38,7 +38,7 @@ impl<T, D> LiftEvaluate<D> for ContextGet<T> {
     }
 }
 
-impl<T, C> LiftParam<C> for ContextGet<T>
+impl<T, C> LiftParam<C> for Get<T>
 {
     type LiftParam = Self;
 

@@ -9,20 +9,20 @@ use crate::{LiftAdt, LiftEvaluate, LiftParam, LiftParamT, Run};
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ContextSet<T>(pub T);
+pub struct Set<T>(pub T);
 
-impl<T, F> Fmap<F> for ContextSet<T>
+impl<T, F> Fmap<F> for Set<T>
 where
     F: Closure<T>,
 {
-    type Fmap = ContextSet<OutputT<F, T>>;
+    type Fmap = Set<OutputT<F, T>>;
 
     fn fmap(self, f: F) -> Self::Fmap {
-        ContextSet(f.call(self.0))
+        Set(f.call(self.0))
     }
 }
 
-impl<T> LiftAdt for ContextSet<T> {
+impl<T> LiftAdt for Set<T> {
     type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -30,7 +30,7 @@ impl<T> LiftAdt for ContextSet<T> {
     }
 }
 
-impl<T, D> LiftEvaluate<D> for ContextSet<T> {
+impl<T, D> LiftEvaluate<D> for Set<T> {
     type LiftEvaluate = Curry2B<SetF, T>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
@@ -38,13 +38,13 @@ impl<T, D> LiftEvaluate<D> for ContextSet<T> {
     }
 }
 
-impl<T, C> LiftParam<C> for ContextSet<T>
+impl<T, C> LiftParam<C> for Set<T>
 where
     T: LiftParam<C>,
 {
-    type LiftParam = ContextSet<LiftParamT<T, C>>;
+    type LiftParam = Set<LiftParamT<T, C>>;
 
     fn lift_param(self, input: C) -> Self::LiftParam {
-        ContextSet(self.0.lift_param(input))
+        Set(self.0.lift_param(input))
     }
 }

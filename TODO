@@ -206,10 +206,13 @@
  DONE: Combiners now take (A, B, C, FA, FB) where A / B are distance eval closures,
       FA / FB are full eval closures, and any composed functions (ex. Lt, Gt) are lifted to read from a context
 
+* Distance + Color evaluation
+  
+  DONE: Color can be injected for a given field without needing domain impls,
+        working as a passthrough w.r.t. boolean etc.
+
 
 =======================================================================================================================
-
-* Distance + Color evaluation
 
 * Amend Combine typeclass impls
   * Foldr / Foldl / Mappend should produce a single value for each Combine,

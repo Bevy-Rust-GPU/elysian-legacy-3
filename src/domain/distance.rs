@@ -7,7 +7,7 @@ use t_funk::macros::{
     applicative::Applicative, functor::Functor, monad::Monad, Copointed, Pointed,
 };
 
-use crate::{DomainF, FunctionT};
+use crate::{DomainF, FunctionT, LiftParam};
 
 // Distance domain values
 #[derive(
@@ -41,3 +41,11 @@ where
 
 pub type DistanceT<T> = FunctionT<T, Distance<f32>>;
 pub type DistanceF = DomainF<Distance<f32>>;
+
+impl<T, D> LiftParam<D> for Distance<T> {
+    type LiftParam = Self;
+
+    fn lift_param(self, _: D) -> Self::LiftParam {
+        self
+    }
+}

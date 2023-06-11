@@ -35,7 +35,7 @@ mod test {
     };
 
     use crate::{
-        adt, union, AdtEnd, ContextGet, Distance, Done, Field, Input, Isosurface, LiftAdtF, Run,
+        adt, union, AdtEnd, Get, Distance, Done, Field, Input, Isosurface, LiftAdtF, Run,
         Output, Point, ShapeEnd, Then, Translate,
     };
 
@@ -50,7 +50,7 @@ mod test {
         let from_shape = adt() << Translate(Vec2::new(0.5, 0.5)) << Point << Isosurface(0.2)
             >> union()
             << (adt() << Point >> Done)
-            << ContextGet::<Distance<f32>>::default()
+            << Get::<Distance<f32>>::default()
             >> Done;
 
         let to_list = from_shape.chain(MakeList);
@@ -64,7 +64,7 @@ mod test {
                 ),
                 HCons(
                     Field(Point, ShapeEnd),
-                    HCons(ContextGet(PhantomData::<Distance::<f32>>), HNil),
+                    HCons(Get(PhantomData::<Distance::<f32>>), HNil),
                 ),
             )
         );
@@ -72,7 +72,7 @@ mod test {
         // Nondestructive transform from shape w/no Combine to list and back
         let from_shape = adt() << Translate(Vec2::new(0.5, 0.5)) << Point << Isosurface(0.2)
             >> adt()
-            << ContextGet::<Distance<f32>>::default()
+            << Get::<Distance<f32>>::default()
             >> Done;
 
         let to_list = from_shape.chain(MakeList);
@@ -84,7 +84,7 @@ mod test {
                     Translate(Vec2::new(0.5, 0.5)),
                     Field(Point, Output(Isosurface(0.2), ShapeEnd),),
                 ),
-                HCons(ContextGet(PhantomData::<Distance<f32>>), HNil),
+                HCons(Get(PhantomData::<Distance<f32>>), HNil),
             )
         );
 
@@ -97,7 +97,7 @@ mod test {
                     Translate(Vec2::new(0.5, 0.5)),
                     Field(Point, Output(Isosurface(0.2), ShapeEnd),),
                 ),),
-                Then(Run(ContextGet(PhantomData::<Distance::<f32>>)), AdtEnd,),
+                Then(Run(Get(PhantomData::<Distance::<f32>>)), AdtEnd,),
             )
         );
 

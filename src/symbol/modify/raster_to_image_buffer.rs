@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use glam::Vec2;
-use image::{Luma, Pixel, Rgb, ImageBuffer};
+use glam::{Vec2, Vec3};
+use image::{ImageBuffer, Luma, Pixel, Rgb};
 use t_funk::{
     closure::{Closure, OutputT},
     collection::set::Get,
@@ -13,7 +13,7 @@ use t_funk::{
     typeclass::{copointed::Copointed, functor::Fmap},
 };
 
-use crate::{Distance, Gradient, Invert, LiftAdt, Modify, ModifyFunction, Raster, Saturate};
+use crate::{Color, Distance, Gradient, Invert, LiftAdt, Modify, ModifyFunction, Raster, Saturate};
 
 #[derive(
     Debug, PhantomDefault, PhantomCopy, PhantomClone, PartialEq, Eq, PartialOrd, Ord, Hash,
@@ -66,6 +66,19 @@ where
     } else {
         [g.x * 0.5 + 0.5, g.y * 0.5 + 0.5, 0.0]
     };
+
+    *Pixel::from_slice(&c)
+}
+
+#[lift]
+pub fn dist_color_to_rgb<C>(c: C) -> Rgb<f32>
+where
+    C: Get<(Distance<f32>, Color<Vec3>)>,
+{
+    let (Distance(dist), Color(c)) = c.get();
+
+    let l = (-dist).max(0.0).min(1.0);
+    let c = [c.x * l, c.y * l, c.z * l];
 
     *Pixel::from_slice(&c)
 }

@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
 use elysian::{
-    adt, intersection, union, AdtEnd, Circle, ContextRasterString, Done, Evaluate,
-    Isosurface, Manifold, Modify, Print, RasterToAscii, Rasterizer, Run, Scale, Then,
-    Translate, ASCII_RAMP, Dist, PosDist,
+    adt, intersection, union, AdtEnd, Circle, ContextRasterString, Dist, Done, Evaluate,
+    Isosurface, Manifold, Modify, PosDist, Print, RasterToAscii, Rasterizer, Run, Scale, Then,
+    Translate, ASCII_RAMP,
 };
 use glam::Vec2;
 use t_funk::{macros::lift, op_chain::tap};

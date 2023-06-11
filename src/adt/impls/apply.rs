@@ -68,13 +68,13 @@ mod test {
         typeclass::{applicative::Apply, functor::Fmap},
     };
 
-    use crate::{adt, ContextGet, Distance, Isosurface, Point, Translate};
+    use crate::{adt, Get, Distance, Isosurface, Point, Translate};
 
     #[test]
     fn test_adt_apply() {
         let shape = adt() << Translate(Vec2::new(0.5, 0.5)) << Point << Isosurface(0.2_f32)
             >> adt()
-            << ContextGet::<Distance<f32>>::default()
+            << Get::<Distance<f32>>::default()
             >> Done;
 
         let funcs = shape.fmap(Const(Mul.suffix2(2)));
