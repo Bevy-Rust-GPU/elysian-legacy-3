@@ -1,6 +1,6 @@
 use core::ops::Sub;
 
-use crate::{Distance, DomainFunction, Gradient, LiftAdt, Output, ShapeEnd};
+use crate::{Distance, EvaluateFunction, Shape, Gradient, LiftAdt};
 
 use glam::Vec2;
 use t_funk::{
@@ -16,29 +16,29 @@ use t_funk::{
 pub struct Isosurface<T>(pub T);
 
 impl<T> LiftAdt for Isosurface<T> {
-    type LiftAdt = Output<Self, ShapeEnd>;
+    type LiftAdt = Shape<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Output(self, ShapeEnd)
+        Shape(self)
     }
 }
 
-impl<T> DomainFunction<Distance<f32>> for Isosurface<T> {
+impl<T> EvaluateFunction<Distance<f32>> for Isosurface<T> {
     type Inputs = Distance<f32>;
     type Moves = ();
     type Function = Curry2B<IsosurfaceDistance, T>;
 
-    fn domain(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         IsosurfaceDistance.suffix2(self.0)
     }
 }
 
-impl<T> DomainFunction<Gradient<Vec2>> for Isosurface<T> {
+impl<T> EvaluateFunction<Gradient<Vec2>> for Isosurface<T> {
     type Inputs = ();
     type Moves = ();
     type Function = ();
 
-    fn domain(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         ()
     }
 }

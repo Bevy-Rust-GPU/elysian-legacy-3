@@ -1,7 +1,7 @@
 use glam::Vec2;
 use t_funk::{macros::lift, typeclass::functor::Fmap};
 
-use crate::{Distance, LiftAdt, Modify, ModifyFunction, Position};
+use crate::{Distance, LiftAdt, Modify, EvaluateFunction, Position};
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PositionToDistance;
@@ -22,12 +22,12 @@ impl LiftAdt for PositionToDistance {
     }
 }
 
-impl<D> ModifyFunction<D> for PositionToDistance {
+impl<D> EvaluateFunction<D> for PositionToDistance {
     type Inputs = Position<Vec2>;
     type Moves = Position<Vec2>;
     type Function = PositionToDistanceF;
 
-    fn modify_function(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         PositionToDistanceF
     }
 }

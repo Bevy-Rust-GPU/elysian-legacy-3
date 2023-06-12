@@ -1,7 +1,7 @@
 use glam::Vec2;
 use t_funk::{function::Neg, typeclass::functor::Fmap};
 
-use crate::{Gradient, LiftAdt, Modify, ModifyFunction};
+use crate::{EvaluateFunction, Gradient, LiftAdt, Modify};
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct InvertGradient;
@@ -22,12 +22,12 @@ impl LiftAdt for InvertGradient {
     }
 }
 
-impl<D> ModifyFunction<D> for InvertGradient {
+impl<D> EvaluateFunction<D> for InvertGradient {
     type Inputs = Gradient<Vec2>;
     type Moves = ();
     type Function = Neg;
 
-    fn modify_function(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         Neg
     }
 }

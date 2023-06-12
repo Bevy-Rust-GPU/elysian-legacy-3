@@ -68,7 +68,7 @@ mod test {
         typeclass::{applicative::Apply, functor::Fmap},
     };
 
-    use crate::{adt, Get, Distance, Isosurface, Point, Translate};
+    use crate::{adt, Distance, Get, Isosurface, Point, Translate};
 
     #[test]
     fn test_adt_apply() {
@@ -79,6 +79,12 @@ mod test {
 
         let funcs = shape.fmap(Const(Mul.suffix2(2)));
         let vals = funcs.apply(Cons(2, Cons(3, Nil)));
-        assert_eq!(vals, Cons(4, Cons(6, Cons(4, Cons(6, Nil)))));
+        assert_eq!(
+            vals,
+            Cons(
+                4,
+                Cons(6, Cons(4, Cons(6, Cons(4, Cons(6, Cons(4, Cons(6, Nil)))))))
+            )
+        );
     }
 }

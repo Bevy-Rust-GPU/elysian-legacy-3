@@ -1,21 +1,16 @@
-use crate::{Field, Input, Output, ShapeEnd};
-use t_funk::{
-    macros::impl_adt,
-    typeclass::{
-        category::{Compose, ComposeT},
-        semigroup::Mappend,
-    },
+use crate::Shape;
+use t_funk::typeclass::{
+    category::{Compose, ComposeT},
+    semigroup::Mappend,
 };
 
-impl_adt! {
-    impl<A, B, C> Mappend<C> for Input<A, B> | Field<A, B> | Output<A, B> | ShapeEnd
-    where
-        Self: Compose<C>
-    {
-        type Mappend = ComposeT<Self, C>;
+impl<A, B> Mappend<B> for Shape<A>
+where
+    Self: Compose<B>,
+{
+    type Mappend = ComposeT<Self, B>;
 
-        fn mappend(self, t: C) -> Self::Mappend {
-            self.compose(t)
-        }
+    fn mappend(self, t: B) -> Self::Mappend {
+        self.compose(t)
     }
 }

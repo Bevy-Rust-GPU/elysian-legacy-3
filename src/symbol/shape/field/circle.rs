@@ -1,4 +1,4 @@
-use crate::{Field, Isosurface, LiftAdt, Output, Point, ShapeEnd};
+use crate::{AdtEnd, Shape, Isosurface, LiftAdt, Point, Then};
 
 use t_funk::macros::{applicative::Applicative, functor::Functor, monad::Monad};
 
@@ -10,9 +10,9 @@ use t_funk::macros::{applicative::Applicative, functor::Functor, monad::Monad};
 pub struct Circle<T>(pub T);
 
 impl<T> LiftAdt for Circle<T> {
-    type LiftAdt = Field<Point, Output<Isosurface<T>, ShapeEnd>>;
+    type LiftAdt = Then<Shape<Point>, Then<Shape<Isosurface<T>>, AdtEnd>>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Field(Point, Output(Isosurface(self.0), ShapeEnd))
+        Then(Shape(Point), Then(Shape(Isosurface(self.0)), AdtEnd))
     }
 }

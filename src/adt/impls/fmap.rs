@@ -55,13 +55,13 @@ mod test {
     use glam::Vec2;
     use t_funk::{closure::Const, op_chain::Done, typeclass::functor::Fmap};
 
-    use crate::{adt, Isosurface, Run, Point, Translate};
+    use crate::{adt, AdtEnd, Isosurface, Point, Run, Then, Translate};
 
     #[test]
     fn test_adt_fmap() {
         let adt =
             adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> adt() >> Done;
         let mapped = adt.fmap(Const(()));
-        assert_eq!(mapped, Run(()));
+        assert_eq!(mapped, Then(Run(()), Then(Run(()), Then(Run(()), AdtEnd))));
     }
 }

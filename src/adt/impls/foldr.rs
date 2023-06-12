@@ -65,7 +65,7 @@ mod test {
 
         assert_eq!(
             folded,
-            "Input(Translate(Vec2(0.0, 0.0)), Field(Point, Output(Isosurface(0.0), ShapeEnd)))"
+            "Shape(Isosurface(0.0))Shape(Point)Shape(Translate(Vec2(0.0, 0.0)))"
         )
     }
 }

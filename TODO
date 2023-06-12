@@ -229,8 +229,6 @@
   
   DONE: All contexts can now freely morph their generic types
 
-=======================================================================================================================
-
 * Replace Shape subtypes with context move semantics
     * i.e. Context modifiers remove values from the context, then optionally replace them
     * Shape subtypes are the wrong abstraction for program correctness
@@ -265,9 +263,43 @@
                 * These seem like boolean operations - probably worth some research into the Set typeclass
                 * Seems generalizable for convenience (i.e. map function F over sets A and B to produce set C)
 
-* Factor out Input / Field / Output and elide Modify
-  * ModifyFunction and DomainFunction have identical signatures,
-    and not enough meaningful differences to justify being distinct
+  DONE: Implemented using Moves associated type to generate Remove closures
+        However, still need to implement aggregation to prevent multiple removes;
+        for now, distance impls move distance, others copy it
+
+* Refactor Input / Field / Output into a unit Shape wrapper
+  * No need to this semantic now context modifiers can move values
+
+  DONE: Shape is now a singular unit type
+
+
+* Combine ModifyFunction and DomainFunction
+  * These have identical signatures, and all specialized implementation is currently
+    managed by newtypes.
+  * Can safely merge without affecting existing composition machinery.
+
+  DONE: These have been combined into EvaluateFunction
+
+=======================================================================================================================
+
+* Elide Shape and Modify in favor of associated types on EvaluateFunction
+  * Prime difference is the lifting semantic
+    * Given a set of domains, Modify produces a single C -> C function
+    * Given a set of domains, Shape fan-composes multiple functions into a single C -> C
+    * For instance, a Modify(Set(Position(p))) creates one function that just cares about modifying position,
+      whereas a Shape(Point) creates one function per domain w/context cloning + joining
+      * Thusly, I / O modifiers like Translate would be better as Modify;
+        since their impl is the same across all domains,
+        fan-joining creates multiple identical computations, and is thus wasteful.
+    * Is there a nice way to encode these two behaviours in a single EvaluateFunction<D> trait impl?
+      * Could use an associated symbol type (or trait implementor) to specify desired behaviour
+
+* Implement remove aggregation for context move semantics
+  * Identical removes within the same set of domain functions currently conflict,
+    on account of trying to remove the same element twice.
+  * This can be solved by using the set-like properties of context types
+    to union together a to-remove context, which can then subtract itself from the
+    input context
 
 * Formalize wrapping operations
   * Operations that need control before and after child evaluation,

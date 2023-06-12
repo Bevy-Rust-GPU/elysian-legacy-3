@@ -1,6 +1,6 @@
 use std::ops::Div;
 
-use crate::{Distance, DomainFunction, Gradient, Input, LiftAdt, Position, ShapeEnd};
+use crate::{Distance, EvaluateFunction, Shape, Gradient, LiftAdt, Position};
 
 use glam::Vec2;
 use t_funk::{
@@ -16,29 +16,29 @@ use t_funk::{
 pub struct Scale<S>(pub S);
 
 impl<S> LiftAdt for Scale<S> {
-    type LiftAdt = Input<Self, ShapeEnd>;
+    type LiftAdt = Shape<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Input(self, ShapeEnd)
+        Shape(self)
     }
 }
 
-impl<S> DomainFunction<Distance<f32>> for Scale<S> {
+impl<S> EvaluateFunction<Distance<f32>> for Scale<S> {
     type Inputs = Position<Vec2>;
     type Moves = ();
     type Function = Curry2B<ScaleF, S>;
 
-    fn domain(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         ScaleF.suffix2(self.0)
     }
 }
 
-impl<S> DomainFunction<Gradient<Vec2>> for Scale<S> {
+impl<S> EvaluateFunction<Gradient<Vec2>> for Scale<S> {
     type Inputs = Position<Vec2>;
     type Moves = ();
     type Function = Curry2B<ScaleF, S>;
 
-    fn domain(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         ScaleF.suffix2(self.0)
     }
 }

@@ -60,6 +60,6 @@ mod test {
         let adt = adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> adt() >> Done;
         let folded = adt.fmap(FormatDebug).foldl(Concat, String::default());
 
-        assert_eq!(folded, "Input(Translate(Vec2(0.0, 0.0)), Field(Point, Output(Isosurface(0.0), ShapeEnd)))")
+        assert_eq!(folded, "Shape(Translate(Vec2(0.0, 0.0)))Shape(Point)Shape(Isosurface(0.0))")
     }
 }

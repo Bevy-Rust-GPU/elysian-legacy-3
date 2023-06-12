@@ -12,7 +12,7 @@ use t_funk::{
 };
 
 use crate::{
-    AsUsize, CharsToString, Distance, Index, Invert, LiftAdt, Modify, ModifyFunction, Raster,
+    AsUsize, CharsToString, Distance, Index, Invert, LiftAdt, Modify, EvaluateFunction, Raster,
     Saturate,
 };
 
@@ -35,12 +35,12 @@ impl<const N: usize, R> LiftAdt for RasterToAscii<N, R> {
     }
 }
 
-impl<const N: usize, R, D> ModifyFunction<D> for RasterToAscii<N, R> {
+impl<const N: usize, R, D> EvaluateFunction<D> for RasterToAscii<N, R> {
     type Inputs = Raster<R>;
     type Moves = ();
     type Function = Curry2A<Ascii, Ramp<N>>;
 
-    fn modify_function(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         Ascii.prefix2(self.0)
     }
 }

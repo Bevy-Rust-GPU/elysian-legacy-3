@@ -5,7 +5,7 @@ use t_funk::{
     typeclass::functor::{Fmap, FmapT},
 };
 
-use crate::{AdtEnd, Combine, Field, Input, Modify, Output, Run, ShapeEnd, Then};
+use crate::{AdtEnd, Combine, Shape, Modify, Run, Then};
 
 #[functions]
 #[types]
@@ -15,29 +15,15 @@ pub trait LiftParam<C> {
     fn lift_param(self, input: C) -> Self::LiftParam;
 }
 
-impl<C> LiftParam<C> for ShapeEnd {
-    type LiftParam = Self;
+impl<A, C> LiftParam<C> for Shape<A>
+where
+    A: Fmap<Curry2B<LiftParamF, C>>,
+    C: Clone,
+{
+    type LiftParam = Shape<FmapT<A, Curry2B<LiftParamF, C>>>;
 
-    fn lift_param(self, _: C) -> Self::LiftParam {
-        self
-    }
-}
-
-impl_adt! {
-    impl<A, B, C> LiftParam<C> for Input<A, B> | Field<A, B> | Output<A, B>
-    where
-        A: Fmap<Curry2B<LiftParamF, C>>,
-        B: LiftParam<C>,
-        C: Clone,
-    {
-        type LiftParam = This<FmapT<A, Curry2B<LiftParamF, C>>, LiftParamT<B, C>>;
-
-        fn lift_param(self, input: C) -> Self::LiftParam {
-            This(
-                self.0.fmap(LiftParamF.suffix2(input.clone())),
-                self.1.lift_param(input)
-            )
-        }
+    fn lift_param(self, input: C) -> Self::LiftParam {
+        Shape(self.0.fmap(LiftParamF.suffix2(input.clone())))
     }
 }
 

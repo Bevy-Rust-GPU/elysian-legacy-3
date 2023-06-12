@@ -25,8 +25,6 @@ impl_adt! {
 
 #[cfg(test)]
 mod test {
-    use std::marker::PhantomData;
-
     use glam::Vec2;
     use t_funk::{
         collection::hlist::{Cons as HCons, Nil as HNil},
@@ -35,8 +33,8 @@ mod test {
     };
 
     use crate::{
-        adt, union, AdtEnd, Get, Distance, Done, Field, Input, Isosurface, LiftAdtF, Run,
-        Output, Point, ShapeEnd, Then, Translate,
+        adt, union, AdtEnd, Distance, Done, Shape, Get, Isosurface, LiftAdtF, Point, Run, Then,
+        Translate,
     };
 
     #[lift]
@@ -58,13 +56,13 @@ mod test {
         assert_eq!(
             to_list,
             HCons(
-                Input(
-                    Translate(Vec2::new(0.5, 0.5)),
-                    Field(Point, Output(Isosurface(0.2), ShapeEnd),),
-                ),
+                Shape(Translate(Vec2::new(0.5, 0.5))),
                 HCons(
-                    Field(Point, ShapeEnd),
-                    HCons(Get(PhantomData::<Distance::<f32>>), HNil),
+                    Shape(Point),
+                    HCons(
+                        Shape(Isosurface(0.2)),
+                        HCons(Shape(Point), HCons(Get::<Distance<f32>>::default(), HNil)),
+                    ),
                 ),
             )
         );
@@ -80,11 +78,14 @@ mod test {
         assert_eq!(
             to_list,
             HCons(
-                Input(
-                    Translate(Vec2::new(0.5, 0.5)),
-                    Field(Point, Output(Isosurface(0.2), ShapeEnd),),
+                Shape(Translate(Vec2::new(0.5, 0.5))),
+                HCons(
+                    Shape(Point),
+                    HCons(
+                        Shape(Isosurface(0.2)),
+                        HCons(Get::<Distance<f32>>::default(), HNil),
+                    ),
                 ),
-                HCons(Get(PhantomData::<Distance<f32>>), HNil),
             )
         );
 
@@ -93,11 +94,14 @@ mod test {
         assert_eq!(
             to_shape,
             Then(
-                Run(Input(
-                    Translate(Vec2::new(0.5, 0.5)),
-                    Field(Point, Output(Isosurface(0.2), ShapeEnd),),
-                ),),
-                Then(Run(Get(PhantomData::<Distance::<f32>>)), AdtEnd,),
+                Run(Shape(Translate(Vec2::new(0.5, 0.5)))),
+                Then(
+                    Run(Shape(Point)),
+                    Then(
+                        Run(Shape(Isosurface(0.2))),
+                        Then(Run(Get::<Distance<f32>>::default()), AdtEnd),
+                    ),
+                ),
             )
         );
 

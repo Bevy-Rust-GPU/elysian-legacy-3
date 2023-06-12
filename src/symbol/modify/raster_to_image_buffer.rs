@@ -13,7 +13,7 @@ use t_funk::{
     typeclass::{copointed::Copointed, functor::Fmap},
 };
 
-use crate::{Color, Distance, Gradient, Invert, LiftAdt, Modify, ModifyFunction, Raster, Saturate};
+use crate::{Color, Distance, Gradient, Invert, LiftAdt, Modify, EvaluateFunction, Raster, Saturate};
 
 #[derive(
     Debug, PhantomDefault, PhantomCopy, PhantomClone, PartialEq, Eq, PartialOrd, Ord, Hash,
@@ -36,12 +36,12 @@ impl<R, F> LiftAdt for RasterToImage<R, F> {
     }
 }
 
-impl<R, F, D> ModifyFunction<D> for RasterToImage<R, F> {
+impl<R, F, D> EvaluateFunction<D> for RasterToImage<R, F> {
     type Inputs = Raster<R>;
     type Moves = ();
     type Function = Image<R, F>;
 
-    fn modify_function(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         Image(self.0)
     }
 }

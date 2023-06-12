@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use crate::{Distance, DomainFunction, Gradient, LiftAdt, Output, ShapeEnd};
+use crate::{Distance, EvaluateFunction, Shape, Gradient, LiftAdt};
 use glam::Vec2;
 use t_funk::{function::Abs, macros::lift, typeclass::functor::Fmap};
 
@@ -18,29 +18,29 @@ impl<F> Fmap<F> for Manifold {
 }
 
 impl LiftAdt for Manifold {
-    type LiftAdt = Output<Self, ShapeEnd>;
+    type LiftAdt = Shape<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Output(self, ShapeEnd)
+        Shape(self)
     }
 }
 
-impl DomainFunction<Distance<f32>> for Manifold {
+impl EvaluateFunction<Distance<f32>> for Manifold {
     type Inputs = Distance<f32>;
     type Moves = ();
     type Function = ManifoldDistance;
 
-    fn domain(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         ManifoldDistance
     }
 }
 
-impl DomainFunction<Gradient<Vec2>> for Manifold {
+impl EvaluateFunction<Gradient<Vec2>> for Manifold {
     type Inputs = (Distance<f32>, Gradient<Vec2>);
     type Moves = ();
     type Function = ManifoldGradient;
 
-    fn domain(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         ManifoldGradient
     }
 }

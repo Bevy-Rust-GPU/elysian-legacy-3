@@ -18,7 +18,7 @@ impl Mconcat for AdtEnd {
 }
 
 impl_adt! {
-    impl<A, B, C> Mconcat for Run<A> | Then<A, B>
+    impl<A, B> Mconcat for Run<A> | Then<A, B>
     where
         A: Mempty,
         Self: Foldl<MappendF, MemptyT<A>>,
@@ -63,6 +63,9 @@ mod test {
             Sum(1),
             t_funk::collection::hlist::Nil,
         )));
-        assert_eq!(foo.mconcat(), Cons(Sum(1), Nil));
+        assert_eq!(
+            foo.mconcat(),
+            Cons(Sum(1), Cons(Sum(1), Cons(Sum(1), Nil),),)
+        );
     }
 }

@@ -1,13 +1,11 @@
-use t_funk::{macros::impl_adt, typeclass::monoid::Mempty};
+use t_funk::typeclass::monoid::Mempty;
 
-use crate::{Field, Input, Output, ShapeEnd};
+use crate::{AdtEnd, Shape};
 
-impl_adt! {
-    impl<A, B> Mempty for Input<A, B> | Field<A, B> | Output<A, B> | ShapeEnd {
-        type Mempty = ShapeEnd;
+impl<A> Mempty for Shape<A> {
+    type Mempty = AdtEnd;
 
-        fn mempty() -> Self::Mempty {
-            ShapeEnd
-        }
+    fn mempty() -> Self::Mempty {
+        AdtEnd
     }
 }

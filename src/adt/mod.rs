@@ -68,17 +68,13 @@ mod test {
     use glam::{Vec2, Vec3};
     use image::{ImageBuffer, Rgb};
 
-    use t_funk::{
-        closure::{CallF, Closure, Compose, Const},
-        collection::set::{DropF, LiftContext},
-        typeclass::arrow::Fanout,
-    };
+    use t_funk::closure::Closure;
 
     use crate::{
-        adt, smooth_union, union, Circle, Color, Context, ContextRasterImage, Dist, DistColorToRgb,
-        Distance, Done, Evaluate, InvertGradient, Isosurface, LiftCombine, LiftEvaluate, LiftParam,
-        ModifyFunction, MovesT, Point, PosDist, PosDistColor, Position, PositionToDistance, Raster,
-        RasterToImage, Rasterizer, Set, Translate, ViuerPrinter,
+        adt, smooth_union, Color, Context, ContextRasterImage, Dist, DistColorToRgb, Distance,
+        Done, Evaluate, InvertGradient, Isosurface, LiftCombine, LiftEvaluate, LiftParam, Point,
+        PosDist, PosDistColor, Position, PositionToDistance, Raster, RasterToImage, Rasterizer,
+        Set, Translate, ViuerPrinter,
     };
 
     #[test]
@@ -126,25 +122,26 @@ mod test {
 
         let flipped = adt() << combined << InvertGradient >> Done;
 
-        pub type ShapeCtx = PosDistColor<Position<Vec2>, Distance<f32>, Color<Vec3>>;
+        pub type ShapeCtxFrom = PosDistColor<Position<Vec2>, (), Color<Vec3>>;
+        pub type ShapeCtxTo = PosDistColor<(), Distance<f32>, Color<Vec3>>;
 
         //pub type RasterCtx = ContextRasterString<ShapeCtx, ShapeCtx>;
         pub type RasterCtx = ContextRasterImage<
-            Context<ShapeCtx>,
-            Raster<ShapeCtx>,
+            Context<ShapeCtxFrom>,
+            Raster<ShapeCtxFrom>,
             ImageBuffer<Rgb<f32>, Vec<f32>>,
         >;
 
         let context = RasterCtx::default();
 
         let rasterizer = adt()
-            << Rasterizer::<_, ShapeCtx> {
+            << Rasterizer::<_, ShapeCtxFrom> {
                 width: 48,
                 height: 48,
                 shape: combined,
                 ..Default::default()
             }
-            << RasterToImage::<PosDistColor<(), Distance<f32>, Color<Vec3>>, DistColorToRgb>::default()
+            << RasterToImage::<ShapeCtxTo, DistColorToRgb>::default()
             << ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default()
         /*
             << RasterToAscii(ASCII_RAMP, PhantomData::<PosDistGrad<Vec2, f32, Vec2>>)

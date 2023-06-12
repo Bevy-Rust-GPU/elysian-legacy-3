@@ -3,18 +3,17 @@ use std::marker::PhantomData;
 use t_funk::{
     closure::{CallF, Closure, Compose, ComposeLT, OutputT},
     collection::set::{DropF, LiftContext, LiftContextT},
-    macros::{functions, impl_adt, types},
+    macros::{functions, types},
     typeclass::arrow::{Fanout, FanoutT},
 };
 
 use crate::{
-    interpreter::register_machine::modify_function::FunctionT,
-    interpreter::register_machine::modify_function::MovesT, AdtEnd, Combine, Field, Input,
-    LiftDomains, LiftDomainsT, Modify, ModifyFunction, NotAdtEnd, NotShapeEnd, Output, Run,
-    ShapeEnd, Then,
+    interpreter::register_machine::evaluate_function::FunctionT,
+    interpreter::register_machine::evaluate_function::MovesT, AdtEnd, Combine, EvaluateFunction,
+    LiftEvaluates, Modify, NotAdtEnd, Run, Shape, Then, LiftEvaluatesT,
 };
 
-use super::modify_function::InputsT;
+use super::evaluate_function::InputsT;
 
 #[functions]
 #[types]
@@ -24,57 +23,20 @@ pub trait LiftEvaluate<D> {
     fn lift_evaluate(self) -> Self::LiftEvaluate;
 }
 
-impl_adt! {
-    impl<A, B, D> LiftEvaluate<D> for Input<A, B> | Field<A, B> | Output<A, B>
-    where
-        D: LiftDomains<A>,
-        B: LiftEvaluate<D>,
-        B: NotShapeEnd,
-    {
-        type LiftEvaluate = ComposeLT<LiftDomainsT<D, A>, LiftEvaluateT<B, D>>;
-
-        fn lift_evaluate(self) -> Self::LiftEvaluate {
-            D::lift_domains(self.0).compose_l(self.1.lift_evaluate())
-        }
-    }
-}
-
-impl<A, D> LiftEvaluate<D> for Input<A, ShapeEnd>
+impl<A, D> LiftEvaluate<D> for Shape<A>
 where
-    D: LiftDomains<A>,
+    D: LiftEvaluates<A>,
 {
-    type LiftEvaluate = LiftDomainsT<D, A>;
+    type LiftEvaluate = LiftEvaluatesT<D, A>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        D::lift_domains(self.0)
-    }
-}
-
-impl<A, D> LiftEvaluate<D> for Field<A, ShapeEnd>
-where
-    D: LiftDomains<A>,
-{
-    type LiftEvaluate = LiftDomainsT<D, A>;
-
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        D::lift_domains(self.0)
-    }
-}
-
-impl<A, D> LiftEvaluate<D> for Output<A, ShapeEnd>
-where
-    D: LiftDomains<A>,
-{
-    type LiftEvaluate = LiftDomainsT<D, A>;
-
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        D::lift_domains(self.0)
+        D::lift_evaluates(self.0)
     }
 }
 
 impl<A, D> LiftEvaluate<D> for Modify<A>
 where
-    A: ModifyFunction<D>,
+    A: EvaluateFunction<D>,
     FunctionT<A, D>: LiftContext<InputsT<A, D>>,
     LiftContextT<FunctionT<A, D>, InputsT<A, D>>: Fanout<DropF<MovesT<A, D>>>,
 {
@@ -85,7 +47,7 @@ where
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
         self.0
-            .modify_function()
+            .evaluate_function()
             .lift_context()
             .fanout(DropF::<MovesT<A, D>>::default())
             .compose_l(CallF)

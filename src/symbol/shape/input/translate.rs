@@ -1,6 +1,6 @@
 use std::ops::Sub;
 
-use crate::{Distance, DomainFunction, Gradient, Input, LiftAdt, Position, ShapeEnd};
+use crate::{Distance, EvaluateFunction, Shape, Gradient, LiftAdt, Position};
 
 use glam::Vec2;
 use t_funk::{
@@ -16,29 +16,29 @@ use t_funk::{
 pub struct Translate<T>(pub T);
 
 impl<T> LiftAdt for Translate<T> {
-    type LiftAdt = Input<Self, ShapeEnd>;
+    type LiftAdt = Shape<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Input(self, ShapeEnd)
+        Shape(self)
     }
 }
 
-impl<T> DomainFunction<Distance<f32>> for Translate<T> {
+impl<T> EvaluateFunction<Distance<f32>> for Translate<T> {
     type Inputs = Position<Vec2>;
     type Moves = ();
     type Function = Curry2B<TranslateF, T>;
 
-    fn domain(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         TranslateF.suffix2(self.0)
     }
 }
 
-impl<T> DomainFunction<Gradient<Vec2>> for Translate<T> {
+impl<T> EvaluateFunction<Gradient<Vec2>> for Translate<T> {
     type Inputs = Position<Vec2>;
     type Moves = ();
     type Function = Curry2B<TranslateF, T>;
 
-    fn domain(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         TranslateF.suffix2(self.0)
     }
 }

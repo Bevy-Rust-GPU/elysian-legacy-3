@@ -1,4 +1,4 @@
-use crate::{Distance, DomainFunction, Field, Gradient, LiftAdt, Position, ShapeEnd};
+use crate::{Distance, EvaluateFunction, Shape, Gradient, LiftAdt, Position};
 
 use glam::Vec2;
 use t_funk::{macros::lift, typeclass::functor::Fmap};
@@ -17,29 +17,29 @@ impl<F> Fmap<F> for Point {
 }
 
 impl LiftAdt for Point {
-    type LiftAdt = Field<Self, ShapeEnd>;
+    type LiftAdt = Shape<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Field(self, ShapeEnd)
+        Shape(self)
     }
 }
 
-impl DomainFunction<Distance<f32>> for Point {
+impl EvaluateFunction<Distance<f32>> for Point {
     type Inputs = Position<Vec2>;
     type Moves = Position<Vec2>;
     type Function = PointDistance;
 
-    fn domain(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         PointDistance
     }
 }
 
-impl DomainFunction<Gradient<Vec2>> for Point {
+impl EvaluateFunction<Gradient<Vec2>> for Point {
     type Inputs = Position<Vec2>;
     type Moves = ();
     type Function = PointGradient;
 
-    fn domain(self) -> Self::Function {
+    fn evaluate_function(self) -> Self::Function {
         PointGradient
     }
 }

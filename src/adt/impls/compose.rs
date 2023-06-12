@@ -5,10 +5,7 @@ use t_funk::{
     typeclass::category::{Compose, ComposeT, Id},
 };
 
-use crate::{
-    AdtEnd, Combine, Field, Input, LiftAdt, LiftAdtT, Modify, NotAdtEnd, Output, Run, ShapeEnd,
-    Then,
-};
+use crate::{AdtEnd, Combine, Shape, LiftAdt, LiftAdtT, Modify, NotAdtEnd, Run, Then};
 
 // AdtEnd is the compositional identity
 
@@ -157,100 +154,40 @@ impl<A, B, F, C, D, G> Compose<Combine<C, D, G>> for Combine<A, B, F> {
 
 // Run
 
-impl<A, C, D> Compose<Input<C, D>> for Run<A>
+impl<A, B> Compose<Shape<B>> for Run<A>
 where
-    Input<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Input<C, D>>>,
+    Shape<B>: LiftAdt,
+    Self: Compose<LiftAdtT<Shape<B>>>,
 {
-    type Compose = ComposeT<Self, LiftAdtT<Input<C, D>>>;
+    type Compose = ComposeT<Self, LiftAdtT<Shape<B>>>;
 
-    fn compose(self, f: Input<C, D>) -> Self::Compose {
+    fn compose(self, f: Shape<B>) -> Self::Compose {
         self.compose(f.lift_adt())
     }
 }
 
-impl<A, C, D> Compose<Field<C, D>> for Run<A>
+impl<A, B> Compose<Modify<B>> for Run<A>
 where
-    Field<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Field<C, D>>>,
+    Modify<B>: LiftAdt,
+    Self: Compose<LiftAdtT<Modify<B>>>,
 {
-    type Compose = ComposeT<Self, LiftAdtT<Field<C, D>>>;
+    type Compose = ComposeT<Self, LiftAdtT<Modify<B>>>;
 
-    fn compose(self, f: Field<C, D>) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
-impl<A, C, D> Compose<Output<C, D>> for Run<A>
-where
-    Output<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Output<C, D>>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<Output<C, D>>>;
-
-    fn compose(self, f: Output<C, D>) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
-impl<A, C> Compose<Modify<C>> for Run<A>
-where
-    Modify<C>: LiftAdt,
-    Self: Compose<LiftAdtT<Modify<C>>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<Modify<C>>>;
-
-    fn compose(self, f: Modify<C>) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
-impl<A> Compose<ShapeEnd> for Run<A>
-where
-    ShapeEnd: LiftAdt,
-    Self: Compose<LiftAdtT<ShapeEnd>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<ShapeEnd>>;
-
-    fn compose(self, f: ShapeEnd) -> Self::Compose {
+    fn compose(self, f: Modify<B>) -> Self::Compose {
         self.compose(f.lift_adt())
     }
 }
 
 // Then
 
-impl<A, B, C, D> Compose<Input<C, D>> for Then<A, B>
+impl<A, B, C> Compose<Shape<C>> for Then<A, B>
 where
-    Input<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Input<C, D>>>,
+    Shape<C>: LiftAdt,
+    Self: Compose<LiftAdtT<Shape<C>>>,
 {
-    type Compose = ComposeT<Self, LiftAdtT<Input<C, D>>>;
+    type Compose = ComposeT<Self, LiftAdtT<Shape<C>>>;
 
-    fn compose(self, f: Input<C, D>) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
-impl<A, B, C, D> Compose<Field<C, D>> for Then<A, B>
-where
-    Field<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Field<C, D>>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<Field<C, D>>>;
-
-    fn compose(self, f: Field<C, D>) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
-impl<A, B, C, D> Compose<Output<C, D>> for Then<A, B>
-where
-    Output<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Output<C, D>>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<Output<C, D>>>;
-
-    fn compose(self, f: Output<C, D>) -> Self::Compose {
+    fn compose(self, f: Shape<C>) -> Self::Compose {
         self.compose(f.lift_adt())
     }
 }
@@ -267,52 +204,16 @@ where
     }
 }
 
-impl<A, B> Compose<ShapeEnd> for Then<A, B>
-where
-    ShapeEnd: LiftAdt,
-    Self: Compose<LiftAdtT<ShapeEnd>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<ShapeEnd>>;
-
-    fn compose(self, f: ShapeEnd) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
 // Combine
 
-impl<A, B, F, C, D> Compose<Input<C, D>> for Combine<A, B, F>
+impl<A, B, F, C> Compose<Shape<C>> for Combine<A, B, F>
 where
-    Input<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Input<C, D>>>,
+    Shape<C>: LiftAdt,
+    Self: Compose<LiftAdtT<Shape<C>>>,
 {
-    type Compose = ComposeT<Self, LiftAdtT<Input<C, D>>>;
+    type Compose = ComposeT<Self, LiftAdtT<Shape<C>>>;
 
-    fn compose(self, f: Input<C, D>) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
-impl<A, B, F, C, D> Compose<Field<C, D>> for Combine<A, B, F>
-where
-    Field<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Field<C, D>>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<Field<C, D>>>;
-
-    fn compose(self, f: Field<C, D>) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
-impl<A, B, F, C, D> Compose<Output<C, D>> for Combine<A, B, F>
-where
-    Output<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Output<C, D>>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<Output<C, D>>>;
-
-    fn compose(self, f: Output<C, D>) -> Self::Compose {
+    fn compose(self, f: Shape<C>) -> Self::Compose {
         self.compose(f.lift_adt())
     }
 }
@@ -329,52 +230,16 @@ where
     }
 }
 
-impl<A, B, F> Compose<ShapeEnd> for Combine<A, B, F>
-where
-    ShapeEnd: LiftAdt,
-    Self: Compose<LiftAdtT<ShapeEnd>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<ShapeEnd>>;
-
-    fn compose(self, f: ShapeEnd) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
 // AdtEnd
 
-impl<C, D> Compose<Input<C, D>> for AdtEnd
+impl<C> Compose<Shape<C>> for AdtEnd
 where
-    Input<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Input<C, D>>>,
+    Shape<C>: LiftAdt,
+    Self: Compose<LiftAdtT<Shape<C>>>,
 {
-    type Compose = ComposeT<Self, LiftAdtT<Input<C, D>>>;
+    type Compose = ComposeT<Self, LiftAdtT<Shape<C>>>;
 
-    fn compose(self, f: Input<C, D>) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
-impl<C, D> Compose<Field<C, D>> for AdtEnd
-where
-    Field<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Field<C, D>>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<Field<C, D>>>;
-
-    fn compose(self, f: Field<C, D>) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
-impl<C, D> Compose<Output<C, D>> for AdtEnd
-where
-    Output<C, D>: LiftAdt,
-    Self: Compose<LiftAdtT<Output<C, D>>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<Output<C, D>>>;
-
-    fn compose(self, f: Output<C, D>) -> Self::Compose {
+    fn compose(self, f: Shape<C>) -> Self::Compose {
         self.compose(f.lift_adt())
     }
 }
@@ -387,18 +252,6 @@ where
     type Compose = ComposeT<Self, LiftAdtT<Modify<C>>>;
 
     fn compose(self, f: Modify<C>) -> Self::Compose {
-        self.compose(f.lift_adt())
-    }
-}
-
-impl Compose<ShapeEnd> for AdtEnd
-where
-    ShapeEnd: LiftAdt,
-    Self: Compose<LiftAdtT<ShapeEnd>>,
-{
-    type Compose = ComposeT<Self, LiftAdtT<ShapeEnd>>;
-
-    fn compose(self, f: ShapeEnd) -> Self::Compose {
         self.compose(f.lift_adt())
     }
 }
