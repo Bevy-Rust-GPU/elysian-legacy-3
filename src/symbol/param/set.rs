@@ -1,4 +1,4 @@
-use t_funk::collection::set::Set;
+use t_funk::collection::set::{Insert, InsertT};
 
 use crate::LiftParam;
 
@@ -8,11 +8,11 @@ pub struct ParamSet<T>(pub T);
 
 impl<T, C> LiftParam<C> for ParamSet<T>
 where
-    C: Set<T>,
+    C: Insert<T>,
 {
-    type LiftParam = C;
+    type LiftParam = InsertT<C, T>;
 
     fn lift_param(self, input: C) -> Self::LiftParam {
-        input.set(self.0)
+        input.insert(self.0)
     }
 }

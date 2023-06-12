@@ -5,6 +5,7 @@ use t_funk::macros::{functions, types};
 #[types]
 pub trait DomainFunction<T> {
     type Inputs;
+    type Moves;
     type Function;
 
     fn domain(self) -> Self::Function;

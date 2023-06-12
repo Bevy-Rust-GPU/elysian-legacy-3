@@ -1,4 +1,4 @@
-use t_funk::{closure::Closure, collection::set::Set};
+use t_funk::{closure::Closure, collection::set::Insert};
 
 use crate::Distance;
 
@@ -11,7 +11,7 @@ impl<F, A, B, C, FA, FB> Closure<(A, B, C, FA, FB)> for Bounding<F>
 where
     A: Closure<C, Output = C>,
     B: Closure<C, Output = C>,
-    C: Default + Clone + Set<Distance<f32>>,
+    C: Default + Clone + Insert<Distance<f32>, Insert = C>,
     FA: Closure<C, Output = C>,
     FB: Closure<C, Output = C>,
     F: Closure<(C, C), Output = bool>,
@@ -24,7 +24,7 @@ where
         if self.0.call((da, Default::default())) {
             fb.call(c)
         } else {
-            C::default().set(Distance(f32::INFINITY))
+            C::default().insert(Distance(f32::INFINITY))
         }
     }
 }

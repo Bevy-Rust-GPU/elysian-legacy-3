@@ -4,17 +4,51 @@ pub use raster::*;
 use std::marker::PhantomData;
 
 use glam::Vec2;
-use t_funk::{closure::Closure, collection::set::Set, typeclass::functor::Fmap};
+use t_funk::{
+    closure::Closure,
+    collection::set::{Insert, InsertT},
+    typeclass::functor::Fmap,
+};
 
 use crate::{Context, Evaluate, EvaluateT, LiftAdt, Modify, ModifyFunction, Position};
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Rasterizer<S, C> {
     pub width: usize,
     pub height: usize,
     pub shape: S,
     pub context: PhantomData<C>,
 }
+
+impl<S, C> Default for Rasterizer<S, C>
+where
+    S: Default,
+{
+    fn default() -> Self {
+        Self {
+            width: Default::default(),
+            height: Default::default(),
+            shape: Default::default(),
+            context: Default::default(),
+        }
+    }
+}
+
+impl<S, C> Clone for Rasterizer<S, C>
+where
+    S: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            width: self.width.clone(),
+            height: self.height.clone(),
+            shape: self.shape.clone(),
+            context: self.context.clone(),
+        }
+    }
+}
+
+impl<S, C> Copy for Rasterizer<S, C> where S: Copy {}
 
 impl<S, C, F> Fmap<F> for Rasterizer<S, C> {
     type Fmap = Self;
@@ -34,7 +68,7 @@ impl<S, C> LiftAdt for Rasterizer<S, C> {
 
 impl<S, C, D> ModifyFunction<D> for Rasterizer<S, C> {
     type Inputs = Context<C>;
-
+    type Moves = ();
     type Function = RasterizeF<S, D>;
 
     fn modify_function(self) -> Self::Function {
@@ -57,11 +91,11 @@ pub struct RasterizeF<S, D> {
 
 impl<D, C, S> Closure<Context<C>> for RasterizeF<S, D>
 where
-    S: Clone + Evaluate<D, C>,
-    EvaluateT<S, D, C>: Default + Clone,
-    C: Clone + Set<Position<Vec2>>,
+    S: Clone + Evaluate<D, InsertT<C, Position<Vec2>>>,
+    EvaluateT<S, D, InsertT<C, Position<Vec2>>>: Default + Clone,
+    C: Clone + Insert<Position<Vec2>>,
 {
-    type Output = Raster<EvaluateT<S, D, C>>;
+    type Output = Raster<EvaluateT<S, D, InsertT<C, Position<Vec2>>>>;
 
     fn call(self, Context(ctx): Context<C>) -> Self::Output {
         let mut out: Self::Output = Raster::new(self.width, self.height);
@@ -69,9 +103,9 @@ where
             for (x, col) in row.iter_mut().enumerate() {
                 let nx = ((x as f32 + 0.5) / self.width as f32) * 2.0 - 1.0;
                 let ny = ((y as f32 + 0.5) / self.height as f32) * 2.0 - 1.0;
-                *col = Evaluate::<D, C>::evaluate(
+                *col = Evaluate::<D, InsertT<C, Position<Vec2>>>::evaluate(
                     self.shape.clone(),
-                    ctx.clone().set(Position(Vec2::new(nx, ny))),
+                    ctx.clone().insert(Position(Vec2::new(nx, ny))),
                 );
             }
         }

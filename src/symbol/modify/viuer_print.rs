@@ -6,7 +6,7 @@ use viuer::Config;
 
 use crate::{LiftAdt, Modify, ModifyFunction};
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ViuerPrinter<T> {
     pub transparent: bool,
     pub absolute_offset: bool,
@@ -39,6 +39,26 @@ impl<T> Default for ViuerPrinter<T> {
     }
 }
 
+impl<T> Clone for ViuerPrinter<T> {
+    fn clone(&self) -> Self {
+        Self {
+            transparent: self.transparent.clone(),
+            absolute_offset: self.absolute_offset.clone(),
+            x: self.x.clone(),
+            y: self.y.clone(),
+            restore_cursor: self.restore_cursor.clone(),
+            width: self.width.clone(),
+            height: self.height.clone(),
+            truecolor: self.truecolor.clone(),
+            use_kitty: self.use_kitty.clone(),
+            use_iterm: self.use_iterm.clone(),
+            image_buffer: PhantomData,
+        }
+    }
+}
+
+impl<T> Copy for ViuerPrinter<T> {}
+
 impl<T, F> Fmap<F> for ViuerPrinter<T> {
     type Fmap = Self;
 
@@ -57,7 +77,7 @@ impl<T> LiftAdt for ViuerPrinter<T> {
 
 impl<T, D> ModifyFunction<D> for ViuerPrinter<T> {
     type Inputs = T;
-
+    type Moves = ();
     type Function = ViuerPrintF;
 
     fn modify_function(self) -> Self::Function {
@@ -115,4 +135,3 @@ where
         .unwrap();
     }
 }
-

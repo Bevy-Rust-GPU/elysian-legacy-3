@@ -1,11 +1,11 @@
+use std::ops::Div;
+
 use crate::{Distance, DomainFunction, Gradient, Input, LiftAdt, Position, ShapeEnd};
 
 use glam::Vec2;
 use t_funk::{
-    closure::Closure,
-    macros::{
-        applicative::Applicative, arrow::Arrow, category::Category, functor::Functor, monad::Monad,
-    },
+    closure::{Curry2, Curry2B},
+    macros::{applicative::Applicative, functor::Functor, lift, monad::Monad},
 };
 
 // Scale input modifier symbol
@@ -25,34 +25,28 @@ impl<S> LiftAdt for Scale<S> {
 
 impl<S> DomainFunction<Distance<f32>> for Scale<S> {
     type Inputs = Position<Vec2>;
-    type Function = ScaleF<S>;
+    type Moves = ();
+    type Function = Curry2B<ScaleF, S>;
 
     fn domain(self) -> Self::Function {
-        ScaleF(self.0)
+        ScaleF.suffix2(self.0)
     }
 }
 
 impl<S> DomainFunction<Gradient<Vec2>> for Scale<S> {
     type Inputs = Position<Vec2>;
-    type Function = ScaleF<S>;
+    type Moves = ();
+    type Function = Curry2B<ScaleF, S>;
 
     fn domain(self) -> Self::Function {
-        ScaleF(self.0)
+        ScaleF.suffix2(self.0)
     }
 }
 
-// General scale function
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Category, Arrow)]
-pub struct ScaleF<T>(T);
-
-impl<P, S> Closure<Position<P>> for ScaleF<S>
+#[lift]
+pub fn scale_f<P, S>(Position(p): Position<P>, scale: S) -> Position<P::Output>
 where
-    P: Clone + core::ops::Div<S, Output = P>,
+    P: Div<S>,
 {
-    type Output = Position<P>;
-
-    fn call(self, Position(p): Position<P>) -> Self::Output {
-        let s = self.0;
-        Position(p / s)
-    }
+    Position(p / scale)
 }

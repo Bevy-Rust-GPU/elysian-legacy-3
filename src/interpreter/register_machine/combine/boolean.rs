@@ -1,4 +1,4 @@
-use t_funk::closure::Closure;
+use t_funk::closure::{Closure, OutputT};
 
 use crate::{Dist, LiftEvaluate, LiftEvaluateT};
 
@@ -10,11 +10,13 @@ pub struct PostBoolean<F>(pub F);
 impl<F, A, B, C, FA, FB> Closure<(A, B, C, FA, FB)> for PostBoolean<F>
 where
     C: Clone,
-    FA: Closure<C, Output = C>,
-    FB: Closure<C, Output = C>,
-    F: Closure<(C, C), Output = bool>,
+    FA: Closure<C>,
+    FB: Closure<C, Output = OutputT<FA, C>>,
+    OutputT<FA, C>: Clone,
+    OutputT<FB, C>: Clone,
+    F: Closure<(OutputT<FA, C>, OutputT<FB, C>), Output = bool>,
 {
-    type Output = C;
+    type Output = OutputT<FA, C>;
 
     fn call(self, (_, _, c, fa, fb): (A, B, C, FA, FB)) -> Self::Output {
         let da = fa.call(c.clone());
@@ -37,10 +39,16 @@ impl<F, A, B, C, FA, FB> Closure<(A, B, C, FA, FB)> for PreBoolean<F>
 where
     C: Clone,
     A: LiftEvaluate<Dist<f32>>,
-    LiftEvaluateT<A, Dist<f32>>: Closure<C, Output = C>,
+    LiftEvaluateT<A, Dist<f32>>: Closure<C>,
     B: LiftEvaluate<Dist<f32>>,
-    LiftEvaluateT<B, Dist<f32>>: Closure<C, Output = C>,
-    F: Closure<(C, C), Output = bool>,
+    LiftEvaluateT<B, Dist<f32>>: Closure<C>,
+    F: Closure<
+        (
+            OutputT<LiftEvaluateT<A, Dist<f32>>, C>,
+            OutputT<LiftEvaluateT<B, Dist<f32>>, C>,
+        ),
+        Output = bool,
+    >,
     FA: Closure<C, Output = C>,
     FB: Closure<C, Output = C>,
 {

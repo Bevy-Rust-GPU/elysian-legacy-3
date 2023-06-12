@@ -1,11 +1,7 @@
 use crate::{Distance, DomainFunction, Field, Gradient, LiftAdt, Position, ShapeEnd};
 
 use glam::Vec2;
-use t_funk::{
-    function::Function,
-    macros::{arrow::Arrow, category::Category, Closure},
-    typeclass::functor::Fmap,
-};
+use t_funk::{macros::lift, typeclass::functor::Fmap};
 
 // Point field symbol
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -30,6 +26,7 @@ impl LiftAdt for Point {
 
 impl DomainFunction<Distance<f32>> for Point {
     type Inputs = Position<Vec2>;
+    type Moves = Position<Vec2>;
     type Function = PointDistance;
 
     fn domain(self) -> Self::Function {
@@ -39,6 +36,7 @@ impl DomainFunction<Distance<f32>> for Point {
 
 impl DomainFunction<Gradient<Vec2>> for Point {
     type Inputs = Position<Vec2>;
+    type Moves = ();
     type Function = PointGradient;
 
     fn domain(self) -> Self::Function {
@@ -46,28 +44,12 @@ impl DomainFunction<Gradient<Vec2>> for Point {
     }
 }
 
-#[derive(
-    Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure, Category, Arrow,
-)]
-pub struct PointDistance;
-
-impl Function<Position<Vec2>> for PointDistance {
-    type Output = Distance<f32>;
-
-    fn call(Position(p): Position<Vec2>) -> Self::Output {
-        Distance(p.length())
-    }
+#[lift]
+pub fn point_distance(Position(p): Position<Vec2>) -> Distance<f32> {
+    Distance(p.length())
 }
 
-#[derive(
-    Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure, Category, Arrow,
-)]
-pub struct PointGradient;
-
-impl Function<Position<Vec2>> for PointGradient {
-    type Output = Gradient<Vec2>;
-
-    fn call(Position(p): Position<Vec2>) -> Self::Output {
-        Gradient(p.normalize())
-    }
+#[lift]
+pub fn point_gradient(Position(p): Position<Vec2>) -> Gradient<Vec2> {
+    Gradient(p.normalize())
 }

@@ -18,9 +18,9 @@ use crate::{Color, Distance, Gradient, Invert, LiftAdt, Modify, ModifyFunction, 
 #[derive(
     Debug, PhantomDefault, PhantomCopy, PhantomClone, PartialEq, Eq, PartialOrd, Ord, Hash,
 )]
-pub struct RasterToImage<C, F>(pub PhantomData<(C, F)>);
+pub struct RasterToImage<R, F>(pub PhantomData<(R, F)>);
 
-impl<C, G, F> Fmap<F> for RasterToImage<C, G> {
+impl<R, G, F> Fmap<F> for RasterToImage<R, G> {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -28,7 +28,7 @@ impl<C, G, F> Fmap<F> for RasterToImage<C, G> {
     }
 }
 
-impl<C, F> LiftAdt for RasterToImage<C, F> {
+impl<R, F> LiftAdt for RasterToImage<R, F> {
     type LiftAdt = Modify<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -36,10 +36,10 @@ impl<C, F> LiftAdt for RasterToImage<C, F> {
     }
 }
 
-impl<C, F, D> ModifyFunction<D> for RasterToImage<C, F> {
-    type Inputs = Raster<C>;
-
-    type Function = Image<C, F>;
+impl<R, F, D> ModifyFunction<D> for RasterToImage<R, F> {
+    type Inputs = Raster<R>;
+    type Moves = ();
+    type Function = Image<R, F>;
 
     fn modify_function(self) -> Self::Function {
         Image(self.0)

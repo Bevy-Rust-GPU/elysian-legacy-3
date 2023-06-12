@@ -68,30 +68,45 @@ mod test {
     use glam::{Vec2, Vec3};
     use image::{ImageBuffer, Rgb};
 
-    use t_funk::closure::{Closure, Const};
+    use t_funk::{
+        closure::{CallF, Closure, Compose, Const},
+        collection::set::{DropF, LiftContext},
+        typeclass::arrow::Fanout,
+    };
 
     use crate::{
-        adt, smooth_union, union, Circle, Color, ContextRasterImage, Dist, DistColorToRgb, Done,
-        Evaluate, InvertGradient, LiftCombine, LiftEvaluate, LiftParam, PosDistColor,
+        adt, smooth_union, union, Circle, Color, Context, ContextRasterImage, Dist, DistColorToRgb,
+        Distance, Done, Evaluate, InvertGradient, Isosurface, LiftCombine, LiftEvaluate, LiftParam,
+        ModifyFunction, MovesT, Point, PosDist, PosDistColor, Position, PositionToDistance, Raster,
         RasterToImage, Rasterizer, Set, Translate, ViuerPrinter,
     };
 
     #[test]
     fn test_adt() {
-        let shape_a =
-            adt() << Translate(Vec2::new(-0.8, -0.4)) << Circle(0.8_f32) << Set(Color(Vec3::X))
-                >> Done;
-        let shape_b =
-            adt() << Translate(Vec2::new(0.8, 0.4)) << Circle(0.8_f32) << Set(Color(Vec3::Y))
-                >> Done;
-        let shape_c =
-            adt() << Translate(Vec2::new(0.0, 0.4)) << Circle(0.8_f32) << Set(Color(Vec3::Z))
-                >> Done;
-        let shape_d =
-            adt() << Translate(Vec2::new(0.0, -0.4)) << Circle(0.8_f32) << Set(Color(Vec3::ONE))
-                >> Done;
-
-        panic!("{shape_a:#?}");
+        let shape_a = adt()
+            << Translate(Vec2::new(-0.8, -0.4))
+            << Point
+            << Isosurface(0.8_f32)
+            << Set(Color(Vec3::X))
+            >> Done;
+        let shape_b = adt()
+            << Translate(Vec2::new(0.8, 0.4))
+            << Point
+            << Isosurface(0.8_f32)
+            << Set(Color(Vec3::Y))
+            >> Done;
+        let shape_c = adt()
+            << Translate(Vec2::new(0.0, 0.4))
+            << Point
+            << Isosurface(0.8_f32)
+            << Set(Color(Vec3::Z))
+            >> Done;
+        let shape_d = adt()
+            << Translate(Vec2::new(0.0, -0.4))
+            << Point
+            << Isosurface(0.8_f32)
+            << Set(Color(Vec3::ONE))
+            >> Done;
 
         /*
         let combined =
@@ -100,12 +115,25 @@ mod test {
 
         let combined = smooth_union() << shape_a << shape_b << shape_c << shape_d >> Done;
 
+        let positioned = adt() << Set(Position(Vec2::default())) << combined >> Done;
+
+        let input = PosDistColor::<(), (), ()>::default();
+        let foo = positioned.lift_param(input.clone());
+        let foo = LiftCombine::<Dist<f32>>::lift_combine(foo);
+        let foo = LiftEvaluate::<Dist<f32>>::lift_evaluate(foo);
+        let foo = foo.call(input);
+        let foo = Evaluate::<Dist<f32>, PosDistColor<(), (), ()>>::evaluate(positioned, input);
+
         let flipped = adt() << combined << InvertGradient >> Done;
 
-        pub type ShapeCtx = PosDistColor<Vec2, f32, Vec3>;
+        pub type ShapeCtx = PosDistColor<Position<Vec2>, Distance<f32>, Color<Vec3>>;
 
         //pub type RasterCtx = ContextRasterString<ShapeCtx, ShapeCtx>;
-        pub type RasterCtx = ContextRasterImage<ShapeCtx, ShapeCtx, Rgb<f32>, Vec<f32>>;
+        pub type RasterCtx = ContextRasterImage<
+            Context<ShapeCtx>,
+            Raster<ShapeCtx>,
+            ImageBuffer<Rgb<f32>, Vec<f32>>,
+        >;
 
         let context = RasterCtx::default();
 
@@ -116,7 +144,7 @@ mod test {
                 shape: combined,
                 ..Default::default()
             }
-            << RasterToImage::<ShapeCtx, DistColorToRgb>::default()
+            << RasterToImage::<PosDistColor<(), Distance<f32>, Color<Vec3>>, DistColorToRgb>::default()
             << ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default()
         /*
             << RasterToAscii(ASCII_RAMP, PhantomData::<PosDistGrad<Vec2, f32, Vec2>>)
@@ -124,14 +152,13 @@ mod test {
         */
             >> Done;
 
-        let foo = combined.lift_param(context.clone());
+        let foo = rasterizer.lift_param(context.clone());
         let foo = LiftCombine::<Dist<f32>>::lift_combine(foo);
         let foo = LiftEvaluate::<Dist<f32>>::lift_evaluate(foo);
-        let foo = foo.call(ShapeCtx::default());
+        let foo = foo.call(RasterCtx::default());
 
         Evaluate::<Dist<f32>, RasterCtx>::evaluate(rasterizer, context);
         //panic!("{foo:#?}");
-        panic!();
 
         /*
         Evaluate::<Dist<f32>, ContextRaster<PosDist<Vec2, f32>, PosDist<Vec2, f32>>>::evaluate(
@@ -139,5 +166,13 @@ mod test {
             context,
         );
         */
+
+        let foo = adt() << Set(Position(Vec2::default())) << PositionToDistance >> Done;
+        let ctx = PosDist::<(), ()>::default();
+
+        let foo = foo.lift_param(ctx);
+        let foo = LiftCombine::<Dist<f32>>::lift_combine(foo);
+        let foo = Evaluate::<Dist<f32>, PosDist<(), ()>>::evaluate(foo, ctx);
+        panic!("{foo:#?}");
     }
 }

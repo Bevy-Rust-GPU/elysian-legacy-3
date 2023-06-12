@@ -1,15 +1,15 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    closure::{CallF, Closure, Compose, ComposeLT},
-    collection::set::{LiftContext, LiftContextT},
-    function::Id,
+    closure::{CallF, Closure, Compose, ComposeLT, OutputT},
+    collection::set::{DropF, LiftContext, LiftContextT},
     macros::{functions, impl_adt, types},
     typeclass::arrow::{Fanout, FanoutT},
 };
 
 use crate::{
-    interpreter::register_machine::modify_function::FunctionT, AdtEnd, Combine, Field, Input,
+    interpreter::register_machine::modify_function::FunctionT,
+    interpreter::register_machine::modify_function::MovesT, AdtEnd, Combine, Field, Input,
     LiftDomains, LiftDomainsT, Modify, ModifyFunction, NotAdtEnd, NotShapeEnd, Output, Run,
     ShapeEnd, Then,
 };
@@ -76,15 +76,18 @@ impl<A, D> LiftEvaluate<D> for Modify<A>
 where
     A: ModifyFunction<D>,
     FunctionT<A, D>: LiftContext<InputsT<A, D>>,
-    LiftContextT<FunctionT<A, D>, InputsT<A, D>>: Fanout<Id>,
+    LiftContextT<FunctionT<A, D>, InputsT<A, D>>: Fanout<DropF<MovesT<A, D>>>,
 {
-    type LiftEvaluate = ComposeLT<FanoutT<LiftContextT<FunctionT<A, D>, InputsT<A, D>>, Id>, CallF>;
+    type LiftEvaluate = ComposeLT<
+        FanoutT<LiftContextT<FunctionT<A, D>, InputsT<A, D>>, DropF<MovesT<A, D>>>,
+        CallF,
+    >;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
         self.0
             .modify_function()
             .lift_context()
-            .fanout(Id)
+            .fanout(DropF::<MovesT<A, D>>::default())
             .compose_l(CallF)
     }
 }
@@ -140,9 +143,9 @@ impl<A, B, F, D, C> Closure<C> for LiftEvaluateCombine<A, B, F, D>
 where
     A: Clone + LiftEvaluate<D>,
     B: Clone + LiftEvaluate<D>,
-    F: Closure<(A, B, C, LiftEvaluateT<A, D>, LiftEvaluateT<B, D>), Output = C>,
+    F: Closure<(A, B, C, LiftEvaluateT<A, D>, LiftEvaluateT<B, D>)>,
 {
-    type Output = C;
+    type Output = OutputT<F, (A, B, C, LiftEvaluateT<A, D>, LiftEvaluateT<B, D>)>;
 
     fn call(self, input: C) -> Self::Output {
         self.2.call((

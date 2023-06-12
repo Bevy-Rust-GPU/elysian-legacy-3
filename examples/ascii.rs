@@ -1,34 +1,36 @@
 use std::marker::PhantomData;
 
 use elysian::{
-    adt, intersection, union, AdtEnd, Circle, ContextRasterString, Dist, Done, Evaluate,
-    Isosurface, Manifold, Modify, PosDist, Print, RasterToAscii, Rasterizer, Run, Scale, Then,
-    Translate, ASCII_RAMP,
+    adt, union, AdtEnd, Circle, Context, ContextRasterString, Dist, Distance, Done, Evaluate,
+    Isosurface, Manifold, Modify, PosDist, Position, Print, Raster, RasterToAscii, Rasterizer, Run,
+    Scale, Then, Translate, ASCII_RAMP,
 };
 use glam::Vec2;
 use t_funk::{macros::lift, op_chain::tap};
 
 fn main() {
-    pub type ShapeCtx = PosDist<Vec2, f32>;
-    pub type RasterCtx = ContextRasterString<ShapeCtx, ShapeCtx>;
+    pub type ShapeContextFrom = PosDist<Position<Vec2>, ()>;
+    pub type ShapeContextTo = PosDist<(), Distance<f32>>;
+    pub type RasterCtx =
+        ContextRasterString<Context<ShapeContextFrom>, Raster<ShapeContextFrom>, String>;
     pub type Domain = Dist<f32>;
 
     #[lift]
     fn ascii<T>(t: T)
     where
         Then<
-            Run<Modify<Rasterizer<T, ShapeCtx>>>,
-            Then<Run<Modify<RasterToAscii<11, ShapeCtx>>>, Then<Run<Modify<Print>>, AdtEnd>>,
+            Run<Modify<Rasterizer<T, ShapeContextFrom>>>,
+            Then<Run<Modify<RasterToAscii<11, ShapeContextTo>>>, Then<Run<Modify<Print>>, AdtEnd>>,
         >: Evaluate<Domain, RasterCtx>,
     {
         let comp = adt()
-            << Rasterizer::<T, ShapeCtx> {
+            << Rasterizer::<T, ShapeContextFrom> {
                 width: 48,
                 height: 24,
                 shape: t,
                 context: Default::default(),
             }
-            << RasterToAscii(ASCII_RAMP, PhantomData::<ShapeCtx>)
+            << RasterToAscii(ASCII_RAMP, PhantomData::<ShapeContextTo>)
             << Print
             >> Done;
 
@@ -41,8 +43,7 @@ fn main() {
     let shape_d =
         adt() << Translate(Vec2::new(0.0, -0.8)) << Circle(0.15_f32) >> tap(Ascii) >> Done;
 
-    let combined =
-        union() << shape_a << shape_b << shape_c << shape_d >> tap(Ascii) >> Done;
+    let combined = union() << shape_a << shape_b << shape_c << shape_d >> tap(Ascii) >> Done;
 
     let _shape = adt()
         << Translate(Vec2::new(0.25, 0.25))

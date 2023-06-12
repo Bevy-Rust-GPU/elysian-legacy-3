@@ -1,7 +1,7 @@
 use elysian::{
-    adt, intersection, subtraction, union, AdtEnd, Circle, Color, ContextRasterImage, Set,
-    Dist, DistColorToRgb, Done, Evaluate, Isosurface, Manifold, Modify, PosDistColor,
-    RasterToImage, Rasterizer, Run, Scale, Then, Translate, ViuerPrinter,
+    adt, intersection, subtraction, union, AdtEnd, Circle, Color, Context, ContextRasterImage,
+    Dist, DistColorToRgb, Distance, Done, Evaluate, Isosurface, Manifold, Modify, PosDistColor,
+    Position, Raster, RasterToImage, Rasterizer, Run, Scale, Set, Then, Translate, ViuerPrinter,
 };
 use glam::{Vec2, Vec3};
 use image::{ImageBuffer, Rgb};
@@ -32,28 +32,33 @@ where
 
 fn main() {
     pub type Domains = Dist<f32>;
-    pub type ShapeCtx = PosDistColor<Vec2, f32, Vec3>;
-    pub type RasterCtx = ContextRasterImage<ShapeCtx, ShapeCtx, Rgb<f32>, Vec<f32>>;
+    pub type ShapeCtxFrom = PosDistColor<Position<Vec2>, (), Color<Vec3>>;
+    pub type ShapeCtxTo = PosDistColor<(), Distance<f32>, Color<Vec3>>;
+    pub type RasterCtx = ContextRasterImage<
+        Context<ShapeCtxFrom>,
+        Raster<ShapeCtxFrom>,
+        ImageBuffer<Rgb<f32>, Vec<f32>>,
+    >;
 
     #[lift]
     fn viuer<T>(t: T)
     where
         Then<
-            Run<Modify<Rasterizer<T, ShapeCtx>>>,
+            Run<Modify<Rasterizer<T, ShapeCtxFrom>>>,
             Then<
-                Run<Modify<RasterToImage<ShapeCtx, DistColorToRgb>>>,
+                Run<Modify<RasterToImage<ShapeCtxTo, DistColorToRgb>>>,
                 Then<Run<Modify<ViuerPrinter<ImageBuffer<Rgb<f32>, Vec<f32>>>>>, AdtEnd>,
             >,
         >: Evaluate<Domains, RasterCtx>,
     {
         let comp = adt()
-            << Rasterizer::<T, ShapeCtx> {
+            << Rasterizer::<T, ShapeCtxFrom> {
                 width: 48,
                 height: 48,
                 shape: t,
                 context: Default::default(),
             }
-            << RasterToImage::<ShapeCtx, DistColorToRgb>::default()
+            << RasterToImage::<ShapeCtxTo, DistColorToRgb>::default()
             << ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default()
             >> Done;
 
@@ -64,20 +69,16 @@ fn main() {
         adt() << Translate(Vec2::new(-0.5, -0.5)) << Circle(1.2_f32) << Set(Color(Vec3::X))
             >> tap(Viuer)
             >> Done;
-    let shape_b =
-        adt() << Translate(Vec2::new(0.5, 0.5)) << Circle(1.1_f32) << Set(Color(Vec3::Y))
-            >> tap(Viuer)
-            >> Done;
-    let shape_c =
-        adt() << Translate(Vec2::new(0.0, 0.5)) << Circle(1.3_f32) << Set(Color(Vec3::Z))
-            >> tap(Viuer)
-            >> Done;
-    let shape_d = adt()
-        << Translate(Vec2::new(0.0, -0.5))
-        << Circle(1.15_f32)
-        << Set(Color(Vec3::ONE))
+    let shape_b = adt() << Translate(Vec2::new(0.5, 0.5)) << Circle(1.1_f32) << Set(Color(Vec3::Y))
         >> tap(Viuer)
         >> Done;
+    let shape_c = adt() << Translate(Vec2::new(0.0, 0.5)) << Circle(1.3_f32) << Set(Color(Vec3::Z))
+        >> tap(Viuer)
+        >> Done;
+    let shape_d =
+        adt() << Translate(Vec2::new(0.0, -0.5)) << Circle(1.15_f32) << Set(Color(Vec3::ONE))
+            >> tap(Viuer)
+            >> Done;
 
     let combined = intersection() << shape_a >> union() << shape_b << shape_c >> subtraction()
         << shape_d

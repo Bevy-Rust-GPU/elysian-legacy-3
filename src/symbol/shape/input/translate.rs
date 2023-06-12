@@ -1,11 +1,11 @@
+use std::ops::Sub;
+
 use crate::{Distance, DomainFunction, Gradient, Input, LiftAdt, Position, ShapeEnd};
 
 use glam::Vec2;
 use t_funk::{
-    closure::Closure,
-    macros::{
-        applicative::Applicative, arrow::Arrow, category::Category, functor::Functor, monad::Monad,
-    },
+    closure::{Curry2, Curry2B},
+    macros::{applicative::Applicative, functor::Functor, lift, monad::Monad},
 };
 
 // Translation input modifier symbol
@@ -25,33 +25,28 @@ impl<T> LiftAdt for Translate<T> {
 
 impl<T> DomainFunction<Distance<f32>> for Translate<T> {
     type Inputs = Position<Vec2>;
-    type Function = TranslateF<T>;
+    type Moves = ();
+    type Function = Curry2B<TranslateF, T>;
 
     fn domain(self) -> Self::Function {
-        TranslateF(self.0)
+        TranslateF.suffix2(self.0)
     }
 }
 
 impl<T> DomainFunction<Gradient<Vec2>> for Translate<T> {
     type Inputs = Position<Vec2>;
-    type Function = TranslateF<T>;
+    type Moves = ();
+    type Function = Curry2B<TranslateF, T>;
 
     fn domain(self) -> Self::Function {
-        TranslateF(self.0)
+        TranslateF.suffix2(self.0)
     }
 }
 
-// General translation function
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Category, Arrow)]
-pub struct TranslateF<T>(pub T);
-
-impl<P> Closure<Position<P>> for TranslateF<P>
+#[lift]
+pub fn translate_f<P>(Position(p): Position<P>, translation: P) -> Position<P::Output>
 where
-    P: core::ops::Sub<Output = P>,
+    P: Sub<P>,
 {
-    type Output = Position<P>;
-
-    fn call(self, Position(p): Position<P>) -> Self::Output {
-        Position(p - self.0)
-    }
+    Position(p - translation)
 }

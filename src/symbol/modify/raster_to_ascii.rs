@@ -17,9 +17,9 @@ use crate::{
 };
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct RasterToAscii<const N: usize, T>(pub Ramp<N>, pub PhantomData<T>);
+pub struct RasterToAscii<const N: usize, R>(pub Ramp<N>, pub PhantomData<R>);
 
-impl<const N: usize, T, F> Fmap<F> for RasterToAscii<N, T> {
+impl<const N: usize, R, F> Fmap<F> for RasterToAscii<N, R> {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -27,7 +27,7 @@ impl<const N: usize, T, F> Fmap<F> for RasterToAscii<N, T> {
     }
 }
 
-impl<const N: usize, T> LiftAdt for RasterToAscii<N, T> {
+impl<const N: usize, R> LiftAdt for RasterToAscii<N, R> {
     type LiftAdt = Modify<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -35,9 +35,9 @@ impl<const N: usize, T> LiftAdt for RasterToAscii<N, T> {
     }
 }
 
-impl<const N: usize, T, D> ModifyFunction<D> for RasterToAscii<N, T> {
-    type Inputs = Raster<T>;
-
+impl<const N: usize, R, D> ModifyFunction<D> for RasterToAscii<N, R> {
+    type Inputs = Raster<R>;
+    type Moves = ();
     type Function = Curry2A<Ascii, Ramp<N>>;
 
     fn modify_function(self) -> Self::Function {
@@ -49,9 +49,9 @@ pub type Ramp<const N: usize> = [char; N];
 pub const ASCII_RAMP: Ramp<11> = [' ', '.', ':', '-', '=', '+', '*', '#', '%', '@', '█'];
 
 #[lift]
-pub fn ascii<const N: usize, T>(ramp: Ramp<N>, rast: Raster<T>) -> String
+pub fn ascii<const N: usize, R>(ramp: Ramp<N>, rast: Raster<R>) -> String
 where
-    T: Clone + Get<Distance<f32>>,
+    R: Clone + Get<Distance<f32>>,
 {
     rast.fmap(GetF::<Distance<f32>>::default())
         .fmap(CopointF)

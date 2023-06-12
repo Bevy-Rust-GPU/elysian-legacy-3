@@ -225,7 +225,49 @@
 
  DONE: Now iterating on solutions
 
+* Refactor contexts to allow polymorphism
+  
+  DONE: All contexts can now freely morph their generic types
+
 =======================================================================================================================
+
+* Replace Shape subtypes with context move semantics
+    * i.e. Context modifiers remove values from the context, then optionally replace them
+    * Shape subtypes are the wrong abstraction for program correctness
+      * Obstructs correct programs that involve wrappers, ex. Scale(...)
+    * Program correctness should be enforced by Get<T> bounds in interpreters,
+      rather than directly through EDSL types
+    * Implementation:
+      * Introduce a Moves associated type to ModifyFunction / DomainFunction,
+        which is similar to Inputs, but specifies which types will be
+        removed from the context before outputs are applied
+      * This allows fanout copy semantics to be retained,
+        which solves various dependency issues between domain functions
+        (ex. explicit domain ordering)
+      * In addition, multiple domain functions trying to move the same data
+        will produce a compiler error, further strengthening the abstraction
+      * Probably better to avoid introducing Moves,
+        and instead create an aggregate list of types to remove
+        * Enforces move semantics as standard, but avoids multiple-removes,
+          or cases where one domain has to be authoritative over moving,
+          thus invalidating the other domains if used in isolation.
+        * How to do this?
+          * Lack of negative impls makes it impossible to to 'is not'
+            for an open set (i.e. trait implementors)
+          * Best bet is probably to reuse the context's set-like properties,
+            since it already contains type holes for all relevant data
+            * Take an empty context (via a new Empty trait), set each input on it at the type level
+              to produce a to-remove set type, then call Remove<T> on the input context once for each of its generic types
+              * Missing types will no-op, on account of calling Remove<()>
+              * Shouldn't be too hefty to introduce apply traits for sets
+                i.e. ApplyRemove would remove all of set A's elements from set B,
+                     ApplySet would insert them, and so on.
+                * These seem like boolean operations - probably worth some research into the Set typeclass
+                * Seems generalizable for convenience (i.e. map function F over sets A and B to produce set C)
+
+* Factor out Input / Field / Output and elide Modify
+  * ModifyFunction and DomainFunction have identical signatures,
+    and not enough meaningful differences to justify being distinct
 
 * Formalize wrapping operations
   * Operations that need control before and after child evaluation,
@@ -238,23 +280,7 @@
             shape: adt() << Circle(1.0) >> Done) >> Done,
             k: 0.01,
         }
-  * Scale example is challenging, since it's at odds with the Input / Field / Output model
-    * For instance, both (Scale(Input << Field) << Output) and (Input << Scale(Field << Output))
-      are algorithmically valid, but not semantically valid since Input and Output
-      aren't meant to be free-standing.
-    * This would suggest that Input / Field / Output doesn't properly model the problem
-      * Practically speaking, they're just syntax aids to try and enforce program correctness
-      * But that's not useful if they prevent some subset of correct programs
-      * Would need Run subtypes to be first-class in order for wrapping to work seamlessly
-      * May be a better idea to rely on the context to determine program correctness,
-        given that any modification of valid values is technically a correct program
-        * In this context, encoding operations in a semantically strong fashion (ex. Scale as a wrapper)
-          is the better approach, since it shifts responsibility for correctness from the execution model
-          to the EDSL model.
-      * So, start from something like PosDistGrad<Vec2, (), ()> and have the missing data inserted
-        by commands rather than existing from the start in default form
-        * Incorrect programs are prevented from compiling, as their Ctx: Get<T> bound would be unfulfilled
-        * However, this would require context lifting to occur ad-hoc during evaluation instead of as a prepass
+  * Scale(Inner) should LiftAdt to Then(ScalePosition, Then(Inner, Then(InverseScaleDistance, AdtEnd)))
 
 * Further generalization for Boolean and SmoothBoolean
   * Combiner / blending functions should be (C, C) -> C rather than (C, C) -> bool
@@ -267,6 +293,21 @@
       compose setters, then apply setters to context
     * Seems like it may be generalizable in some sense,
       though the difference in signatures necessitates abstraction
+
+* Reconsider replacing Then with Combine<A, B, ComposeL> or such
+  * Really, Then is just Combine with an implicit combinator
+
+* Amend Combine typeclass impls
+  * Foldr / Foldl / Mappend should produce a single value for each Combine,
+    rather than aggregating its A / B types as per Then.
+  * To wit, Combine should call F(A, B) in order to produce this single value
+    * Should allow for proper behaviour, possibly open the door to ADT-based evaluation
+  * How to make this work for current usage?
+    * Could make the combiner function a constructor for LiftEvaluateCombine
+
+* Look into convenience functions for composing monadic structure
+  * RepeatM etc, various utilities from Haskell's base libraries
+  * Bare minimum, whatever is needed to recreate the diagrams example that inspired Elysian
 
 * Abstract over multi-frame evaluation
   * ex:
@@ -283,12 +324,6 @@
     * Maybe not - need to puzzle out the types involved and see what's ideal
   * If any notable code remains after refactor,
     it should be split into a free-standing register machine abstraction
-
-* Amend Combine typeclass impls
-  * Foldr / Foldl / Mappend should produce a single value for each Combine,
-    rather than aggregating its A / B types as per Then.
-  * To wit, Combine should call F(A, B) in order to produce this single value
-    * Should allow for proper behaviour, possibly open the door to ADT-based evaluation
 
 * Simple lighting model for rendering 2D fields
   * Concrete case for use of normal and color

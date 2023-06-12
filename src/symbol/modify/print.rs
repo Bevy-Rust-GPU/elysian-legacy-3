@@ -23,7 +23,7 @@ impl LiftAdt for Print {
 
 impl<D> ModifyFunction<D> for Print {
     type Inputs = String;
-
+    type Moves = ();
     type Function = PrintLn;
 
     fn modify_function(self) -> Self::Function {

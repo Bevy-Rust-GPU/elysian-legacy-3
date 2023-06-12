@@ -4,10 +4,8 @@ use crate::{Distance, DomainFunction, Gradient, LiftAdt, Output, ShapeEnd};
 
 use glam::Vec2;
 use t_funk::{
-    closure::Closure,
-    macros::{
-        applicative::Applicative, arrow::Arrow, category::Category, functor::Functor, monad::Monad,
-    },
+    closure::{Curry2, Curry2B},
+    macros::{applicative::Applicative, functor::Functor, lift, monad::Monad},
 };
 
 // Isosurface output modifier symbol
@@ -27,15 +25,17 @@ impl<T> LiftAdt for Isosurface<T> {
 
 impl<T> DomainFunction<Distance<f32>> for Isosurface<T> {
     type Inputs = Distance<f32>;
-    type Function = IsosurfaceDistance<T>;
+    type Moves = ();
+    type Function = Curry2B<IsosurfaceDistance, T>;
 
     fn domain(self) -> Self::Function {
-        IsosurfaceDistance(self.0)
+        IsosurfaceDistance.suffix2(self.0)
     }
 }
 
 impl<T> DomainFunction<Gradient<Vec2>> for Isosurface<T> {
     type Inputs = ();
+    type Moves = ();
     type Function = ();
 
     fn domain(self) -> Self::Function {
@@ -43,16 +43,10 @@ impl<T> DomainFunction<Gradient<Vec2>> for Isosurface<T> {
     }
 }
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Category, Arrow)]
-pub struct IsosurfaceDistance<T>(pub T);
-
-impl<T> Closure<Distance<T>> for IsosurfaceDistance<T>
+#[lift]
+pub fn isosurface_distance<T>(Distance(input): Distance<T>, iso: T) -> Distance<T::Output>
 where
-    T: Sub<Output = T>,
+    T: Sub<T>,
 {
-    type Output = Distance<T>;
-
-    fn call(self, Distance(input): Distance<T>) -> Self::Output {
-        Distance(input - self.0)
-    }
+    Distance(input - iso)
 }

@@ -24,6 +24,7 @@ impl LiftAdt for InvertGradient {
 
 impl<D> ModifyFunction<D> for InvertGradient {
     type Inputs = Gradient<Vec2>;
+    type Moves = ();
     type Function = Neg;
 
     fn modify_function(self) -> Self::Function {

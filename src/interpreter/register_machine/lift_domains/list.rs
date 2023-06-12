@@ -1,7 +1,11 @@
-use crate::{DomainFunction, LiftDomainFunctionF, LiftDomains, Pair};
+use crate::{
+    interpreter::register_machine::domain_function::MovesT, DomainFunction, LiftDomainFunctionF,
+    LiftDomains, Pair,
+};
 
 use t_funk::{
     closure::{CallF, Closure, Compose, ComposeLF, ComposeLT, OutputT},
+    collection::set::DropF,
     function::Id,
     macros::types,
     typeclass::arrow::{Fanout, FanoutF, FanoutT, Second, SecondT},
@@ -9,7 +13,7 @@ use t_funk::{
 
 impl<D, N, T> LiftDomains<T> for (D, N)
 where
-    Self: LiftDomainsList<T> + FanoutSetters + ComposeSetters,
+    Self: LiftDomainsList<T> + FanoutSetters + ComposeSetters + ComposeRemoves<T>,
     LiftDomainListT<Self, T>: Closure<T>,
     FanoutSettersT<Self>: Closure<OutputT<LiftDomainListT<Self, T>, T>>,
 {
@@ -19,7 +23,7 @@ where
                 OutputT<FanoutSettersT<Self>, OutputT<LiftDomainListT<Self, T>, T>>,
                 ComposeSettersT<Self>,
             >,
-            Id,
+            ComposeRemovesT<Self, T>,
         >,
         CallF,
     >;
@@ -29,7 +33,7 @@ where
             .compose_l(Self::fanout_setters())
             .call(input)
             .compose_l(Self::compose_setters())
-            .fanout(Id)
+            .fanout(Self::compose_removes())
             .compose_l(CallF)
     }
 }
@@ -140,5 +144,35 @@ impl<D> ComposeSetters for (D, ()) {
 
     fn compose_setters() -> Self::ComposeSetters {
         Id
+    }
+}
+
+#[types]
+pub trait ComposeRemoves<T> {
+    type ComposeRemoves;
+
+    fn compose_removes() -> Self::ComposeRemoves;
+}
+
+impl<D, N, T> ComposeRemoves<T> for (D, N)
+where
+    T: DomainFunction<D>,
+    N: Pair + ComposeRemoves<T>,
+{
+    type ComposeRemoves = ComposeLT<DropF<MovesT<T, D>>, ComposeRemovesT<N, T>>;
+
+    fn compose_removes() -> Self::ComposeRemoves {
+        DropF::<MovesT<T, D>>::default().compose_l(N::compose_removes())
+    }
+}
+
+impl<D, T> ComposeRemoves<T> for (D, ())
+where
+    T: DomainFunction<D>,
+{
+    type ComposeRemoves = DropF<MovesT<T, D>>;
+
+    fn compose_removes() -> Self::ComposeRemoves {
+        DropF::<MovesT<T, D>>::default()
     }
 }

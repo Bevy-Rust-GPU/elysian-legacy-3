@@ -1,6 +1,6 @@
 use t_funk::{
-    closure::Closure,
-    collection::set::{Get, Set},
+    closure::{Closure, OutputT},
+    collection::set::{Get, Insert, InsertT},
 };
 
 use crate::Distance;
@@ -15,12 +15,15 @@ pub struct SmoothBoolean<F> {
 
 impl<F, A, B, C, FA, FB> Closure<(A, B, C, FA, FB)> for SmoothBoolean<F>
 where
-    C: Clone + Get<Distance<f32>> + Set<Distance<f32>>,
-    FA: Closure<C, Output = C>,
-    FB: Closure<C, Output = C>,
-    F: Closure<(C, C), Output = bool>,
+    C: Clone,
+    FA: Closure<C>,
+    FB: Closure<C>,
+    OutputT<FA, C>: Clone + Get<Distance<f32>> + Insert<Distance<f32>>,
+    OutputT<FB, C>:
+        Clone + Get<Distance<f32>> + Insert<Distance<f32>, Insert = InsertT<OutputT<FA, C>, Distance<f32>>>,
+    F: Closure<(OutputT<FA, C>, OutputT<FB, C>), Output = bool>,
 {
-    type Output = C;
+    type Output = InsertT<OutputT<FA, C>, Distance<f32>>;
 
     fn call(self, (_, _, c, fa, fb): (A, B, C, FA, FB)) -> Self::Output {
         let ca = fa.call(c.clone());
@@ -37,9 +40,9 @@ where
         let d = lerp(db, da, t) - self.k * t * (1.0 - t);
 
         if self.boolean.call((ca.clone(), cb.clone())) {
-            ca.set(Distance(d))
+            ca.insert(Distance(d))
         } else {
-            cb.set(Distance(d))
+            cb.insert(Distance(d))
         }
     }
 }

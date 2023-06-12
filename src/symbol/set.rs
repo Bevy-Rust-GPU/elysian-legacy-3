@@ -1,7 +1,7 @@
 use t_funk::{
     closure::{Closure, OutputT},
     closure::{Curry2, Curry2B},
-    collection::set::SetF,
+    collection::set::InsertF,
     typeclass::functor::Fmap,
 };
 
@@ -31,10 +31,10 @@ impl<T> LiftAdt for Set<T> {
 }
 
 impl<T, D> LiftEvaluate<D> for Set<T> {
-    type LiftEvaluate = Curry2B<SetF, T>;
+    type LiftEvaluate = Curry2B<InsertF, T>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        SetF.suffix2(self.0)
+        InsertF.suffix2(self.0)
     }
 }
 

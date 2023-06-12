@@ -2,14 +2,9 @@ use std::ops::Mul;
 
 use crate::{Distance, DomainFunction, Gradient, LiftAdt, Output, ShapeEnd};
 use glam::Vec2;
-use t_funk::{
-    closure::{Closure, Curry2},
-    function::{Abs, Function},
-    macros::{arrow::Arrow, category::Category, Closure},
-    typeclass::functor::{Fmap, FmapF},
-};
+use t_funk::{function::Abs, macros::lift, typeclass::functor::Fmap};
 
-// Isosurface output modifier symbol
+// Manifold output modifier symbol
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Manifold;
@@ -32,6 +27,7 @@ impl LiftAdt for Manifold {
 
 impl DomainFunction<Distance<f32>> for Manifold {
     type Inputs = Distance<f32>;
+    type Moves = ();
     type Function = ManifoldDistance;
 
     fn domain(self) -> Self::Function {
@@ -41,6 +37,7 @@ impl DomainFunction<Distance<f32>> for Manifold {
 
 impl DomainFunction<Gradient<Vec2>> for Manifold {
     type Inputs = (Distance<f32>, Gradient<Vec2>);
+    type Moves = ();
     type Function = ManifoldGradient;
 
     fn domain(self) -> Self::Function {
@@ -48,32 +45,16 @@ impl DomainFunction<Gradient<Vec2>> for Manifold {
     }
 }
 
-#[derive(
-    Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure, Category, Arrow,
-)]
-pub struct ManifoldDistance;
-
-impl Function<Distance<f32>> for ManifoldDistance {
-    type Output = Distance<f32>;
-
-    fn call(input: Distance<f32>) -> Self::Output {
-        FmapF.suffix2(Abs).call(input)
-    }
+#[lift]
+pub fn manifold_distance(input: Distance<f32>) -> Distance<f32> {
+    input.fmap(Abs)
 }
 
-#[derive(
-    Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure, Category, Arrow,
-)]
-pub struct ManifoldGradient;
-
-impl<G> Function<(Distance<f32>, Gradient<G>)> for ManifoldGradient
+#[lift]
+pub fn manifold_gradient<G>((Distance(d), Gradient(g)): (Distance<f32>, Gradient<G>)) -> Gradient<G>
 where
     G: Mul<f32, Output = G>,
 {
-    type Output = Gradient<G>;
-
-    fn call((Distance(d), Gradient(g)): (Distance<f32>, Gradient<G>)) -> Self::Output {
-        let s = d.signum();
-        Gradient(g * s)
-    }
+    let s = d.signum();
+    Gradient(g * s)
 }
