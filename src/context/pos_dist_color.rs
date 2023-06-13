@@ -101,9 +101,9 @@ impl<P, D, C> Remove<Color<C>> for PosDistColor<P, D, Color<C>> {
 impl<P, D, C> Empty for PosDistColor<P, D, C> {
     type Empty = PosDistColor<(), (), ()>;
 
-    fn empty(self) -> Self::Empty {
+    fn empty() -> Self::Empty {
         PosDistColor {
-            pos_dist: self.pos_dist.empty(),
+            pos_dist: PosDist::<P, D>::empty(),
             color: (),
         }
     }

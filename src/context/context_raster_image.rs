@@ -171,9 +171,9 @@ where
 impl<C, R, I> Empty for ContextRasterImage<C, R, I> {
     type Empty = ContextRasterImage<(), (), ()>;
 
-    fn empty(self) -> Self::Empty {
+    fn empty() -> Self::Empty {
         ContextRasterImage {
-            context_raster: self.context_raster.empty(),
+            context_raster: ContextRaster::<C, R>::empty(),
             image: (),
         }
     }

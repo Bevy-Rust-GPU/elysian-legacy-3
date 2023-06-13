@@ -321,6 +321,18 @@
   DONE: Scale now acts as a pre/post wrapper around some other ADT items,
         provides a baseline example with the related traits
 
+* Refactor so t_funk::set::Empty does not need a self parameter
+  * Currently using to avoid capturing context type in evaluation lifting machinery
+  * Will likely be able to create a specialized  intermediary function that takes self,
+    and returns Self::empty()
+  * Thinking about it, this should be a first-class macro abstraction in t-funk
+    * Generate a FunctionNameC type that impls Closure and uses
+      Self::function_name() to offload type reification to whatever it's called on
+    * Useful for any typeclass method that takes no params, ex. Pure, Return, and so on
+
+  DONE: Generated function structs with no inputs now take their receiver type
+        in the argument position rather than as composed PhantomData.
+
 =======================================================================================================================
 
 * Further generalization for Boolean and SmoothBoolean
@@ -357,11 +369,6 @@
   * Can use a parameter function to retrieve time from context and parametrize
   * This is higher-order operation over image-generating contexts
     * Uses another distinct context of its own, likely containing a list / array of outputs
-
-* Refactor so t_funk::set::Empty does not need a self parameter
-  * Currently using to avoid capturing context type in evaluation lifting machinery
-  * Will likely be able to create a specialized  intermediary function that takes self,
-    and returns Self::empty()
 
 * Investigate refactoring register machine interpreter into a State monad impl
   * Effectively equivalent - drags a state (i.e. context) through a chain of functions,

@@ -136,9 +136,9 @@ impl<C, R> Remove<String> for ContextRasterString<C, R, String> {
 impl<C, R, S> Empty for ContextRasterString<C, R, S> {
     type Empty = ContextRasterString<(), (), ()>;
 
-    fn empty(self) -> Self::Empty {
+    fn empty() -> Self::Empty {
         ContextRasterString {
-            context_raster: self.context_raster.empty(),
+            context_raster: ContextRaster::<C, R>::empty(),
             string: (),
         }
     }

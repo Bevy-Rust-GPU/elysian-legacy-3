@@ -97,9 +97,9 @@ impl<P, D, G> Remove<Gradient<G>> for PosDistGrad<P, D, Gradient<G>> {
 impl<P, D, G> Empty for PosDistGrad<P, D, G> {
     type Empty = PosDistGrad<(), (), ()>;
 
-    fn empty(self) -> Self::Empty {
+    fn empty() -> Self::Empty {
         PosDistGrad {
-            pos_dist: self.pos_dist.empty(),
+            pos_dist: PosDist::<P, D>::empty(),
             grad: (),
         }
     }

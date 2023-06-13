@@ -76,7 +76,7 @@ impl<C, R> Remove<Raster<R>> for ContextRaster<C, Raster<R>> {
 impl<C, R> Empty for ContextRaster<C, R> {
     type Empty = ContextRaster<(), ()>;
 
-    fn empty(self) -> Self::Empty {
+    fn empty() -> Self::Empty {
         ContextRaster {
             context: (),
             raster: (),
