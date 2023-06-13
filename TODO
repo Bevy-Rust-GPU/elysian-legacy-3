@@ -1,5 +1,4 @@
-* Refactor domain types as trait impls
-  * Semantically similar to context, i.e. a set of types
+* Refactor domain types as trait impls Semantically similar to context, i.e. a set of types
   * Will avoid having to implement combinators over (Distance, D)
   * Should allow replacing (DistanceF32, (GradientF32, ()) with PosDistGrad
     * Feels like Input / Field / Output taking multiple values may complicate this
@@ -333,12 +332,12 @@
   DONE: Generated function structs with no inputs now take their receiver type
         in the argument position rather than as composed PhantomData.
 
-=======================================================================================================================
-
-* Further generalization for Boolean and SmoothBoolean
+* Consider further generalization for Boolean and SmoothBoolean
   * Combiner / blending functions should be (C, C) -> C rather than (C, C) -> bool
 
-* Composability for combination functions
+  DONE: Now considering implementation.
+
+* Consider composability for combination functions
   * Need to be able to define per-context-member combination strategies
     ex. Boolean distance, lerp color with k = 0.5, always take normal from left side, etc
   * Similar strategy to domain function composition
@@ -347,8 +346,7 @@
     * Seems like it may be generalizable in some sense,
       though the difference in signatures necessitates abstraction
 
-* Reconsider replacing Then with Combine<A, B, ComposeL> or such
-  * Really, Then is just Combine with an implicit combinator
+  DONE: Now considering implementation.
 
 * Amend Combine typeclass impls
   * Foldr / Foldl / Mappend should produce a single value for each Combine,
@@ -357,6 +355,72 @@
     * Should allow for proper behaviour, possibly open the door to ADT-based evaluation
   * How to make this work for current usage?
     * Could make the combiner function a constructor for LiftEvaluateCombine
+  
+  DEPRECATED: No need if Combine is going to be an ADT wrapper,
+              can do passthrough to inner lists if needed
+
+=======================================================================================================================
+
+* Refactor Combine as a wrapper instead of a concrete ADT member
+  * Take advantage of context execution machinery to apply blending operations
+    * i.e. A, B and C types all hold ADT, instead of C being specialized to combine,
+           and C ADT is used to manipulate a context of contexts
+  * Use a supercontext to hold A / B contexts + final output context
+    * All the same type, since this is value-level picking
+    * FA, FB start as () and get populated via sub-evaluations,
+      FO starts as C::empty() and gets populated with values from FA / FB
+    * Should likely also hold K and blending factors, similar to existing distance-based SmoothBoolean impl
+  * Core operations:
+    * Evaluate - Evaluate a given set of domains on one or both children,
+                 write into respective contexts.
+                 Probably best as Evaluate<D, D> with an EvaluateBoth<D> alias for convenience
+                 (This resembles a Bifunctor?)
+    * Conditional - Pick between two operations based on context data
+                    ex. The Get / Get -> Lt construct currently used by Union
+    * Blend - Use a (T, T) -> T function to read from both contexts and write to the final context
+              Can use Fst / Snd to copy directly into final context,
+              a theoretical Lerp or other ops (hermite, curve evaluation, etc) for smooth blending
+              (Note that curve evaluation is a 1D distance function - useful case for Param lifting)
+    * Replace - Set the final context to A or B based on evaluation output
+                ex. Dragging values through without needing to address them explicitly
+  * Example high level operations:
+    * Blend
+      Evaluate both contexts in full, create final context via (T, T) -> T combiner functions
+      Evaluate full set of domains on both contexts
+      Use one binary function per member to write results into final context
+    * Prepass
+      Evaluate single domain on both contexts
+      Use binary function to pick a context based on output
+      Evaluate full set of domains on the chosen context
+      Replace output context with chosen context
+    * Bounding
+      Evaluate a single domain on a single context
+      Use unary function (ex. comparison with 0) to pick between constant infinite distance,
+      and evaluating the other context in full
+      (0 is technically an infinite field where every point is its surface,
+       and const infinite is the same but with every point being infinitely far away.
+       Inverse (i.e. always infinitely inside field) is also worth considering.
+       Generalization possible?)
+    * Pick (Optimization for to single-context evaluations, ex. distance boolean)
+      Evaluate full set of domains on both contexts
+      Use binary function to pick a context based on output
+      Replace output context with chosen context
+
+* Consider eliding entire ADT and using HList instead
+  * After the Combine refactor, ADT will just be a recursive list with Run-wrapped LHS
+  * At that point, Run can be trivially elided, resulting in a simple recursive list
+  * HList is more featureful, so would be a better foundation
+    for future composition / interpretation improvements
+
+* Investigate more idiomatic Raster -> ImageBuffer conversion
+  * Currently similar to monadic chaining, but implemented manually
+  * May be able to create typeclass impls for raster, imagebuffer and handle it that way
+  * Semantically, this should move the raster
+
+* Investigate type-level solution to move semantic aggregate removes
+  * In theory should be achievable with no concrete instance of the
+    to-remove set, since the type is the only relevant aspect for removal
+    * Some closure that composes PhantomData<SetType> and wraps type arithmetic?
 
 * Look into convenience functions for composing monadic structure
   * RepeatM etc, various utilities from Haskell's base libraries
@@ -381,6 +445,8 @@
 * Simple lighting model for rendering 2D fields
   * Concrete case for use of normal and color
 
+* UV domain, texture mapping machinery
+
 * Improve functions macro
   * Should be able to cover all cases present in t-funk and elysian
 
@@ -399,12 +465,21 @@
     parse multiple blocks
   * Unsure about where clause, needs to be per-block, but seems unergonomic
 
+* Consider a define_typeclass! macro
+  * Similar to define_adt!, but for traits instead of structs
+  * Use trait syntax with 'typeclass' as the keyword,
+    autogenerate an appropriately-named #[functions] #[types] trait + assoc type for each function
+
 * Improve lift macro to use PhantomData for handling non-bound types
   * Still a valid Function impl, since a self receiver is not needed
 
 * Better list abstraction for t-funk
   * Need a unified set of interfaces that can be implemented by HList and nested tuples
   * Ideally also regular tuples, though that may raise conflicts between approaches
+  * Monadic chaining / typeclasses are the solution - can use to transmute freely between list types (i.e. HList, Tuple, TList)
+    * Solution to interface conflicts is tuple transformers, i.e. newtypes
+      * First-class tuple impl should be for flat tuples (1, 2, 3)
+      * ex. TList((1, (2, (3, ())))) to apply HList-like semantics, TBTree for HBTree semantics, etc
 
 * Haskell diagrams R&D
   * Lots of food for thought in the documentation

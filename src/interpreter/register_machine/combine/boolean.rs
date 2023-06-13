@@ -19,13 +19,13 @@ where
     type Output = OutputT<FA, C>;
 
     fn call(self, (_, _, c, fa, fb): (A, B, C, FA, FB)) -> Self::Output {
-        let da = fa.call(c.clone());
-        let db = fb.call(c.clone());
+        let ca = fa.call(c.clone());
+        let cb = fb.call(c.clone());
 
-        if self.0.call((da.clone(), db.clone())) {
-            da
+        if self.0.call((ca.clone(), cb.clone())) {
+            ca
         } else {
-            db
+            cb
         }
     }
 }
@@ -55,10 +55,10 @@ where
     type Output = C;
 
     fn call(self, (a, b, c, fa, fb): (A, B, C, FA, FB)) -> Self::Output {
-        let da = LiftEvaluate::<Dist<f32>>::lift_evaluate(a).call(c.clone());
-        let db = LiftEvaluate::<Dist<f32>>::lift_evaluate(b).call(c.clone());
+        let ca = LiftEvaluate::<Dist<f32>>::lift_evaluate(a).call(c.clone());
+        let cb = LiftEvaluate::<Dist<f32>>::lift_evaluate(b).call(c.clone());
 
-        if self.0.call((da, db)) {
+        if self.0.call((ca, cb)) {
             fa.call(c)
         } else {
             fb.call(c)

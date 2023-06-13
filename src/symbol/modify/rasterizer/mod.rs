@@ -74,7 +74,7 @@ impl<S, C> Evaluable for Rasterizer<S, C> {
 
 impl<S, C, D> EvaluateFunction<D> for Rasterizer<S, C> {
     type Inputs = Context<C>;
-    type Moves = ();
+    type Moves = Context<C>;
     type Function = RasterizeF<S, D>;
 
     fn evaluate_function(self) -> Self::Function {

@@ -41,7 +41,7 @@ impl<const N: usize, R> Evaluable for RasterToAscii<N, R> {
 
 impl<const N: usize, R, D> EvaluateFunction<D> for RasterToAscii<N, R> {
     type Inputs = Raster<R>;
-    type Moves = ();
+    type Moves = Raster<R>;
     type Function = Curry2A<Ascii, Ramp<N>>;
 
     fn evaluate_function(self) -> Self::Function {

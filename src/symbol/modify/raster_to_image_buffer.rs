@@ -45,7 +45,7 @@ impl<R, F> Evaluable for RasterToImage<R, F> {
 
 impl<R, F, D> EvaluateFunction<D> for RasterToImage<R, F> {
     type Inputs = Raster<R>;
-    type Moves = ();
+    type Moves = Raster<R>;
     type Function = Image<R, F>;
 
     fn evaluate_function(self) -> Self::Function {

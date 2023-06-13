@@ -81,7 +81,7 @@ impl<T> Evaluable for ViuerPrinter<T> {
 
 impl<T, D> EvaluateFunction<D> for ViuerPrinter<T> {
     type Inputs = T;
-    type Moves = ();
+    type Moves = T;
     type Function = ViuerPrintF;
 
     fn evaluate_function(self) -> Self::Function {

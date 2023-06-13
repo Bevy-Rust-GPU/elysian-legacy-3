@@ -27,7 +27,7 @@ impl Evaluable for Print {
 
 impl<D> EvaluateFunction<D> for Print {
     type Inputs = String;
-    type Moves = ();
+    type Moves = String;
     type Function = PrintLn;
 
     fn evaluate_function(self) -> Self::Function {
