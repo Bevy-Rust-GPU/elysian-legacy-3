@@ -64,7 +64,7 @@ impl<P, D> Remove<Distance<D>> for PosDist<P, Distance<D>> {
 impl<P, D> Empty for PosDist<P, D> {
     type Empty = PosDist<(), ()>;
 
-    fn empty() -> Self::Empty {
+    fn empty(self) -> Self::Empty {
         PosDist { pos: (), dist: () }
     }
 }
@@ -102,7 +102,7 @@ mod test {
 
     #[test]
     fn test_pos_dist_set() {
-        let empty = PosDist::<Vec2, f32>::empty();
+        let empty = PosDist::<Vec2, f32>::default().empty();
         assert_eq!(empty, PosDist { pos: (), dist: () });
 
         let set_a = empty.insert(Position(Vec2::ZERO));

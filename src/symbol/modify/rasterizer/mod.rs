@@ -10,7 +10,9 @@ use t_funk::{
     typeclass::functor::Fmap,
 };
 
-use crate::{Context, Evaluate, EvaluateT, LiftAdt, Modify, EvaluateFunction, Position};
+use crate::{
+    Context, Evaluable, Evaluate, EvaluateFunction, EvaluateT, LiftAdt, LiftModify, Position, Run,
+};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Rasterizer<S, C> {
@@ -59,11 +61,15 @@ impl<S, C, F> Fmap<F> for Rasterizer<S, C> {
 }
 
 impl<S, C> LiftAdt for Rasterizer<S, C> {
-    type LiftAdt = Modify<Self>;
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Modify(self)
+        Run(self)
     }
+}
+
+impl<S, C> Evaluable for Rasterizer<S, C> {
+    type Lift = LiftModify;
 }
 
 impl<S, C, D> EvaluateFunction<D> for Rasterizer<S, C> {

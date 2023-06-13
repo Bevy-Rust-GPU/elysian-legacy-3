@@ -1,19 +1,13 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    closure::{CallF, Closure, Compose, ComposeLT, OutputT},
-    collection::set::{DropF, LiftContext, LiftContextT},
+    closure::{Closure, Compose, ComposeLT, OutputT},
     macros::{functions, types},
-    typeclass::arrow::{Fanout, FanoutT},
 };
 
 use crate::{
-    interpreter::register_machine::evaluate_function::FunctionT,
-    interpreter::register_machine::evaluate_function::MovesT, AdtEnd, Combine, EvaluateFunction,
-    LiftEvaluates, Modify, NotAdtEnd, Run, Shape, Then, LiftEvaluatesT,
+    AdtEnd, Combine, Evaluable, LiftEvaluable, LiftEvaluableT, LiftT, NotAdtEnd, Run, Then,
 };
-
-use super::evaluate_function::InputsT;
 
 #[functions]
 #[types]
@@ -23,45 +17,15 @@ pub trait LiftEvaluate<D> {
     fn lift_evaluate(self) -> Self::LiftEvaluate;
 }
 
-impl<A, D> LiftEvaluate<D> for Shape<A>
+impl<A, D> LiftEvaluate<D> for Run<A>
 where
-    D: LiftEvaluates<A>,
+    A: Evaluable,
+    LiftT<A>: LiftEvaluable<A, D>,
 {
-    type LiftEvaluate = LiftEvaluatesT<D, A>;
+    type LiftEvaluate = LiftEvaluableT<LiftT<A>, A, D>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        D::lift_evaluates(self.0)
-    }
-}
-
-impl<A, D> LiftEvaluate<D> for Modify<A>
-where
-    A: EvaluateFunction<D>,
-    FunctionT<A, D>: LiftContext<InputsT<A, D>>,
-    LiftContextT<FunctionT<A, D>, InputsT<A, D>>: Fanout<DropF<MovesT<A, D>>>,
-{
-    type LiftEvaluate = ComposeLT<
-        FanoutT<LiftContextT<FunctionT<A, D>, InputsT<A, D>>, DropF<MovesT<A, D>>>,
-        CallF,
-    >;
-
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        self.0
-            .evaluate_function()
-            .lift_context()
-            .fanout(DropF::<MovesT<A, D>>::default())
-            .compose_l(CallF)
-    }
-}
-
-impl<T, D> LiftEvaluate<D> for Run<T>
-where
-    T: LiftEvaluate<D>,
-{
-    type LiftEvaluate = LiftEvaluateT<T, D>;
-
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        self.0.lift_evaluate()
+        LiftT::<A>::lift_evaluable(self.0)
     }
 }
 

@@ -33,8 +33,7 @@ mod test {
     };
 
     use crate::{
-        adt, union, AdtEnd, Distance, Done, Shape, Get, Isosurface, LiftAdtF, Point, Run, Then,
-        Translate,
+        adt, union, AdtEnd, Distance, Done, Get, Isosurface, LiftAdtF, Point, Run, Then, Translate,
     };
 
     #[lift]
@@ -56,12 +55,12 @@ mod test {
         assert_eq!(
             to_list,
             HCons(
-                Shape(Translate(Vec2::new(0.5, 0.5))),
+                Translate(Vec2::new(0.5, 0.5)),
                 HCons(
-                    Shape(Point),
+                    Point,
                     HCons(
-                        Shape(Isosurface(0.2)),
-                        HCons(Shape(Point), HCons(Get::<Distance<f32>>::default(), HNil)),
+                        Isosurface(0.2),
+                        HCons(Point, HCons(Get::<Distance<f32>>::default(), HNil)),
                     ),
                 ),
             )
@@ -78,11 +77,11 @@ mod test {
         assert_eq!(
             to_list,
             HCons(
-                Shape(Translate(Vec2::new(0.5, 0.5))),
+                Translate(Vec2::new(0.5, 0.5)),
                 HCons(
-                    Shape(Point),
+                    Point,
                     HCons(
-                        Shape(Isosurface(0.2)),
+                        Isosurface(0.2),
                         HCons(Get::<Distance<f32>>::default(), HNil),
                     ),
                 ),
@@ -94,11 +93,11 @@ mod test {
         assert_eq!(
             to_shape,
             Then(
-                Run(Shape(Translate(Vec2::new(0.5, 0.5)))),
+                Run(Translate(Vec2::new(0.5, 0.5))),
                 Then(
-                    Run(Shape(Point)),
+                    Run(Point),
                     Then(
-                        Run(Shape(Isosurface(0.2))),
+                        Run(Isosurface(0.2)),
                         Then(Run(Get::<Distance<f32>>::default()), AdtEnd),
                     ),
                 ),

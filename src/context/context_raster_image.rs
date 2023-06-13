@@ -1,11 +1,12 @@
 use image::{ImageBuffer, Pixel};
-use t_funk::collection::set::{Get, Insert, Remove};
+use t_funk::collection::set::{
+    Drop, DropT, Empty, Get, Insert, InsertT, Remove, SubtractFrom, UnionWith,
+};
 
 use crate::{Context, ContextRaster, Raster};
 
 #[derive(Debug, PartialEq, Eq, Hash)]
-pub struct ContextRasterImage<C, R, I>
-{
+pub struct ContextRasterImage<C, R, I> {
     pub context_raster: ContextRaster<C, R>,
     pub image: I,
 }
@@ -164,5 +165,42 @@ where
             },
             image,
         )
+    }
+}
+
+impl<C, R, I> Empty for ContextRasterImage<C, R, I> {
+    type Empty = ContextRasterImage<(), (), ()>;
+
+    fn empty(self) -> Self::Empty {
+        ContextRasterImage {
+            context_raster: self.context_raster.empty(),
+            image: (),
+        }
+    }
+}
+
+impl<C, R, I, U> UnionWith<U> for ContextRasterImage<C, R, I>
+where
+    U: Insert<C>,
+    InsertT<U, C>: Insert<R>,
+    InsertT<InsertT<U, C>, R>: Insert<I>,
+{
+    type UnionWith = InsertT<InsertT<InsertT<U, C>, R>, I>;
+
+    fn union_with(self, u: U) -> Self::UnionWith {
+        self.context_raster.union_with(u).insert(self.image)
+    }
+}
+
+impl<C, R, I, U> SubtractFrom<U> for ContextRasterImage<C, R, I>
+where
+    U: Drop<C>,
+    DropT<U, C>: Drop<R>,
+    DropT<DropT<U, C>, R>: Drop<I>,
+{
+    type SubtractFrom = DropT<DropT<DropT<U, C>, R>, I>;
+
+    fn subtract_from(self, u: U) -> Self::SubtractFrom {
+        u.drop().drop().drop()
     }
 }

@@ -6,8 +6,8 @@ use crate::{
 };
 
 use t_funk::{
-    closure::{CallF, Closure, Compose, ComposeLF, ComposeLT, OutputT},
-    collection::set::DropF,
+    closure::{CallF, Closure, Compose, ComposeLF, ComposeLT, Curry2, Curry2B, OutputT},
+    collection::set::{EmptyF, InsertF, SubtractFromF},
     function::{Function, Id},
     macros::{types, Closure},
     typeclass::arrow::{Fanout, FanoutF, FanoutT, Second, SecondT},
@@ -63,7 +63,7 @@ where
                 OutputT<FanoutSettersT<Self>, OutputT<LiftDomainsListT<Self, T>, T>>,
                 ComposeSettersT<Self>,
             >,
-            ComposeRemovesT<Self, T>,
+            ComposeLT<FanoutT<ComposeLT<EmptyF, ComposeRemovesT<Self, T>>, Id>, SubtractFromF>,
         >,
         CallF,
     >;
@@ -73,7 +73,12 @@ where
             .compose_l(Self::fanout_setters())
             .call(input)
             .compose_l(Self::compose_setters())
-            .fanout(Self::compose_removes())
+            .fanout(
+                EmptyF
+                    .compose_l(Self::compose_removes())
+                    .fanout(Id)
+                    .compose_l(SubtractFromF),
+            )
             .compose_l(CallF)
     }
 }
@@ -197,22 +202,26 @@ pub trait ComposeRemoves<T> {
 impl<D, N, T> ComposeRemoves<T> for (D, N)
 where
     T: EvaluateFunction<D>,
+    MovesT<T, D>: Default,
     N: Pair + ComposeRemoves<T>,
 {
-    type ComposeRemoves = ComposeLT<DropF<MovesT<T, D>>, ComposeRemovesT<N, T>>;
+    type ComposeRemoves = ComposeLT<Curry2B<InsertF, MovesT<T, D>>, ComposeRemovesT<N, T>>;
 
     fn compose_removes() -> Self::ComposeRemoves {
-        DropF::<MovesT<T, D>>::default().compose_l(N::compose_removes())
+        InsertF
+            .suffix2(MovesT::<T, D>::default())
+            .compose_l(N::compose_removes())
     }
 }
 
 impl<D, T> ComposeRemoves<T> for (D, ())
 where
     T: EvaluateFunction<D>,
+    MovesT<T, D>: Default,
 {
-    type ComposeRemoves = DropF<MovesT<T, D>>;
+    type ComposeRemoves = Curry2B<InsertF, MovesT<T, D>>;
 
     fn compose_removes() -> Self::ComposeRemoves {
-        DropF::<MovesT<T, D>>::default()
+        InsertF.suffix2(MovesT::<T, D>::default())
     }
 }

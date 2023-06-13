@@ -1,5 +1,7 @@
 /// Evaluation context containing Position, Distance and Color
-use t_funk::collection::set::{Get, Insert, Remove};
+use t_funk::collection::set::{
+    Drop, DropT, Empty, Get, Insert, InsertT, Remove, SubtractFrom, UnionWith,
+};
 
 use crate::{Color, Distance, PosDist, Position};
 
@@ -93,5 +95,42 @@ impl<P, D, C> Remove<Color<C>> for PosDistColor<P, D, Color<C>> {
             },
             color,
         )
+    }
+}
+
+impl<P, D, C> Empty for PosDistColor<P, D, C> {
+    type Empty = PosDistColor<(), (), ()>;
+
+    fn empty(self) -> Self::Empty {
+        PosDistColor {
+            pos_dist: self.pos_dist.empty(),
+            color: (),
+        }
+    }
+}
+
+impl<P, D, C, U> UnionWith<U> for PosDistColor<P, D, C>
+where
+    U: Insert<P>,
+    InsertT<U, P>: Insert<D>,
+    InsertT<InsertT<U, P>, D>: Insert<C>,
+{
+    type UnionWith = InsertT<InsertT<InsertT<U, P>, D>, C>;
+
+    fn union_with(self, u: U) -> Self::UnionWith {
+        self.pos_dist.union_with(u).insert(self.color)
+    }
+}
+
+impl<P, D, G, U> SubtractFrom<U> for PosDistColor<P, D, G>
+where
+    U: Drop<P>,
+    DropT<U, P>: Drop<D>,
+    DropT<DropT<U, P>, D>: Drop<G>,
+{
+    type SubtractFrom = DropT<DropT<DropT<U, P>, D>, G>;
+
+    fn subtract_from(self, u: U) -> Self::SubtractFrom {
+        self.pos_dist.subtract_from(u).drop()
     }
 }

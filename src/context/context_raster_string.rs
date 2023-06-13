@@ -1,4 +1,6 @@
-use t_funk::collection::set::{Get, Insert, Remove};
+use t_funk::collection::set::{
+    Drop, DropT, Empty, Get, Insert, InsertT, Remove, SubtractFrom, UnionWith,
+};
 
 use crate::{Context, ContextRaster, Raster};
 
@@ -128,5 +130,42 @@ impl<C, R> Remove<String> for ContextRasterString<C, R, String> {
             },
             string,
         )
+    }
+}
+
+impl<C, R, S> Empty for ContextRasterString<C, R, S> {
+    type Empty = ContextRasterString<(), (), ()>;
+
+    fn empty(self) -> Self::Empty {
+        ContextRasterString {
+            context_raster: self.context_raster.empty(),
+            string: (),
+        }
+    }
+}
+
+impl<C, R, S, U> UnionWith<U> for ContextRasterString<C, R, S>
+where
+    U: Insert<C>,
+    InsertT<U, C>: Insert<R>,
+    InsertT<InsertT<U, C>, R>: Insert<S>,
+{
+    type UnionWith = InsertT<InsertT<InsertT<U, C>, R>, S>;
+
+    fn union_with(self, u: U) -> Self::UnionWith {
+        self.context_raster.union_with(u).insert(self.string)
+    }
+}
+
+impl<C, R, S, U> SubtractFrom<U> for ContextRasterString<C, R, S>
+where
+    U: Drop<C>,
+    DropT<U, C>: Drop<R>,
+    DropT<DropT<U, C>, R>: Drop<S>,
+{
+    type SubtractFrom = DropT<DropT<DropT<U, C>, R>, S>;
+
+    fn subtract_from(self, u: U) -> Self::SubtractFrom {
+        u.drop().drop().drop()
     }
 }

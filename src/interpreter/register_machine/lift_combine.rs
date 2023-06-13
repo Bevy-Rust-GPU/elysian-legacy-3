@@ -1,28 +1,12 @@
 use t_funk::macros::{impl_adt, types};
 
-use crate::{AdtEnd, Combine, Shape, Modify, Run, Then};
+use crate::{AdtEnd, Combine, Run, Then};
 
 #[types]
 pub trait LiftCombine<D> {
     type LiftCombine;
 
     fn lift_combine(self) -> Self::LiftCombine;
-}
-
-impl<A, D> LiftCombine<D> for Shape<A> {
-    type LiftCombine = Self;
-
-    fn lift_combine(self) -> Self::LiftCombine {
-        self
-    }
-}
-
-impl<A, D> LiftCombine<D> for Modify<A> {
-    type LiftCombine = Self;
-
-    fn lift_combine(self) -> Self::LiftCombine {
-        self
-    }
 }
 
 impl_adt! {

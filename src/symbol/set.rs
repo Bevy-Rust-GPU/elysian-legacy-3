@@ -5,7 +5,7 @@ use t_funk::{
     typeclass::functor::Fmap,
 };
 
-use crate::{LiftAdt, LiftEvaluate, LiftParam, LiftParamT, Run};
+use crate::{Evaluable, EvaluateFunction, LiftAdt, LiftNone, LiftParam, LiftParamT, Run};
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -30,10 +30,18 @@ impl<T> LiftAdt for Set<T> {
     }
 }
 
-impl<T, D> LiftEvaluate<D> for Set<T> {
-    type LiftEvaluate = Curry2B<InsertF, T>;
+impl<T> Evaluable for Set<T> {
+    type Lift = LiftNone;
+}
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
+impl<T, D> EvaluateFunction<D> for Set<T> {
+    type Inputs = ();
+
+    type Moves = ();
+
+    type Function = Curry2B<InsertF, T>;
+
+    fn evaluate_function(self) -> Self::Function {
         InsertF.suffix2(self.0)
     }
 }

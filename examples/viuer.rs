@@ -1,7 +1,8 @@
 use elysian::{
     adt, intersection, subtraction, union, AdtEnd, Circle, Color, Context, ContextRasterImage,
-    Dist, DistColorToRgb, Distance, Done, Evaluate, Isosurface, Manifold, Modify, PosDistColor,
-    Position, Raster, RasterToImage, Rasterizer, Run, Scale, Set, Then, Translate, ViuerPrinter,
+    Dist, DistColorToRgb, Distance, Done, Evaluate, Isosurface, Manifold, PosDistColor, Position,
+    Raster, RasterToImage, Rasterizer, Run, Scale, Set, Then, Translate,
+    ViuerPrinter,
 };
 use glam::{Vec2, Vec3};
 use image::{ImageBuffer, Rgb};
@@ -44,10 +45,10 @@ fn main() {
     fn viuer<T>(t: T)
     where
         Then<
-            Run<Modify<Rasterizer<T, ShapeCtxFrom>>>,
+            Run<Rasterizer<T, ShapeCtxFrom>>,
             Then<
-                Run<Modify<RasterToImage<ShapeCtxTo, DistColorToRgb>>>,
-                Then<Run<Modify<ViuerPrinter<ImageBuffer<Rgb<f32>, Vec<f32>>>>>, AdtEnd>,
+                Run<RasterToImage<ShapeCtxTo, DistColorToRgb>>,
+                Then<Run<ViuerPrinter<ImageBuffer<Rgb<f32>, Vec<f32>>>>, AdtEnd>,
             >,
         >: Evaluate<Domains, RasterCtx>,
     {
@@ -86,11 +87,15 @@ fn main() {
         >> Done;
 
     let _shape = adt()
-        << Translate(Vec2::new(0.25, 0.25))
-        << Scale(0.5_f32)
-        << combined
-        << Manifold
-        << Isosurface(0.5_f32)
+        << Scale(
+            0.5_f32,
+            adt()
+                << Translate(Vec2::new(0.25, 0.25))
+                << combined
+                << Manifold
+                << Isosurface(0.5_f32)
+                >> Done,
+        )
         >> tap(Viuer)
         >> Done;
 }

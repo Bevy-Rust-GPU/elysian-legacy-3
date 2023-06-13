@@ -1,8 +1,7 @@
 use core::ops::Sub;
 
-use crate::{Distance, EvaluateFunction, Shape, Gradient, LiftAdt};
+use crate::{Distance, Evaluable, EvaluateFunction, LiftAdt, LiftModify, Run};
 
-use glam::Vec2;
 use t_funk::{
     closure::{Curry2, Curry2B},
     macros::{applicative::Applicative, functor::Functor, lift, monad::Monad},
@@ -16,30 +15,24 @@ use t_funk::{
 pub struct Isosurface<T>(pub T);
 
 impl<T> LiftAdt for Isosurface<T> {
-    type LiftAdt = Shape<Self>;
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Shape(self)
+        Run(self)
     }
 }
 
-impl<T> EvaluateFunction<Distance<f32>> for Isosurface<T> {
+impl<T> Evaluable for Isosurface<T> {
+    type Lift = LiftModify;
+}
+
+impl<T, D> EvaluateFunction<D> for Isosurface<T> {
     type Inputs = Distance<f32>;
     type Moves = ();
     type Function = Curry2B<IsosurfaceDistance, T>;
 
     fn evaluate_function(self) -> Self::Function {
         IsosurfaceDistance.suffix2(self.0)
-    }
-}
-
-impl<T> EvaluateFunction<Gradient<Vec2>> for Isosurface<T> {
-    type Inputs = ();
-    type Moves = ();
-    type Function = ();
-
-    fn evaluate_function(self) -> Self::Function {
-        ()
     }
 }
 

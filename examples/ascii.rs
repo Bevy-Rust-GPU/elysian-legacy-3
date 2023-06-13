@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 
 use elysian::{
     adt, union, AdtEnd, Circle, Context, ContextRasterString, Dist, Distance, Done, Evaluate,
-    Isosurface, Manifold, Modify, PosDist, Position, Print, Raster, RasterToAscii, Rasterizer, Run,
-    Scale, Then, Translate, ASCII_RAMP,
+    Isosurface, Manifold, PosDist, Position, Print, Raster, RasterToAscii, Rasterizer, Run, Scale,
+    Then, Translate, ASCII_RAMP,
 };
 use glam::Vec2;
 use t_funk::{macros::lift, op_chain::tap};
@@ -19,8 +19,8 @@ fn main() {
     fn ascii<T>(t: T)
     where
         Then<
-            Run<Modify<Rasterizer<T, ShapeContextFrom>>>,
-            Then<Run<Modify<RasterToAscii<11, ShapeContextTo>>>, Then<Run<Modify<Print>>, AdtEnd>>,
+            Run<Rasterizer<T, ShapeContextFrom>>,
+            Then<Run<RasterToAscii<11, ShapeContextTo>>, Then<Run<Print>, AdtEnd>>,
         >: Evaluate<Domain, RasterCtx>,
     {
         let comp = adt()
@@ -46,11 +46,15 @@ fn main() {
     let combined = union() << shape_a << shape_b << shape_c << shape_d >> tap(Ascii) >> Done;
 
     let _shape = adt()
-        << Translate(Vec2::new(0.25, 0.25))
-        << Scale(0.5_f32)
-        << combined
-        << Isosurface(0.2_f32)
-        << Manifold
+        << Scale(
+            0.5_f32,
+            adt()
+                << Translate(Vec2::new(0.25, 0.25))
+                << combined
+                << Isosurface(0.2_f32)
+                << Manifold
+                >> Done,
+        )
         >> tap(Ascii)
         >> Done;
 }

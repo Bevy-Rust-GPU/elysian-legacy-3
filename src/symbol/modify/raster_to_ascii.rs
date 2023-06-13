@@ -12,8 +12,8 @@ use t_funk::{
 };
 
 use crate::{
-    AsUsize, CharsToString, Distance, Index, Invert, LiftAdt, Modify, EvaluateFunction, Raster,
-    Saturate,
+    AsUsize, CharsToString, Distance, Evaluable, EvaluateFunction, Index, Invert, LiftAdt,
+    LiftModify, Raster, Run, Saturate,
 };
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -28,11 +28,15 @@ impl<const N: usize, R, F> Fmap<F> for RasterToAscii<N, R> {
 }
 
 impl<const N: usize, R> LiftAdt for RasterToAscii<N, R> {
-    type LiftAdt = Modify<Self>;
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Modify(self)
+        Run(self)
     }
+}
+
+impl<const N: usize, R> Evaluable for RasterToAscii<N, R> {
+    type Lift = LiftModify;
 }
 
 impl<const N: usize, R, D> EvaluateFunction<D> for RasterToAscii<N, R> {

@@ -280,8 +280,6 @@
 
   DONE: These have been combined into EvaluateFunction
 
-=======================================================================================================================
-
 * Elide Shape and Modify in favor of associated types on EvaluateFunction
   * Prime difference is the lifting semantic
     * Given a set of domains, Modify produces a single C -> C function
@@ -291,8 +289,11 @@
       * Thusly, I / O modifiers like Translate would be better as Modify;
         since their impl is the same across all domains,
         fan-joining creates multiple identical computations, and is thus wasteful.
-    * Is there a nice way to encode these two behaviours in a single EvaluateFunction<D> trait impl?
-      * Could use an associated symbol type (or trait implementor) to specify desired behaviour
+
+  DONE: Implemented Evaluable trait to model symbol -> lift strategy,
+        LiftEvaluable trait to encode the lifting strategies themselves,
+        and LiftNone / LiftModify / LiftDomains as concrete strategies
+        for raw C -> C, context-lifted, and domain-lifted functions respectively.
 
 * Implement remove aggregation for context move semantics
   * Identical removes within the same set of domain functions currently conflict,
@@ -300,6 +301,9 @@
   * This can be solved by using the set-like properties of context types
     to union together a to-remove context, which can then subtract itself from the
     input context
+
+  DONE: Added self parameter to Empty to defer capturing context type until evaluation,
+        setup domain lifting to create empty context, populate from Moved, and subtract from input context.
 
 * Formalize wrapping operations
   * Operations that need control before and after child evaluation,
@@ -313,6 +317,11 @@
             k: 0.01,
         }
   * Scale(Inner) should LiftAdt to Then(ScalePosition, Then(Inner, Then(InverseScaleDistance, AdtEnd)))
+
+  DONE: Scale now acts as a pre/post wrapper around some other ADT items,
+        provides a baseline example with the related traits
+
+=======================================================================================================================
 
 * Further generalization for Boolean and SmoothBoolean
   * Combiner / blending functions should be (C, C) -> C rather than (C, C) -> bool
@@ -348,6 +357,11 @@
   * Can use a parameter function to retrieve time from context and parametrize
   * This is higher-order operation over image-generating contexts
     * Uses another distinct context of its own, likely containing a list / array of outputs
+
+* Refactor so t_funk::set::Empty does not need a self parameter
+  * Currently using to avoid capturing context type in evaluation lifting machinery
+  * Will likely be able to create a specialized  intermediary function that takes self,
+    and returns Self::empty()
 
 * Investigate refactoring register machine interpreter into a State monad impl
   * Effectively equivalent - drags a state (i.e. context) through a chain of functions,
