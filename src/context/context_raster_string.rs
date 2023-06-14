@@ -11,24 +11,18 @@ pub struct ContextRasterString<C, R, S> {
 }
 
 impl<C, R, S> Get<Context<C>> for ContextRasterString<Context<C>, R, S> {
-    type Get = Context<C>;
-
-    fn get(self) -> Self::Get {
-        Get::<Context<C>>::get(self.context_raster)
+    fn get(self) -> Context<C> {
+        self.context_raster.get()
     }
 }
 
 impl<C, R, S> Get<Raster<R>> for ContextRasterString<C, Raster<R>, S> {
-    type Get = Raster<R>;
-
     fn get(self) -> Raster<R> {
-        Get::<Raster<R>>::get(self.context_raster)
+        self.context_raster.get()
     }
 }
 
 impl<C, R> Get<String> for ContextRasterString<C, R, String> {
-    type Get = String;
-
     fn get(self) -> String {
         self.string
     }

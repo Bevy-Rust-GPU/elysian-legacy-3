@@ -55,7 +55,7 @@ pub const ASCII_RAMP: Ramp<11> = [' ', '.', ':', '-', '=', '+', '*', '#', '%', '
 #[lift]
 pub fn ascii<const N: usize, R>(ramp: Ramp<N>, rast: Raster<R>) -> String
 where
-    R: Clone + Get<Distance<f32>, Get = Distance<f32>>,
+    R: Clone + Get<Distance<f32>>,
 {
     rast.fmap(GetF::<Distance<f32>>::default())
         .fmap(CopointF)

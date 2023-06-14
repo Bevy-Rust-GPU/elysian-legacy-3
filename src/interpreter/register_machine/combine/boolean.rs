@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use t_funk::{
     closure::{Closure, OutputT},
-    collection::set::{Get, GetT},
+    collection::set::Get,
 };
 
 use crate::{Dist, LiftEvaluate, LiftEvaluateT};
@@ -14,7 +14,7 @@ pub struct BooleanCombine<F, T>(pub F, pub PhantomData<T>);
 impl<F, T, C> Closure<(C, C)> for BooleanCombine<F, T>
 where
     C: Clone + Get<T>,
-    F: Closure<(GetT<C, T>, GetT<C, T>), Output = bool>,
+    F: Closure<(T, T), Output = bool>,
 {
     type Output = C;
 

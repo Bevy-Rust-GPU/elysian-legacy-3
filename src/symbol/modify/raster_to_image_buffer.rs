@@ -56,7 +56,7 @@ impl<R, F, D> EvaluateFunction<D> for RasterToImage<R, F> {
 #[lift]
 pub fn dist_to_luma<C>(c: C) -> Luma<f32>
 where
-    C: Get<Distance<f32>, Get = Distance<f32>>,
+    C: Get<Distance<f32>>,
 {
     *Pixel::from_slice(&[c.get().fmap(Saturate).fmap(Invert).copoint()])
 }
@@ -64,7 +64,7 @@ where
 #[lift]
 pub fn dist_grad_to_rgb<C>(c: C) -> Rgb<f32>
 where
-    C: Get<(Distance<f32>, Gradient<Vec2>), Get = (Distance<f32>, Gradient<Vec2>)>,
+    C: Get<(Distance<f32>, Gradient<Vec2>)>,
 {
     let (Distance(dist), Gradient(g)) = c.get();
 
@@ -80,7 +80,7 @@ where
 #[lift]
 pub fn dist_color_to_rgb<C>(c: C) -> Rgb<f32>
 where
-    C: Get<(Distance<f32>, Color<Vec3>), Get = (Distance<f32>, Color<Vec3>)>,
+    C: Get<(Distance<f32>, Color<Vec3>)>,
 {
     let (Distance(dist), Color(c)) = c.get();
 

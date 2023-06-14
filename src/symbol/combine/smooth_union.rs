@@ -73,9 +73,7 @@ impl Default for NormalizedLerp {
 
 impl<C> Closure<(C, C, f32)> for NormalizedLerp
 where
-    C: Clone
-        + Get<(Distance<f32>, Gradient<Vec2>), Get = (Distance<f32>, Gradient<Vec2>)>
-        + Insert<(Distance<f32>, Gradient<Vec2>)>,
+    C: Clone + Get<(Distance<f32>, Gradient<Vec2>)> + Insert<(Distance<f32>, Gradient<Vec2>)>,
 {
     type Output = InsertT<C, (Distance<f32>, Gradient<Vec2>)>;
 

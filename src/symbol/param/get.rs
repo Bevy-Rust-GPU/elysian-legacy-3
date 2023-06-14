@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    collection::set::{Get, GetT},
+    collection::set::Get,
     macros::phantom::{PhantomClone, PhantomCopy, PhantomDefault},
 };
 
@@ -17,7 +17,7 @@ impl<T, C> LiftParam<C> for ParamGet<T>
 where
     C: Get<T>,
 {
-    type LiftParam = GetT<C, T>;
+    type LiftParam = T;
 
     fn lift_param(self, input: C) -> Self::LiftParam {
         input.get()
