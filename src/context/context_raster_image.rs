@@ -40,14 +40,18 @@ where
 }
 
 impl<C, R, I> Get<Context<C>> for ContextRasterImage<Context<C>, R, I> {
+    type Get = Context<C>;
+
     fn get(self) -> Context<C> {
-        self.context_raster.get()
+        Get::<Context<C>>::get(self.context_raster)
     }
 }
 
 impl<C, R, I> Get<Raster<R>> for ContextRasterImage<C, Raster<R>, I> {
+    type Get = Raster<R>;
+
     fn get(self) -> Raster<R> {
-        self.context_raster.get()
+        Get::<Raster<R>>::get(self.context_raster)
     }
 }
 
@@ -55,6 +59,8 @@ impl<C, R, P, PC> Get<ImageBuffer<P, PC>> for ContextRasterImage<C, R, ImageBuff
 where
     P: Pixel,
 {
+    type Get = ImageBuffer<P, PC>;
+
     fn get(self) -> ImageBuffer<P, PC> {
         self.image
     }

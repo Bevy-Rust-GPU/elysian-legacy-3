@@ -8,7 +8,7 @@ use t_funk::{
     },
 };
 
-use crate::{Distance, LiftCombine, Pair, PostBoolean, PreBoolean};
+use crate::{BooleanCombine, Distance, EvaluateAndCombine, LiftCombine, Pair, PreBoolean};
 
 use t_funk::{
     macros::{functions, impl_adt, types},
@@ -44,14 +44,10 @@ impl_adt! {
 pub struct IntersectionS;
 
 impl LiftCombine<(Distance<f32>, ())> for IntersectionS {
-    type LiftCombine = PostBoolean<ComposeLT<SplitT<GetF<Distance<f32>>, GetF<Distance<f32>>>, Gt>>;
+    type LiftCombine = EvaluateAndCombine<BooleanCombine<Gt, Distance<f32>>>;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        PostBoolean(
-            GetF::<Distance<f32>>::default()
-                .split(GetF::<Distance<f32>>::default())
-                .compose_l(Gt),
-        )
+        Default::default()
     }
 }
 

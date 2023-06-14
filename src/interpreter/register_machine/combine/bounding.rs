@@ -1,4 +1,7 @@
-use t_funk::{closure::Closure, collection::set::Insert};
+use t_funk::{
+    closure::{Closure, OutputT},
+    collection::set::Insert,
+};
 
 use crate::Distance;
 
@@ -9,22 +12,22 @@ pub struct Bounding<F>(pub F);
 /// Evaluate distance of A, return infinity if outside, evaluate inner shape if inside
 impl<F, A, B, C, FA, FB> Closure<(A, B, C, FA, FB)> for Bounding<F>
 where
-    A: Closure<C, Output = C>,
-    B: Closure<C, Output = C>,
-    C: Default + Clone + Insert<Distance<f32>, Insert = C>,
-    FA: Closure<C, Output = C>,
-    FB: Closure<C, Output = C>,
-    F: Closure<(C, C), Output = bool>,
+    A: Closure<C>,
+    C: Clone,
+    OutputT<A, C>: Default + Clone + Insert<Distance<f32>, Insert = OutputT<A, C>>,
+    FB: Closure<C, Output = OutputT<A, C>>,
+    F: Closure<(OutputT<A, C>, OutputT<A, C>), Output = bool>,
 {
-    type Output = C;
+    type Output = OutputT<A, C>;
 
     fn call(self, (a, _, c, _, fb): (A, B, C, FA, FB)) -> Self::Output {
-        let da = a.call(c.clone());
+        let ca = a.call(c.clone());
+        let cb: OutputT<A, C> = Default::default();
 
-        if self.0.call((da, Default::default())) {
+        if self.0.call((ca, cb.clone())) {
             fb.call(c)
         } else {
-            C::default().insert(Distance(f32::INFINITY))
+            cb.insert(Distance(f32::INFINITY))
         }
     }
 }

@@ -332,34 +332,9 @@
   DONE: Generated function structs with no inputs now take their receiver type
         in the argument position rather than as composed PhantomData.
 
-* Consider further generalization for Boolean and SmoothBoolean
-  * Combiner / blending functions should be (C, C) -> C rather than (C, C) -> bool
-
-  DONE: Now considering implementation.
-
-* Consider composability for combination functions
-  * Need to be able to define per-context-member combination strategies
-    ex. Boolean distance, lerp color with k = 0.5, always take normal from left side, etc
-  * Similar strategy to domain function composition
-    * Fanout A / B contexts across lifted (C, C) -> C functions to create setters,
-      compose setters, then apply setters to context
-    * Seems like it may be generalizable in some sense,
-      though the difference in signatures necessitates abstraction
-
-  DONE: Now considering implementation.
-
-* Amend Combine typeclass impls
-  * Foldr / Foldl / Mappend should produce a single value for each Combine,
-    rather than aggregating its A / B types as per Then.
-  * To wit, Combine should call F(A, B) in order to produce this single value
-    * Should allow for proper behaviour, possibly open the door to ADT-based evaluation
-  * How to make this work for current usage?
-    * Could make the combiner function a constructor for LiftEvaluateCombine
+* Create attribute macro to generate Set impls for a given struct
   
-  DEPRECATED: No need if Combine is going to be an ADT wrapper,
-              can do passthrough to inner lists if needed
-
-=======================================================================================================================
+  DONE: Implemented via t_funk::macros::set::set
 
 * Refactor Combine as a wrapper instead of a concrete ADT member
   * Take advantage of context execution machinery to apply blending operations
@@ -406,11 +381,91 @@
       Use binary function to pick a context based on output
       Replace output context with chosen context
 
+  ABANDONED: Not feasible with current framework:
+             * Would need map semantics for context of contexts,
+               since set semantics require knowing the full type in order to Get it,
+               and context types change over the course of evaluation
+             * Better to extend existing Combine framework for now,
+               reconsider later down the line
+
 * Consider eliding entire ADT and using HList instead
   * After the Combine refactor, ADT will just be a recursive list with Run-wrapped LHS
   * At that point, Run can be trivially elided, resulting in a simple recursive list
   * HList is more featureful, so would be a better foundation
     for future composition / interpretation improvements
+  
+  ABANDONED: Combine refactor is not happening, so this isn't feasible for the moment
+
+* Consider further generalization for Boolean and SmoothBoolean
+  * Combiner / blending functions should be (C, C) -> C rather than (C, C) -> bool
+
+  DONE: Now separated into evaluation function and context combiners
+        * Evaluation functions use the existing (A, B, C, FA, FB) signature and return a context
+        * Boolean uses a (C, C) -> bool to pick between contexts
+        * Blend uses a (C, C) -> T to calculate blending factor and a (C, C, T) -> C to combine contexts
+
+* Consider composability for combination functions
+  * Need to be able to define per-context-member combination strategies
+    ex. Boolean distance, lerp color with k = 0.5, always take normal from left side, etc
+  * Similar strategy to domain function composition
+    * Fanout A / B contexts across lifted (C, C) -> C functions to create setters,
+      compose setters, then apply setters to context
+    * Seems like it may be generalizable in some sense,
+      though the difference in signatures necessitates abstraction
+
+  DONE: Now considering implementation
+
+=======================================================================================================================
+
+* Use an associated type to decouple Get input param from its output
+  * Offloads set vs map semantics to implementor
+  * Seems reasonable enough; maps are a specialization of sets,
+    and there's enough implementation boilerplate that duplication should be avoided
+  * Allows using tag types to avoid naming full value type,
+    making GetT<T, U> more useful for bounds
+    * Should open up the possibility of storing contexts in contexts for Combine generalization
+
+* Generalize Combine
+  * Needs a similar degree of expressibility to existing shape definition setup
+    * i.e. A list of commands that can be composed with similar << syntax
+           However, there's no need for Combine in this context, so a simple list would do
+  * Using a context of contexts does not work due to fluid inner types
+  * Given that some form of context is still necessary for storing things like K and blend factors,
+    and that a super / sub relation is impractical, perhaps a sibling relation is viable
+  * i.e. Using a separate context to store combine-specific data,
+         accessible to participants via some separate parameter or specialized auto-lifting
+
+  * Need to generalize explicit domain evaluation vs implicit
+    * i.e. Manual lift-evaluate vs calling the inherited full-evaluate continuations
+    * Perhaps use some tag type to signify "whatever the top-level eval is using"?
+    * Resembles Evaluable; different ways to lift functions into some shared signature
+      * In this case, the differentiator is which of the (A, B, C, FA, FB) params are required
+
+  * Example cases:
+    * Evaluate inherited for both, compare distance, return closer (Boolean Union without extra params)
+    * Evaluate distance for both, compare, evaluate inherited for closer (Boolean Union with extra params)
+    * Evaluate distance for left, compare with literal, evaluate inherited for right if true and return literal if false (Bounding)
+    * Evaluate distance for both, compare, take some other param of whichever is closer (Proxy)
+      * This implies a need for partial application; generate setter thunks for composing final output?
+    * Various combinations of the above
+      * Evaluate distance for both, calculate blend color (assuming color is domain-agnostic), pick closer, evaluate inherited, apply blend color
+  
+  * Based on the above, it seems similar to the existing evaluation machinery,
+    but with extra specialization to handle building an output context from two input contexts
+    instead of rebuilding around even higher level abstractions for greater generality
+    * In comparison to shape, the A -> B move is a (C, C) -> C move, after which further evaluation may take place
+      * To wit, that implies some (C, C) -> (C, C) operations as well as some C -> C operations
+        * Though, C -> C is just regular ADT functionality; could use ADT expansion to inject after Combine
+
+  * Once an extensible structure is in place, reconsider splitting Combine out of the ADT as a freestanding wrapper
+
+* Reconsider Combine typeclass impls
+  * Foldr / Foldl / Mappend should produce a single value for each Combine,
+    rather than aggregating its A / B types as per Then.
+  * To wit, Combine should call F(A, B) in order to produce this single value
+    * Should allow for proper behaviour, possibly open the door to ADT-based evaluation
+  * How to make this work for current usage?
+    * Could make the combiner function a constructor for LiftEvaluateCombine
 
 * Investigate more idiomatic Raster -> ImageBuffer conversion
   * Currently similar to monadic chaining, but implemented manually
@@ -449,6 +504,10 @@
 
 * Improve functions macro
   * Should be able to cover all cases present in t-funk and elysian
+
+* Improve set macro
+  * Doesn't handle literal types (ex. String)
+  * Doesn't handle generic types whose param count differs (ex. Image<P, PC>)
 
 * Revisit autogenerated type suffixes
   * FooT conflicts with the T suffix for monad transformers

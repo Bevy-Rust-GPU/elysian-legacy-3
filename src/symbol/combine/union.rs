@@ -5,7 +5,9 @@ use t_funk::{
     typeclass::arrow::{Split, SplitT},
 };
 
-use crate::{Distance, LiftCombine, Pair, PostBoolean, PreBoolean};
+use crate::{
+    BooleanCombine, Distance, EvaluateAndCombine, LiftCombine, Pair, PreBoolean,
+};
 
 use t_funk::{
     macros::{functions, impl_adt, types},
@@ -41,14 +43,10 @@ impl_adt! {
 pub struct UnionS;
 
 impl LiftCombine<(Distance<f32>, ())> for UnionS {
-    type LiftCombine = PostBoolean<ComposeLT<SplitT<GetF<Distance<f32>>, GetF<Distance<f32>>>, Lt>>;
+    type LiftCombine = EvaluateAndCombine<BooleanCombine<Lt, Distance<f32>>>;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        PostBoolean(
-            GetF::<Distance<f32>>::default()
-                .split(GetF::<Distance<f32>>::default())
-                .compose_l(Lt),
-        )
+        Default::default()
     }
 }
 

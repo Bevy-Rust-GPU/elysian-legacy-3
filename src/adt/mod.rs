@@ -93,6 +93,7 @@ mod test {
 
         let positioned = adt() << Set(Position(Vec2::default())) << combined >> Done;
 
+        /*
         let input = PosDistColor::<(), (), Color<Vec3>>::default();
         let foo = positioned.lift_param(input.clone());
         let foo = LiftCombine::<Dist<f32>>::lift_combine(foo);
@@ -100,6 +101,7 @@ mod test {
         let _foo = foo.call(input);
         let _foo =
             Evaluate::<Dist<f32>, PosDistColor<(), (), Color<Vec3>>>::evaluate(positioned, input);
+        */
 
         pub type ShapeCtxFrom = PosDistGrad<Position<Vec2>, (), ()>;
         pub type ShapeCtxTo = PosDistGrad<(), Distance<f32>, Gradient<Vec2>>;
@@ -127,11 +129,6 @@ mod test {
             << Print
         */
             >> Done;
-
-        let foo = rasterizer.lift_param(context.clone());
-        let foo = LiftCombine::<DistGrad<f32, Vec2>>::lift_combine(foo);
-        let foo = LiftEvaluate::<DistGrad<f32, Vec2>>::lift_evaluate(foo);
-        let _foo = foo.call(RasterCtx::default());
 
         Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
 

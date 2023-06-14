@@ -1,7 +1,9 @@
+mod blend;
 mod boolean;
 mod bounding;
-mod smooth_boolean;
+mod evaluation;
 
+pub use blend::*;
 pub use boolean::*;
 pub use bounding::*;
-pub use smooth_boolean::*;
+pub use evaluation::*;

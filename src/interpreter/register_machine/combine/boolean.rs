@@ -1,28 +1,28 @@
-use t_funk::closure::{Closure, OutputT};
+use std::marker::PhantomData;
+
+use t_funk::{
+    closure::{Closure, OutputT},
+    collection::set::{Get, GetT},
+};
 
 use crate::{Dist, LiftEvaluate, LiftEvaluateT};
 
-/// Evaluate two shapes in full, then pick one based on the output of a binary function
-/// Primarily useful in single-domain contexts to avoid the double evaluation of PreBoolean.
+// Given two evaluated contexts, pick one using the output of a (C, C) -> bool function
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct PostBoolean<F>(pub F);
+pub struct BooleanCombine<F, T>(pub F, pub PhantomData<T>);
 
-impl<F, A, B, C, FA, FB> Closure<(A, B, C, FA, FB)> for PostBoolean<F>
+impl<F, T, C> Closure<(C, C)> for BooleanCombine<F, T>
 where
-    C: Clone,
-    FA: Closure<C>,
-    FB: Closure<C, Output = OutputT<FA, C>>,
-    OutputT<FA, C>: Clone,
-    OutputT<FB, C>: Clone,
-    F: Closure<(OutputT<FA, C>, OutputT<FB, C>), Output = bool>,
+    C: Clone + Get<T>,
+    F: Closure<(GetT<C, T>, GetT<C, T>), Output = bool>,
 {
-    type Output = OutputT<FA, C>;
+    type Output = C;
 
-    fn call(self, (_, _, c, fa, fb): (A, B, C, FA, FB)) -> Self::Output {
-        let ca = fa.call(c.clone());
-        let cb = fb.call(c.clone());
+    fn call(self, (ca, cb): (C, C)) -> Self::Output {
+        let ta = ca.clone().get();
+        let tb = cb.clone().get();
 
-        if self.0.call((ca.clone(), cb.clone())) {
+        if self.0.call((ta, tb)) {
             ca
         } else {
             cb

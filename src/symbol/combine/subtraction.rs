@@ -5,7 +5,7 @@ use t_funk::{
     typeclass::arrow::{First, Firsted, Split, SplitT},
 };
 
-use crate::{Distance, LiftCombine, Pair, PostBoolean};
+use crate::{BooleanCombine, Distance, EvaluateAndCombine, LiftCombine, Pair, PreBoolean};
 
 use t_funk::{
     macros::{functions, impl_adt, types},
@@ -41,16 +41,11 @@ impl_adt! {
 pub struct SubtractionS;
 
 impl LiftCombine<(Distance<f32>, ())> for SubtractionS {
-    type LiftCombine = PostBoolean<
-        ComposeLT<SplitT<GetF<Distance<f32>>, GetF<Distance<f32>>>, Composed<Gt, Firsted<Neg>>>,
-    >;
+    type LiftCombine =
+        EvaluateAndCombine<BooleanCombine<Composed<Gt, Firsted<Neg>>, Distance<f32>>>;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        PostBoolean(
-            GetF::<Distance<f32>>::default()
-                .split(GetF::<Distance<f32>>::default())
-                .compose_l(Gt.compose(Neg.first())),
-        )
+        Default::default()
     }
 }
 
@@ -58,12 +53,12 @@ impl<D> LiftCombine<(Distance<f32>, D)> for SubtractionS
 where
     D: Pair,
 {
-    type LiftCombine = PostBoolean<
+    type LiftCombine = PreBoolean<
         ComposeLT<SplitT<GetF<Distance<f32>>, GetF<Distance<f32>>>, Composed<Gt, Firsted<Neg>>>,
     >;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        PostBoolean(
+        PreBoolean(
             GetF::<Distance<f32>>::default()
                 .split(GetF::<Distance<f32>>::default())
                 .compose_l(Gt.compose(Neg.first())),
