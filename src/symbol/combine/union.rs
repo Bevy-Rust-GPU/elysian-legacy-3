@@ -1,12 +1,13 @@
+use std::marker::PhantomData;
+
 use t_funk::{
-    closure::{Compose, ComposeLT},
-    collection::set::GetF,
+    closure::{Compose, ComposeT},
     function::Lt,
-    typeclass::arrow::{Split, SplitT},
 };
 
 use crate::{
-    BooleanCombine, Distance, EvaluateAndCombine, LiftCombine, Pair, PreBoolean,
+    BooleanConditional, ContextA, ContextB, ContextOut, Dist, Distance, EvaluateSide, Inherited,
+    Left, LiftCombine, CopyContext, Pair, Right,
 };
 
 use t_funk::{
@@ -43,10 +44,25 @@ impl_adt! {
 pub struct UnionS;
 
 impl LiftCombine<(Distance<f32>, ())> for UnionS {
-    type LiftCombine = EvaluateAndCombine<BooleanCombine<Lt, Distance<f32>>>;
+    type LiftCombine = ComposeT<
+        BooleanConditional<
+            Lt,
+            CopyContext<ContextA, ContextOut>,
+            CopyContext<ContextB, ContextOut>,
+            Distance<f32>,
+        >,
+        ComposeT<EvaluateSide<Right, Inherited, ContextB>, EvaluateSide<Left, Inherited, ContextA>>,
+    >;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        Default::default()
+        EvaluateSide::<Left, Inherited, ContextA>::default()
+            .compose_l(EvaluateSide::<Right, Inherited, ContextB>::default())
+            .compose_l(BooleanConditional(
+                Lt,
+                CopyContext::default(),
+                CopyContext::default(),
+                PhantomData::<Distance<f32>>,
+            ))
     }
 }
 
@@ -54,13 +70,24 @@ impl<D> LiftCombine<(Distance<f32>, D)> for UnionS
 where
     D: Pair,
 {
-    type LiftCombine = PreBoolean<ComposeLT<SplitT<GetF<Distance<f32>>, GetF<Distance<f32>>>, Lt>>;
+    type LiftCombine = ComposeT<
+        BooleanConditional<
+            Lt,
+            EvaluateSide<Left, Inherited, ContextOut>,
+            EvaluateSide<Right, Inherited, ContextOut>,
+            Distance<f32>,
+        >,
+        ComposeT<EvaluateSide<Right, Dist<f32>, ContextB>, EvaluateSide<Left, Dist<f32>, ContextA>>,
+    >;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        PreBoolean(
-            GetF::<Distance<f32>>::default()
-                .split(GetF::<Distance<f32>>::default())
-                .compose_l(Lt),
-        )
+        EvaluateSide::<Left, Dist<f32>, ContextA>::default()
+            .compose_l(EvaluateSide::<Right, Dist<f32>, ContextB>::default())
+            .compose_l(BooleanConditional(
+                Lt,
+                EvaluateSide::<Left, Inherited, ContextOut>::default(),
+                EvaluateSide::<Right, Inherited, ContextOut>::default(),
+                PhantomData::<Distance<f32>>,
+            ))
     }
 }

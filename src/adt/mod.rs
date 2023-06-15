@@ -61,27 +61,25 @@ pub use t_funk::op_chain::Done;
 #[cfg(test)]
 mod test {
 
-    use glam::{Vec2, Vec3};
+    use glam::Vec2;
     use image::{ImageBuffer, Rgb};
 
     use crate::{
-        adt, smooth_union, Color, Context, ContextRasterImage, Dist, DistGrad, DistGradToRgb,
-        Distance, Done, Evaluate, Gradient, Isosurface, LiftCombine, LiftEvaluate, LiftParam,
-        Point, PosDist, PosDistColor, PosDistGrad, Position, PositionToDistance, Raster,
-        RasterToImage, Rasterizer, Set, Translate, ViuerPrinter,
+        adt, proxy, Context, ContextRasterImage, Dist, DistGrad, DistGradToRgb, Distance,
+        Done, Evaluate, Gradient, Isosurface, LiftCombine, LiftParam, Point, PosDist, PosDistGrad,
+        Position, PositionToDistance, Raster, RasterToImage, Rasterizer, Set, Translate,
+        ViuerPrinter,
     };
-
-    use t_funk::closure::Closure;
 
     #[test]
     fn test_adt() {
         let shape_a =
-            adt() << Translate(Vec2::new(-0.8, -0.4)) << Point << Isosurface(0.8_f32) >> Done;
+            adt() << Translate(Vec2::new(-0.2, -0.2)) << Point << Isosurface(0.8_f32) >> Done;
         let shape_b =
-            adt() << Translate(Vec2::new(0.8, 0.4)) << Point << Isosurface(0.8_f32) >> Done;
-        let shape_c =
+            adt() << Translate(Vec2::new(0.2, 0.2)) << Point << Isosurface(0.8_f32) >> Done;
+        let _shape_c =
             adt() << Translate(Vec2::new(0.0, 0.4)) << Point << Isosurface(0.8_f32) >> Done;
-        let shape_d =
+        let _shape_d =
             adt() << Translate(Vec2::new(0.0, -0.4)) << Point << Isosurface(0.8_f32) >> Done;
 
         /*
@@ -89,9 +87,9 @@ mod test {
             union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
         */
 
-        let combined = smooth_union() << shape_a << shape_b << shape_c << shape_d >> Done;
+        let combined = proxy::<Gradient<Vec2>>() << shape_a << shape_b >> Done; //<< shape_c << shape_d >> Done;
 
-        let positioned = adt() << Set(Position(Vec2::default())) << combined >> Done;
+        let _positioned = adt() << Set(Position(Vec2::default())) << combined >> Done;
 
         /*
         let input = PosDistColor::<(), (), Color<Vec3>>::default();
@@ -131,13 +129,6 @@ mod test {
             >> Done;
 
         Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
-
-        /*
-        Evaluate::<Dist<f32>, ContextRaster<PosDist<Vec2, f32>, PosDist<Vec2, f32>>>::evaluate(
-            rasterizer,
-            context,
-        );
-        */
 
         let foo = adt() << Set(Position(Vec2::default())) << PositionToDistance >> Done;
         let ctx = PosDist::<(), ()>::default();

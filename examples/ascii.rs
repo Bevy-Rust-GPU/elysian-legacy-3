@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use elysian::{
     adt, union, AdtEnd, Circle, Context, ContextRasterString, Dist, Distance, Done, Evaluate,
     Isosurface, Manifold, PosDist, Position, Print, Raster, RasterToAscii, Rasterizer, Run, Scale,
-    Then, Translate, ASCII_RAMP,
+    Then, Translate, ASCII_RAMP, outer_bound,
 };
 use glam::Vec2;
 use t_funk::{macros::lift, op_chain::tap};
@@ -44,6 +44,7 @@ fn main() {
         adt() << Translate(Vec2::new(0.0, -0.8)) << Circle(0.15_f32) >> tap(Ascii) >> Done;
 
     let combined = union() << shape_a << shape_b << shape_c << shape_d >> tap(Ascii) >> Done;
+    let combined = outer_bound() << shape_a << combined >> Done;
 
     let _shape = adt()
         << Scale(

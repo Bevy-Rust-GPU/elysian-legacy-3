@@ -1,13 +1,16 @@
 use glam::Vec2;
+use std::marker::PhantomData;
 use t_funk::{
-    closure::Closure,
-    collection::set::{Get, Insert, InsertT},
+    closure::{Closure, Compose, ComposeT},
+    function::Lt,
     macros::{functions, impl_adt, types},
     op_chain::OpChain,
 };
 
 use crate::{
-    BlendCombine, Combine, Distance, EvaluateAndCombine, Gradient, LiftAdtF, LiftCombine, Run, Then,
+    BlendProperty, BlendPropertyDist, BooleanConditional, Combine, ContextA, ContextB, ContextOut,
+    Distance, EvaluateSide, Gradient, Inherited, Left, LiftAdtF, LiftCombine, CopyContext, Right,
+    Run, Then,
 };
 
 pub fn smooth_union() -> OpChain<LiftAdtF, SmoothUnionF> {
@@ -37,55 +40,71 @@ impl_adt! {
 pub struct SmoothUnionS;
 
 impl<D> LiftCombine<D> for SmoothUnionS {
-    type LiftCombine =
-        EvaluateAndCombine<BlendCombine<NormalizedDistance, NormalizedLerp, Distance<f32>>>;
+    type LiftCombine = ComposeT<
+        BlendPropertyDist<PolynomialSmoothMin<Gradient<Vec2>>, Gradient<Vec2>>,
+        ComposeT<
+            BlendProperty<PolynomialSmoothMin<Distance<f32>>, Distance<f32>>,
+            ComposeT<
+                BooleanConditional<
+                    Lt,
+                    CopyContext<ContextA, ContextOut>,
+                    CopyContext<ContextB, ContextOut>,
+                    Distance<f32>,
+                >,
+                ComposeT<
+                    EvaluateSide<Right, Inherited, ContextB>,
+                    EvaluateSide<Left, Inherited, ContextA>,
+                >,
+            >,
+        >,
+    >;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        Default::default()
+        EvaluateSide::<Left, Inherited, ContextA>::default()
+            .compose_l(EvaluateSide::<Right, Inherited, ContextB>::default())
+            .compose_l(BooleanConditional(
+                Lt,
+                CopyContext::default(),
+                CopyContext::default(),
+                PhantomData::<Distance<f32>>,
+            ))
+            .compose_l(BlendProperty(
+                PolynomialSmoothMin(0.5, PhantomData::<Distance<f32>>),
+                PhantomData::<Distance<f32>>,
+            ))
+            .compose_l(BlendPropertyDist(
+                PolynomialSmoothMin(0.5, PhantomData::<Gradient<Vec2>>),
+                PhantomData::<Gradient<Vec2>>,
+            ))
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
-pub struct NormalizedDistance(f32);
+#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
+pub struct PolynomialSmoothMin<T>(pub f32, PhantomData<T>);
 
-impl Default for NormalizedDistance {
-    fn default() -> Self {
-        Self(0.2)
-    }
-}
-
-impl Closure<(Distance<f32>, Distance<f32>)> for NormalizedDistance {
-    type Output = f32;
+impl Closure<(Distance<f32>, Distance<f32>)> for PolynomialSmoothMin<Distance<f32>> {
+    type Output = Distance<f32>;
 
     fn call(self, (Distance(da), Distance(db)): (Distance<f32>, Distance<f32>)) -> Self::Output {
-        (0.5 + 0.5 * (db - da) / self.0).clamp(0.0, 1.0)
+        let t = (0.5 + 0.5 * (db - da) / self.0).clamp(0.0, 1.0);
+        let d = db.lerp(da, t) - self.0 * t * (1.0 - t);
+        Distance(d)
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
-pub struct NormalizedLerp(f32);
-
-impl Default for NormalizedLerp {
-    fn default() -> Self {
-        Self(0.25)
-    }
-}
-
-impl<C> Closure<(C, C, f32)> for NormalizedLerp
+impl<T> Closure<(Distance<f32>, Distance<f32>, T, T)> for PolynomialSmoothMin<T>
 where
-    C: Clone + Get<(Distance<f32>, Gradient<Vec2>)> + Insert<(Distance<f32>, Gradient<Vec2>)>,
+    T: Lerp<T, f32>,
 {
-    type Output = InsertT<C, (Distance<f32>, Gradient<Vec2>)>;
+    type Output = LerpT<T, T, f32>;
 
-    fn call(self, (ca, cb, t): (C, C, f32)) -> Self::Output {
-        let da = ca.clone().get();
-        let db = cb.clone().get();
-
-        let mut d = db.lerp(da, t);
-        d.0 .0 = d.0 .0 - self.0 * t * (1.0 - t);
-        d.1 .0 = d.1 .0.normalize();
-
-        if da.0 < db.0 { ca } else { cb }.insert(d)
+    fn call(
+        self,
+        (Distance(da), Distance(db), pa, pb): (Distance<f32>, Distance<f32>, T, T),
+    ) -> Self::Output {
+        let t = (0.5 + 0.5 * (db - da) / self.0).clamp(0.0, 1.0);
+        let p = pb.lerp(pa, t);
+        p
     }
 }
 

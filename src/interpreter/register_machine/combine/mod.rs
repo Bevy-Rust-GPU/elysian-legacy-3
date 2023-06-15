@@ -1,9 +1,13 @@
 mod blend;
 mod boolean;
-mod bounding;
+mod context;
 mod evaluation;
+mod overwrite;
+mod insert;
 
 pub use blend::*;
 pub use boolean::*;
-pub use bounding::*;
+pub use context::*;
 pub use evaluation::*;
+pub use overwrite::*;
+pub use insert::*;

@@ -2,28 +2,84 @@ use std::marker::PhantomData;
 
 use t_funk::{
     closure::{Closure, OutputT},
-    collection::set::Get,
+    collection::{
+        map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
+        set::{Get as GetS, Insert as InsertS, InsertT as InsertST},
+    },
 };
 
-// Given two evaluated contexts, calculate a blending factor using a (C, C) -> T function,
-// then blend them using a (C, C, T) -> C function
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct BlendCombine<TF, BF, T>(pub TF, pub BF, pub PhantomData<T>);
+use crate::{ContextA, ContextB, ContextOut, Distance};
 
-impl<TF, BF, T, C> Closure<(C, C)> for BlendCombine<TF, BF, T>
+// Fetch a given property P from ContextA and ContextB,
+// combine using a (P, P) -> P function, and write it to ContextOut
+#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
+pub struct BlendProperty<F, T>(pub F, pub PhantomData<T>);
+
+impl<F, T, C> Closure<C> for BlendProperty<F, T>
 where
-    C: Clone + Get<T>,
-    TF: Closure<(T, T)>,
-    BF: Closure<(C, C, OutputT<TF, (T, T)>)>,
+    C: Clone
+        + GetM<ContextA>
+        + GetM<ContextB>
+        + GetM<ContextOut>
+        + InsertM<ContextOut, InsertST<GetMT<C, ContextOut>, OutputT<F, (T, T)>>>,
+    GetMT<C, ContextA>: GetS<T>,
+    GetMT<C, ContextB>: GetS<T>,
+    GetMT<C, ContextOut>: InsertS<OutputT<F, (T, T)>>,
+    F: Closure<(T, T)>,
 {
-    type Output = OutputT<BF, (C, C, OutputT<TF, (T, T)>)>;
+    type Output = InsertMT<C, ContextOut, InsertST<GetMT<C, ContextOut>, OutputT<F, (T, T)>>>;
 
-    fn call(self, (ca, cb): (C, C)) -> Self::Output {
-        let ta = ca.clone().get();
-        let tb = cb.clone().get();
+    fn call(self, ctx: C) -> Self::Output {
+        let context_a = GetM::<ContextA>::get(ctx.clone());
+        let context_b = GetM::<ContextB>::get(ctx.clone());
+        let context_out = GetM::<ContextOut>::get(ctx.clone());
 
-        let t = self.0.call((ta, tb));
-        self.1.call((ca, cb, t))
+        let pa = context_a.get();
+        let pb = context_b.get();
+
+        let context_out = context_out.insert(self.0.call((pa, pb)));
+        ctx.insert(context_out)
     }
 }
 
+// Fetch distance D and a given property P from ContextA and ContextB,
+// combine using a (D, D, P, P) -> P function, and write it to ContextOut
+#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
+pub struct BlendPropertyDist<F, T>(pub F, pub PhantomData<T>);
+
+impl<F, T, C> Closure<C> for BlendPropertyDist<F, T>
+where
+    C: Clone
+        + GetM<ContextA>
+        + GetM<ContextB>
+        + GetM<ContextOut>
+        + InsertM<
+            ContextOut,
+            InsertST<GetMT<C, ContextOut>, OutputT<F, (Distance<f32>, Distance<f32>, T, T)>>,
+        >,
+    GetMT<C, ContextA>: Clone + GetS<Distance<f32>> + GetS<T>,
+    GetMT<C, ContextB>: Clone + GetS<Distance<f32>> + GetS<T>,
+    F: Closure<(Distance<f32>, Distance<f32>, T, T)>,
+    GetMT<C, ContextOut>: InsertS<OutputT<F, (Distance<f32>, Distance<f32>, T, T)>>,
+{
+    type Output = InsertMT<
+        C,
+        ContextOut,
+        InsertST<GetMT<C, ContextOut>, OutputT<F, (Distance<f32>, Distance<f32>, T, T)>>,
+    >;
+
+    fn call(self, ctx: C) -> Self::Output {
+        let context_a = GetM::<ContextA>::get(ctx.clone());
+        let context_b = GetM::<ContextB>::get(ctx.clone());
+        let context_out = GetM::<ContextOut>::get(ctx.clone());
+
+        let da = GetS::<Distance<f32>>::get(context_a.clone());
+        let db = GetS::<Distance<f32>>::get(context_b.clone());
+
+        let pa = GetS::<T>::get(context_a);
+        let pb = GetS::<T>::get(context_b);
+
+        let context_out = context_out.insert(self.0.call((da, db, pa, pb)));
+        ctx.insert(context_out)
+    }
+}

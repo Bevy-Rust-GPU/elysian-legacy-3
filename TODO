@@ -415,8 +415,6 @@
 
   DONE: Now considering implementation
 
-=======================================================================================================================
-
 * Use an associated type to decouple Get input param from its output
   * Offloads set vs map semantics to implementor
   * Seems reasonable enough; maps are a specialization of sets,
@@ -424,6 +422,10 @@
   * Allows using tag types to avoid naming full value type,
     making GetT<T, U> more useful for bounds
     * Should open up the possibility of storing contexts in contexts for Combine generalization
+
+  ABANDONED: Semantic doesn't hold when considering non-get operations
+             Extended map instead, but unions don't work on maps unless you have a set of keys,
+             so aren't viable for current purposes
 
 * Generalize Combine
   * Needs a similar degree of expressibility to existing shape definition setup
@@ -457,7 +459,25 @@
       * To wit, that implies some (C, C) -> (C, C) operations as well as some C -> C operations
         * Though, C -> C is just regular ADT functionality; could use ADT expansion to inject after Combine
 
-  * Once an extensible structure is in place, reconsider splitting Combine out of the ADT as a freestanding wrapper
+  DONE: Implemented using a specialized context based on the existing (A, B, F, FA, FB) data,
+        with a C -> C function chaining approach and map semantics so participating functions
+        can name their desired (likely fluid - contexts etc) data by slot instead of knowing its type.
+
+=======================================================================================================================
+
+* ADT-ify combine functions
+  * Currently using function composition, needs a higher-order symbol lifting approach
+  * Should be able to represent as a simple list, compose via Monoid
+    * Good example case for a prospective future ADT refactor
+
+* Split ADT expansion out from ADT lifting
+  * Symbols like Circle aren't usable as-is, so expand to evaluable symbols inside LiftAdt
+  * This is undesirable for type-based notation, where preserving the abstraction is preferable
+  * Thus, this should be refactored as a LiftAdt-like trait (ex. ExpandAdt)
+    * Existing instances lift as Run, then expand when the trait method is called as part of evaluation
+
+* Reconsider splitting Combine out of the ADT as a freestanding wrapper
+  * How does this factor in now combine is refactored around a context approach?
 
 * Reconsider Combine typeclass impls
   * Foldr / Foldl / Mappend should produce a single value for each Combine,
@@ -543,8 +563,6 @@
 * Haskell diagrams R&D
   * Lots of food for thought in the documentation
     * https://archives.haskell.org/projects.haskell.org/diagrams/doc/quickstart.html
-  * Attribute injection
-    * Currently handled by Set, but largely unproven
   * Local origins
   * Envelope-based layout
     * Alignment (i.e. envelope fit vs plane)

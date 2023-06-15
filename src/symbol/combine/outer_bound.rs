@@ -1,16 +1,17 @@
+use std::marker::PhantomData;
+
 use t_funk::{
-    closure::{Compose, ComposeLT},
-    collection::set::GetF,
+    closure::{Compose, ComposeT},
     function::Gt,
-    typeclass::arrow::{Split, SplitT},
+    macros::{functions, types},
 };
 
-use crate::{Bounding, Distance, LiftCombine};
-
-use t_funk::{
-    macros::{functions, impl_adt, types},
-    op_chain::OpChain,
+use crate::{
+    BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
+    Inherited, InsertProperty, Left, LiftCombine, Right,
 };
+
+use t_funk::{macros::impl_adt, op_chain::OpChain};
 
 use crate::{Combine, LiftAdtF, Run, Then};
 
@@ -41,13 +42,31 @@ impl_adt! {
 pub struct OuterBoundS;
 
 impl<D> LiftCombine<D> for OuterBoundS {
-    type LiftCombine = Bounding<ComposeLT<SplitT<GetF<Distance<f32>>, GetF<Distance<f32>>>, Gt>>;
+    type LiftCombine = ComposeT<
+        BooleanConditional<
+            Gt,
+            EvaluateSide<Right, Inherited, ContextOut>,
+            ComposeT<InsertProperty<Distance<f32>, ContextOut>, CopyContext<ContextB, ContextOut>>,
+            Distance<f32>,
+        >,
+        ComposeT<
+            InsertProperty<Distance<f32>, ContextB>,
+            ComposeT<CopyContext<ContextA, ContextB>, EvaluateSide<Left, Dist<f32>, ContextA>>,
+        >,
+    >;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        Bounding(
-            GetF::<Distance<f32>>::default()
-                .split(GetF::<Distance<f32>>::default())
-                .compose_l(Gt),
-        )
+        EvaluateSide::<Left, Dist<f32>, ContextA>::default()
+            .compose_l(CopyContext::<ContextA, ContextB>::default())
+            .compose_l(InsertProperty(Distance(0.0), PhantomData::<ContextB>))
+            .compose_l(BooleanConditional(
+                Gt,
+                EvaluateSide::<Right, Inherited, ContextOut>::default(),
+                CopyContext::<ContextB, ContextOut>::default().compose_l(InsertProperty(
+                    Distance(f32::INFINITY),
+                    PhantomData::<ContextOut>,
+                )),
+                PhantomData::<Distance<f32>>,
+            ))
     }
 }

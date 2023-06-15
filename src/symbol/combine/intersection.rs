@@ -1,14 +1,14 @@
+use std::marker::PhantomData;
+
 use t_funk::{
-    closure::ComposeLT,
-    collection::set::GetF,
+    closure::{Compose, ComposeT},
     function::Gt,
-    typeclass::{
-        arrow::{Split, SplitT},
-        category::ComposeL,
-    },
 };
 
-use crate::{BooleanCombine, Distance, EvaluateAndCombine, LiftCombine, Pair, PreBoolean};
+use crate::{
+    BooleanConditional, ContextA, ContextB, ContextOut, Dist, Distance, EvaluateSide, Inherited,
+    Left, LiftCombine, CopyContext, Pair, Right,
+};
 
 use t_funk::{
     macros::{functions, impl_adt, types},
@@ -43,11 +43,26 @@ impl_adt! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct IntersectionS;
 
-impl LiftCombine<(Distance<f32>, ())> for IntersectionS {
-    type LiftCombine = EvaluateAndCombine<BooleanCombine<Gt, Distance<f32>>>;
+impl LiftCombine<Dist<f32>> for IntersectionS {
+    type LiftCombine = ComposeT<
+        BooleanConditional<
+            Gt,
+            CopyContext<ContextA, ContextOut>,
+            CopyContext<ContextB, ContextOut>,
+            Distance<f32>,
+        >,
+        ComposeT<EvaluateSide<Right, Inherited, ContextB>, EvaluateSide<Left, Inherited, ContextA>>,
+    >;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        Default::default()
+        EvaluateSide::<Left, Inherited, ContextA>::default()
+            .compose_l(EvaluateSide::<Right, Inherited, ContextB>::default())
+            .compose_l(BooleanConditional(
+                Gt,
+                CopyContext::default(),
+                CopyContext::default(),
+                PhantomData::<Distance<f32>>,
+            ))
     }
 }
 
@@ -55,13 +70,24 @@ impl<D> LiftCombine<(Distance<f32>, D)> for IntersectionS
 where
     D: Pair,
 {
-    type LiftCombine = PreBoolean<ComposeLT<SplitT<GetF<Distance<f32>>, GetF<Distance<f32>>>, Gt>>;
+    type LiftCombine = ComposeT<
+        BooleanConditional<
+            Gt,
+            EvaluateSide<Left, Inherited, ContextOut>,
+            EvaluateSide<Right, Inherited, ContextOut>,
+            Distance<f32>,
+        >,
+        ComposeT<EvaluateSide<Right, Dist<f32>, ContextB>, EvaluateSide<Left, Dist<f32>, ContextA>>,
+    >;
 
     fn lift_combine(self) -> Self::LiftCombine {
-        PreBoolean(
-            GetF::<Distance<f32>>::default()
-                .split(GetF::<Distance<f32>>::default())
-                .compose_l(Gt),
-        )
+        EvaluateSide::<Left, Dist<f32>, ContextA>::default()
+            .compose_l(EvaluateSide::<Right, Dist<f32>, ContextB>::default())
+            .compose_l(BooleanConditional(
+                Gt,
+                EvaluateSide::<Left, Inherited, ContextOut>::default(),
+                EvaluateSide::<Right, Inherited, ContextOut>::default(),
+                PhantomData::<Distance<f32>>,
+            ))
     }
 }
