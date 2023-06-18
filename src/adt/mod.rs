@@ -65,10 +65,9 @@ mod test {
     use image::{ImageBuffer, Rgb};
 
     use crate::{
-        adt, proxy, Context, ContextRasterImage, Dist, DistGrad, DistGradToRgb, Distance,
-        Done, Evaluate, Gradient, Isosurface, LiftCombine, LiftParam, Point, PosDist, PosDistGrad,
-        Position, PositionToDistance, Raster, RasterToImage, Rasterizer, Set, Translate,
-        ViuerPrinter,
+        adt, proxy, Context, ContextRasterImage, DistGrad, DistGradToRgb, Distance, Done, Evaluate,
+        Gradient, Isosurface, Point, PosDistGrad, Position, Raster, RasterToImage, Rasterizer, Set,
+        Translate, ViuerPrinter, LiftEvaluate
     };
 
     #[test]
@@ -82,12 +81,15 @@ mod test {
         let _shape_d =
             adt() << Translate(Vec2::new(0.0, -0.4)) << Point << Isosurface(0.8_f32) >> Done;
 
+
         /*
         let combined =
             union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
         */
 
         let combined = proxy::<Gradient<Vec2>>() << shape_a << shape_b >> Done; //<< shape_c << shape_d >> Done;
+        let foo = LiftEvaluate::<DistGrad<f32, Vec2>>::lift_evaluate(combined);
+        panic!("{foo:#?}");
 
         let _positioned = adt() << Set(Position(Vec2::default())) << combined >> Done;
 
@@ -129,13 +131,5 @@ mod test {
             >> Done;
 
         Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
-
-        let foo = adt() << Set(Position(Vec2::default())) << PositionToDistance >> Done;
-        let ctx = PosDist::<(), ()>::default();
-
-        let foo = foo.lift_param(ctx);
-        let foo = LiftCombine::<Dist<f32>>::lift_combine(foo);
-        let foo = Evaluate::<Dist<f32>, PosDist<(), ()>>::evaluate(foo, ctx);
-        panic!("{foo:#?}");
     }
 }

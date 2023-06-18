@@ -43,7 +43,7 @@ impl_adt! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnionS;
 
-impl LiftCombine<(Distance<f32>, ())> for UnionS {
+impl LiftCombine<Dist<f32>> for UnionS {
     type LiftCombine = ComposeT<
         BooleanConditional<
             Lt,

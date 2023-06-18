@@ -1,8 +1,7 @@
 use elysian::{
     adt, intersection, subtraction, union, AdtEnd, Circle, Color, Context, ContextRasterImage,
     Dist, DistColorToRgb, Distance, Done, Evaluate, Isosurface, Manifold, PosDistColor, Position,
-    Raster, RasterToImage, Rasterizer, Run, Scale, Set, Then, Translate,
-    ViuerPrinter,
+    Raster, RasterToImage, Rasterizer, Run, Scale, Set, Then, Translate, ViuerPrinter,
 };
 use glam::{Vec2, Vec3};
 use image::{ImageBuffer, Rgb};
