@@ -7,8 +7,8 @@ use t_funk::{
 };
 
 use crate::{
-    AdtEnd, Combine, CombineContext, ContextOut, Evaluable, LiftCombine, LiftCombineT,
-    LiftEvaluable, LiftEvaluableT, LiftT, NotAdtEnd, Run, Then,
+    AdtEnd, Combine, CombineContext, ContextOut, Evaluable, LiftEvaluable, LiftEvaluableT, LiftT,
+    NotAdtEnd, Run, Then,
 };
 
 #[functions]
@@ -58,18 +58,12 @@ where
 
 impl<A, B, F, D> LiftEvaluate<D> for Combine<A, B, F>
 where
-    F: LiftCombine<D>,
+    F: LiftEvaluate<D>,
 {
-    type LiftEvaluate =
-        LiftEvaluateCombine<A, B, LiftCombineT<F, D>, D>;
+    type LiftEvaluate = LiftEvaluateCombine<A, B, LiftEvaluateT<F, D>, D>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        LiftEvaluateCombine(
-            self.0,
-            self.1,
-            self.2.lift_combine(),
-            PhantomData,
-        )
+        LiftEvaluateCombine(self.0, self.1, self.2.lift_evaluate(), PhantomData)
     }
 }
 

@@ -8,7 +8,7 @@ use t_funk::{
 
 use crate::{
     BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
-    Inherited, InsertProperty, Left, LiftCombine, Right,
+    Inherited, InsertProperty, Left, Right, LiftEvaluate,
 };
 
 use t_funk::{macros::impl_adt, op_chain::OpChain};
@@ -41,8 +41,8 @@ impl_adt! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OuterBoundS;
 
-impl<D> LiftCombine<D> for OuterBoundS {
-    type LiftCombine = ComposeT<
+impl<D> LiftEvaluate<D> for OuterBoundS {
+    type LiftEvaluate = ComposeT<
         BooleanConditional<
             Gt,
             EvaluateSide<Right, Inherited, ContextOut>,
@@ -55,7 +55,7 @@ impl<D> LiftCombine<D> for OuterBoundS {
         >,
     >;
 
-    fn lift_combine(self) -> Self::LiftCombine {
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
         EvaluateSide::<Left, Dist<f32>, ContextA>::default()
             .compose_l(CopyContext::<ContextA, ContextB>::default())
             .compose_l(InsertProperty(Distance(0.0), PhantomData::<ContextB>))

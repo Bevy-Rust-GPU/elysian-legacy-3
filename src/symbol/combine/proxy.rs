@@ -7,7 +7,7 @@ use t_funk::{
 
 use crate::{
     BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, CopyProperty, Distance,
-    EvaluateSide, Inherited, Left, LiftCombine, Right,
+    EvaluateSide, Inherited, Left, LiftEvaluate, Right,
 };
 
 use t_funk::{
@@ -43,8 +43,8 @@ impl_adt! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ProxyS<T>(pub PhantomData<T>);
 
-impl<T, D> LiftCombine<D> for ProxyS<T> {
-    type LiftCombine = ComposeT<
+impl<T, D> LiftEvaluate<D> for ProxyS<T> {
+    type LiftEvaluate = ComposeT<
         BooleanConditional<Lt, Id, CopyProperty<T, ContextB, ContextOut>, Distance<f32>>,
         ComposeT<
             CopyContext<ContextA, ContextOut>,
@@ -55,7 +55,7 @@ impl<T, D> LiftCombine<D> for ProxyS<T> {
         >,
     >;
 
-    fn lift_combine(self) -> Self::LiftCombine {
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
         EvaluateSide::<Left, Inherited, ContextA>::default()
             .compose_l(EvaluateSide::<Right, Inherited, ContextB>::default())
             .compose_l(CopyContext::<ContextA, ContextOut>::default())

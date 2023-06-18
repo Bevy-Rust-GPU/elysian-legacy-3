@@ -67,7 +67,7 @@ mod test {
     use crate::{
         adt, proxy, Context, ContextRasterImage, DistGrad, DistGradToRgb, Distance, Done, Evaluate,
         Gradient, Isosurface, Point, PosDistGrad, Position, Raster, RasterToImage, Rasterizer, Set,
-        Translate, ViuerPrinter, LiftEvaluate
+        Translate, ViuerPrinter,
     };
 
     #[test]
@@ -81,15 +81,12 @@ mod test {
         let _shape_d =
             adt() << Translate(Vec2::new(0.0, -0.4)) << Point << Isosurface(0.8_f32) >> Done;
 
-
         /*
         let combined =
             union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
         */
 
         let combined = proxy::<Gradient<Vec2>>() << shape_a << shape_b >> Done; //<< shape_c << shape_d >> Done;
-        let foo = LiftEvaluate::<DistGrad<f32, Vec2>>::lift_evaluate(combined);
-        panic!("{foo:#?}");
 
         let _positioned = adt() << Set(Position(Vec2::default())) << combined >> Done;
 

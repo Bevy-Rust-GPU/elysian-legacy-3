@@ -9,8 +9,7 @@ use t_funk::{
 
 use crate::{
     BlendProperty, BlendPropertyDist, BooleanConditional, Combine, ContextA, ContextB, ContextOut,
-    Distance, EvaluateSide, Gradient, Inherited, Left, LiftAdtF, LiftCombine, CopyContext, Right,
-    Run, Then,
+    CopyContext, Distance, EvaluateSide, Gradient, Inherited, Left, LiftAdtF, Right, Run, Then, LiftEvaluate,
 };
 
 pub fn smooth_union() -> OpChain<LiftAdtF, SmoothUnionF> {
@@ -39,8 +38,8 @@ impl_adt! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SmoothUnionS;
 
-impl<D> LiftCombine<D> for SmoothUnionS {
-    type LiftCombine = ComposeT<
+impl<D> LiftEvaluate<D> for SmoothUnionS {
+    type LiftEvaluate = ComposeT<
         BlendPropertyDist<PolynomialSmoothMin<Gradient<Vec2>>, Gradient<Vec2>>,
         ComposeT<
             BlendProperty<PolynomialSmoothMin<Distance<f32>>, Distance<f32>>,
@@ -59,7 +58,7 @@ impl<D> LiftCombine<D> for SmoothUnionS {
         >,
     >;
 
-    fn lift_combine(self) -> Self::LiftCombine {
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
         EvaluateSide::<Left, Inherited, ContextA>::default()
             .compose_l(EvaluateSide::<Right, Inherited, ContextB>::default())
             .compose_l(BooleanConditional(

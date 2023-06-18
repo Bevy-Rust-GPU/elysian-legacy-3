@@ -6,8 +6,8 @@ use t_funk::{
 };
 
 use crate::{
-    BooleanConditional, ContextA, ContextB, ContextOut, Dist, Distance, EvaluateSide, Inherited,
-    Left, LiftCombine, CopyContext, Pair, Right,
+    BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
+    Inherited, Left, LiftEvaluate, Pair, Right,
 };
 
 use t_funk::{
@@ -43,8 +43,8 @@ impl_adt! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnionS;
 
-impl LiftCombine<Dist<f32>> for UnionS {
-    type LiftCombine = ComposeT<
+impl LiftEvaluate<Dist<f32>> for UnionS {
+    type LiftEvaluate = ComposeT<
         BooleanConditional<
             Lt,
             CopyContext<ContextA, ContextOut>,
@@ -54,7 +54,7 @@ impl LiftCombine<Dist<f32>> for UnionS {
         ComposeT<EvaluateSide<Right, Inherited, ContextB>, EvaluateSide<Left, Inherited, ContextA>>,
     >;
 
-    fn lift_combine(self) -> Self::LiftCombine {
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
         EvaluateSide::<Left, Inherited, ContextA>::default()
             .compose_l(EvaluateSide::<Right, Inherited, ContextB>::default())
             .compose_l(BooleanConditional(
@@ -66,11 +66,11 @@ impl LiftCombine<Dist<f32>> for UnionS {
     }
 }
 
-impl<D> LiftCombine<(Distance<f32>, D)> for UnionS
+impl<D> LiftEvaluate<(Distance<f32>, D)> for UnionS
 where
     D: Pair,
 {
-    type LiftCombine = ComposeT<
+    type LiftEvaluate = ComposeT<
         BooleanConditional<
             Lt,
             EvaluateSide<Left, Inherited, ContextOut>,
@@ -80,7 +80,7 @@ where
         ComposeT<EvaluateSide<Right, Dist<f32>, ContextB>, EvaluateSide<Left, Dist<f32>, ContextA>>,
     >;
 
-    fn lift_combine(self) -> Self::LiftCombine {
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
         EvaluateSide::<Left, Dist<f32>, ContextA>::default()
             .compose_l(EvaluateSide::<Right, Dist<f32>, ContextB>::default())
             .compose_l(BooleanConditional(

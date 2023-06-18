@@ -7,8 +7,8 @@ use t_funk::{
 };
 
 use crate::{
-    BooleanConditional, ContextA, ContextB, ContextOut, Dist, Distance, EvaluateSide, Inherited,
-    Left, LiftCombine, CopyContext, Pair, Right,
+    BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
+    Inherited, Left, LiftEvaluate, Pair, Right,
 };
 
 use t_funk::{
@@ -44,8 +44,8 @@ impl_adt! {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SubtractionS;
 
-impl LiftCombine<(Distance<f32>, ())> for SubtractionS {
-    type LiftCombine = ComposeT<
+impl LiftEvaluate<Dist<f32>> for SubtractionS {
+    type LiftEvaluate = ComposeT<
         BooleanConditional<
             Composed<Gt, Firsted<Neg>>,
             CopyContext<ContextA, ContextOut>,
@@ -55,7 +55,7 @@ impl LiftCombine<(Distance<f32>, ())> for SubtractionS {
         ComposeT<EvaluateSide<Right, Inherited, ContextB>, EvaluateSide<Left, Inherited, ContextA>>,
     >;
 
-    fn lift_combine(self) -> Self::LiftCombine {
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
         EvaluateSide::<Left, Inherited, ContextA>::default()
             .compose_l(EvaluateSide::<Right, Inherited, ContextB>::default())
             .compose_l(BooleanConditional(
@@ -67,11 +67,11 @@ impl LiftCombine<(Distance<f32>, ())> for SubtractionS {
     }
 }
 
-impl<D> LiftCombine<(Distance<f32>, D)> for SubtractionS
+impl<D> LiftEvaluate<(Distance<f32>, D)> for SubtractionS
 where
     D: Pair,
 {
-    type LiftCombine = ComposeT<
+    type LiftEvaluate = ComposeT<
         BooleanConditional<
             Composed<Gt, Firsted<Neg>>,
             EvaluateSide<Left, Inherited, ContextOut>,
@@ -81,7 +81,7 @@ where
         ComposeT<EvaluateSide<Right, Dist<f32>, ContextB>, EvaluateSide<Left, Dist<f32>, ContextA>>,
     >;
 
-    fn lift_combine(self) -> Self::LiftCombine {
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
         EvaluateSide::<Left, Dist<f32>, ContextA>::default()
             .compose_l(EvaluateSide::<Right, Dist<f32>, ContextB>::default())
             .compose_l(BooleanConditional(
