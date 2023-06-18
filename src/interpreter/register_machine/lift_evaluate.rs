@@ -7,8 +7,8 @@ use t_funk::{
 };
 
 use crate::{
-    AdtEnd, Combine, CombineContext, ContextOut, Evaluable, LiftEvaluable, LiftEvaluableT, LiftT,
-    NotAdtEnd, Run, Then,
+    AdtEnd, Combine, CombineContext, ContextOut, Evaluable, EvaluableT, LiftEvaluable,
+    LiftEvaluableT, NotAdtEnd, Run, Then,
 };
 
 #[functions]
@@ -22,12 +22,12 @@ pub trait LiftEvaluate<D> {
 impl<A, D> LiftEvaluate<D> for Run<A>
 where
     A: Evaluable,
-    LiftT<A>: LiftEvaluable<A, D>,
+    EvaluableT<A>: LiftEvaluable<A, D>,
 {
-    type LiftEvaluate = LiftEvaluableT<LiftT<A>, A, D>;
+    type LiftEvaluate = LiftEvaluableT<EvaluableT<A>, A, D>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        LiftT::<A>::lift_evaluable(self.0)
+        EvaluableT::<A>::lift_evaluable(self.0)
     }
 }
 

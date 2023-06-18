@@ -40,7 +40,7 @@ impl<R, F> LiftAdt for RasterToImage<R, F> {
 }
 
 impl<R, F> Evaluable for RasterToImage<R, F> {
-    type Lift = LiftModify;
+    type Evaluable = LiftModify;
 }
 
 impl<R, F, D> EvaluateFunction<D> for RasterToImage<R, F> {

@@ -36,7 +36,7 @@ impl<const N: usize, R> LiftAdt for RasterToAscii<N, R> {
 }
 
 impl<const N: usize, R> Evaluable for RasterToAscii<N, R> {
-    type Lift = LiftModify;
+    type Evaluable = LiftModify;
 }
 
 impl<const N: usize, R, D> EvaluateFunction<D> for RasterToAscii<N, R> {

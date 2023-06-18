@@ -50,7 +50,7 @@ impl<S> LiftAdt for ScalePosition<S> {
 }
 
 impl<S> Evaluable for ScalePosition<S> {
-    type Lift = LiftModify;
+    type Evaluable = LiftModify;
 }
 
 impl<S, D> EvaluateFunction<D> for ScalePosition<S> {
@@ -87,7 +87,7 @@ impl<S> LiftAdt for InverseScaleDistance<S> {
 }
 
 impl<S> Evaluable for InverseScaleDistance<S> {
-    type Lift = LiftModify;
+    type Evaluable = LiftModify;
 }
 
 impl<S, D> EvaluateFunction<D> for InverseScaleDistance<S> {

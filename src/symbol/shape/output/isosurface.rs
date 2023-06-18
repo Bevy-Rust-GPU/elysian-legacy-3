@@ -23,7 +23,7 @@ impl<T> LiftAdt for Isosurface<T> {
 }
 
 impl<T> Evaluable for Isosurface<T> {
-    type Lift = LiftModify;
+    type Evaluable = LiftModify;
 }
 
 impl<T, D> EvaluateFunction<D> for Isosurface<T> {

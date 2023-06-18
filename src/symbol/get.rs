@@ -31,7 +31,7 @@ impl<T> LiftAdt for Get<T> {
 }
 
 impl<T> Evaluable for Get<T> {
-    type Lift = LiftNone;
+    type Evaluable = LiftNone;
 }
 
 impl<T, D> EvaluateFunction<D> for Get<T> {

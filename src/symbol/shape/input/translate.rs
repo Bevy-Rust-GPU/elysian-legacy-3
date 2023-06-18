@@ -24,7 +24,7 @@ impl<T> LiftAdt for Translate<T> {
 }
 
 impl<T> Evaluable for Translate<T> {
-    type Lift = LiftModify;
+    type Evaluable = LiftModify;
 }
 
 impl<T, D> EvaluateFunction<D> for Translate<T> {

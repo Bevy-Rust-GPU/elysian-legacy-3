@@ -76,7 +76,7 @@ impl<T> LiftAdt for ViuerPrinter<T> {
 }
 
 impl<T> Evaluable for ViuerPrinter<T> {
-    type Lift = LiftModify;
+    type Evaluable = LiftModify;
 }
 
 impl<T, D> EvaluateFunction<D> for ViuerPrinter<T> {

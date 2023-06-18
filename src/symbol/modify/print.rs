@@ -22,7 +22,7 @@ impl LiftAdt for Print {
 }
 
 impl Evaluable for Print {
-    type Lift = LiftModify;
+    type Evaluable = LiftModify;
 }
 
 impl<D> EvaluateFunction<D> for Print {

@@ -26,7 +26,7 @@ impl LiftAdt for Manifold {
 }
 
 impl Evaluable for Manifold {
-    type Lift = LiftDomains;
+    type Evaluable = LiftDomains;
 }
 
 impl EvaluateFunction<Distance<f32>> for Manifold {

@@ -69,7 +69,7 @@ impl<S, C> LiftAdt for Rasterizer<S, C> {
 }
 
 impl<S, C> Evaluable for Rasterizer<S, C> {
-    type Lift = LiftModify;
+    type Evaluable = LiftModify;
 }
 
 impl<S, C, D> EvaluateFunction<D> for Rasterizer<S, C> {

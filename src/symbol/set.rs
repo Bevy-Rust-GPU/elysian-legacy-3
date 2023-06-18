@@ -31,7 +31,7 @@ impl<T> LiftAdt for Set<T> {
 }
 
 impl<T> Evaluable for Set<T> {
-    type Lift = LiftNone;
+    type Evaluable = LiftNone;
 }
 
 impl<T, D> EvaluateFunction<D> for Set<T> {

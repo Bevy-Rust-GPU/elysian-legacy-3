@@ -25,7 +25,7 @@ impl LiftAdt for Point {
 }
 
 impl Evaluable for Point {
-    type Lift = LiftDomains;
+    type Evaluable = LiftDomains;
 }
 
 impl EvaluateFunction<Distance<f32>> for Point {
