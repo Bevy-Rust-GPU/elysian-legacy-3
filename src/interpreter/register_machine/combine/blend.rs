@@ -3,17 +3,26 @@ use std::marker::PhantomData;
 use t_funk::{
     closure::{Closure, OutputT},
     collection::{
+        hlist::{Cons, Nil},
         map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
         set::{Get as GetS, Insert as InsertS, InsertT as InsertST},
     },
 };
 
-use crate::{ContextA, ContextB, ContextOut, Distance};
+use crate::{ContextA, ContextB, ContextOut, Distance, LiftEvaluate};
 
 // Fetch a given property P from ContextA and ContextB,
 // combine using a (P, P) -> P function, and write it to ContextOut
 #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
 pub struct BlendProperty<F, T>(pub F, pub PhantomData<T>);
+
+impl<F, T, D> LiftEvaluate<D> for BlendProperty<F, T> {
+    type LiftEvaluate = Cons<Self, Nil>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        Cons(self, Nil)
+    }
+}
 
 impl<F, T, C> Closure<C> for BlendProperty<F, T>
 where
@@ -46,6 +55,14 @@ where
 // combine using a (D, D, P, P) -> P function, and write it to ContextOut
 #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
 pub struct BlendPropertyDist<F, T>(pub F, pub PhantomData<T>);
+
+impl<F, T, D> LiftEvaluate<D> for BlendPropertyDist<F, T> {
+    type LiftEvaluate = Cons<Self, Nil>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        Cons(self, Nil)
+    }
+}
 
 impl<F, T, C> Closure<C> for BlendPropertyDist<F, T>
 where

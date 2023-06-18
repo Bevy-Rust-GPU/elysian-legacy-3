@@ -2,7 +2,10 @@ use std::marker::PhantomData;
 
 use t_funk::{
     closure::{Closure, OutputT},
-    collection::map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
+    collection::{
+        hlist::{Cons, Nil},
+        map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
+    },
 };
 
 use crate::{LiftEvaluate, LiftEvaluateT, Pair, ShapeA, ShapeB};
@@ -21,6 +24,14 @@ pub struct Inherited;
 // Evaluate side S with domains I (or Inherited), and store output in O
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EvaluateSide<S, I, O>(pub PhantomData<(S, I, O)>);
+
+impl<S, I, O, D> LiftEvaluate<D> for EvaluateSide<S, I, O> {
+    type LiftEvaluate = Cons<Self, Nil>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        Cons(self, Nil)
+    }
+}
 
 impl<O, C> Closure<C> for EvaluateSide<Left, Inherited, O>
 where

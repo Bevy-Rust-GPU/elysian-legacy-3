@@ -1,9 +1,8 @@
-use std::marker::PhantomData;
-
 use t_funk::{
-    closure::{Compose, ComposeT, Composed},
+    closure::Composed,
+    collection::hlist::{Cons, Nil},
     function::{Gt, Neg},
-    typeclass::arrow::{First, Firsted},
+    typeclass::{arrow::Firsted, monad::Identity},
 };
 
 use crate::{
@@ -32,10 +31,10 @@ pub fn subtraction() -> OpChain<LiftAdtF, SubtractionF> {
 
 impl_adt! {
     impl<A, B, C, R> Subtraction<R> for Then<A, B> | Combine<A, B, C> {
-        type Subtraction = Combine<Self, R, SubtractionS>;
+        type Subtraction = Combine<Self, R, Identity<SubtractionS>>;
 
         fn subtraction(self, rhs: R) -> Self::Subtraction {
-            Combine(self, rhs, SubtractionS)
+            Combine(self, rhs, Identity(SubtractionS))
         }
     }
 }
@@ -45,25 +44,24 @@ impl_adt! {
 pub struct SubtractionS;
 
 impl LiftEvaluate<Dist<f32>> for SubtractionS {
-    type LiftEvaluate = ComposeT<
-        BooleanConditional<
-            Composed<Gt, Firsted<Neg>>,
-            CopyContext<ContextA, ContextOut>,
-            CopyContext<ContextB, ContextOut>,
-            Distance<f32>,
+    type LiftEvaluate = Cons<
+        EvaluateSide<Left, Inherited, ContextA>,
+        Cons<
+            EvaluateSide<Right, Inherited, ContextB>,
+            Cons<
+                BooleanConditional<
+                    Composed<Gt, Firsted<Neg>>,
+                    CopyContext<ContextA, ContextOut>,
+                    CopyContext<ContextB, ContextOut>,
+                    Distance<f32>,
+                >,
+                Nil,
+            >,
         >,
-        ComposeT<EvaluateSide<Right, Inherited, ContextB>, EvaluateSide<Left, Inherited, ContextA>>,
     >;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        EvaluateSide::<Left, Inherited, ContextA>::default()
-            .compose_l(EvaluateSide::<Right, Inherited, ContextB>::default())
-            .compose_l(BooleanConditional(
-                Gt.compose(Neg.first()),
-                CopyContext::default(),
-                CopyContext::default(),
-                PhantomData::<Distance<f32>>,
-            ))
+        Default::default()
     }
 }
 
@@ -71,24 +69,23 @@ impl<D> LiftEvaluate<(Distance<f32>, D)> for SubtractionS
 where
     D: Pair,
 {
-    type LiftEvaluate = ComposeT<
-        BooleanConditional<
-            Composed<Gt, Firsted<Neg>>,
-            EvaluateSide<Left, Inherited, ContextOut>,
-            EvaluateSide<Right, Inherited, ContextOut>,
-            Distance<f32>,
+    type LiftEvaluate = Cons<
+        EvaluateSide<Left, Dist<f32>, ContextA>,
+        Cons<
+            EvaluateSide<Right, Dist<f32>, ContextB>,
+            Cons<
+                BooleanConditional<
+                    Composed<Gt, Firsted<Neg>>,
+                    EvaluateSide<Left, Inherited, ContextOut>,
+                    EvaluateSide<Right, Inherited, ContextOut>,
+                    Distance<f32>,
+                >,
+                Nil,
+            >,
         >,
-        ComposeT<EvaluateSide<Right, Dist<f32>, ContextB>, EvaluateSide<Left, Dist<f32>, ContextA>>,
     >;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        EvaluateSide::<Left, Dist<f32>, ContextA>::default()
-            .compose_l(EvaluateSide::<Right, Dist<f32>, ContextB>::default())
-            .compose_l(BooleanConditional(
-                Gt.compose(Neg.first()),
-                EvaluateSide::<Left, Inherited, ContextOut>::default(),
-                EvaluateSide::<Right, Inherited, ContextOut>::default(),
-                PhantomData::<Distance<f32>>,
-            ))
+        Default::default()
     }
 }

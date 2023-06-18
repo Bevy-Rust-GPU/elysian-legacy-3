@@ -1,8 +1,9 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    closure::{Compose, ComposeT},
+    collection::hlist::{Cons, Nil},
     function::{Id, Lt},
+    typeclass::monad::Identity,
 };
 
 use crate::{
@@ -31,10 +32,10 @@ pub trait Proxy<R, T> {
 
 impl_adt! {
     impl<A, B, C, R, T> Proxy<R, T> for Run<A> | Then<A, B> | Combine<A, B, C> {
-        type Proxy = Combine<Self, R, ProxyS<T>>;
+        type Proxy = Combine<Self, R, Identity<ProxyS<T>>>;
 
         fn proxy(self, rhs: R) -> Self::Proxy {
-            Combine(self, rhs, ProxyS(PhantomData::<T>))
+            Combine(self, rhs, Identity(ProxyS(PhantomData::<T>)))
         }
     }
 }
@@ -44,26 +45,26 @@ impl_adt! {
 pub struct ProxyS<T>(pub PhantomData<T>);
 
 impl<T, D> LiftEvaluate<D> for ProxyS<T> {
-    type LiftEvaluate = ComposeT<
-        BooleanConditional<Lt, Id, CopyProperty<T, ContextB, ContextOut>, Distance<f32>>,
-        ComposeT<
-            CopyContext<ContextA, ContextOut>,
-            ComposeT<
-                EvaluateSide<Right, Inherited, ContextB>,
-                EvaluateSide<Left, Inherited, ContextA>,
+    type LiftEvaluate = Cons<
+        EvaluateSide<Left, Inherited, ContextA>,
+        Cons<
+            EvaluateSide<Right, Inherited, ContextB>,
+            Cons<
+                CopyContext<ContextA, ContextOut>,
+                Cons<
+                    BooleanConditional<
+                        Lt,
+                        Id,
+                        CopyProperty<T, ContextB, ContextOut>,
+                        Distance<f32>,
+                    >,
+                    Nil,
+                >,
             >,
         >,
     >;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        EvaluateSide::<Left, Inherited, ContextA>::default()
-            .compose_l(EvaluateSide::<Right, Inherited, ContextB>::default())
-            .compose_l(CopyContext::<ContextA, ContextOut>::default())
-            .compose_l(BooleanConditional(
-                Lt,
-                Id,
-                CopyProperty::<T, ContextB, ContextOut>::default(),
-                PhantomData::<Distance<f32>>,
-            ))
+        Default::default()
     }
 }

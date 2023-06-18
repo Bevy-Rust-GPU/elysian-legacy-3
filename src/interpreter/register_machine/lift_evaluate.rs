@@ -1,9 +1,14 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    closure::{Closure, Compose, ComposeLT, OutputT},
+    closure::{Closure, Compose, ComposeLF, ComposeLT, OutputT},
     collection::map::{Get, GetT},
+    function::Id,
     macros::{functions, types},
+    typeclass::{
+        foldable::{Foldr, FoldrT},
+        monad::{Chain, ChainT},
+    },
 };
 
 use crate::{
@@ -58,12 +63,21 @@ where
 
 impl<A, B, F, D> LiftEvaluate<D> for Combine<A, B, F>
 where
-    F: LiftEvaluate<D>,
+    F: Chain<LiftEvaluateF<D>>,
+    ChainT<F, LiftEvaluateF<D>>: Foldr<ComposeLF, Id>,
 {
-    type LiftEvaluate = LiftEvaluateCombine<A, B, LiftEvaluateT<F, D>, D>;
+    type LiftEvaluate =
+        LiftEvaluateCombine<A, B, FoldrT<ChainT<F, LiftEvaluateF<D>>, ComposeLF, Id>, D>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        LiftEvaluateCombine(self.0, self.1, self.2.lift_evaluate(), PhantomData)
+        LiftEvaluateCombine(
+            self.0,
+            self.1,
+            self.2
+                .chain(LiftEvaluateF::<D>::default())
+                .foldr(ComposeLF::default(), Id),
+            PhantomData,
+        )
     }
 }
 

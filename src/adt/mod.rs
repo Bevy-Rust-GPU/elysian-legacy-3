@@ -60,7 +60,6 @@ pub use t_funk::op_chain::Done;
 
 #[cfg(test)]
 mod test {
-
     use glam::Vec2;
     use image::{ImageBuffer, Rgb};
 
@@ -76,17 +75,37 @@ mod test {
             adt() << Translate(Vec2::new(-0.2, -0.2)) << Point << Isosurface(0.8_f32) >> Done;
         let shape_b =
             adt() << Translate(Vec2::new(0.2, 0.2)) << Point << Isosurface(0.8_f32) >> Done;
-        let _shape_c =
+        let shape_c =
             adt() << Translate(Vec2::new(0.0, 0.4)) << Point << Isosurface(0.8_f32) >> Done;
-        let _shape_d =
+        let shape_d =
             adt() << Translate(Vec2::new(0.0, -0.4)) << Point << Isosurface(0.8_f32) >> Done;
 
-        /*
-        let combined =
-            union() << shape_a << shape_b << shape_c >> intersection() << shape_d >> Done;
-        */
+        let combined = proxy::<Gradient<Vec2>>() << shape_a << shape_b >> Done; // << shape_c >> intersection() << shape_d >> Done;
 
-        let combined = proxy::<Gradient<Vec2>>() << shape_a << shape_b >> Done; //<< shape_c << shape_d >> Done;
+        /*
+        let combined = Combine(
+            shape_a,
+            shape_b,
+            Cons(
+                EvaluateSide::<Left, Inherited, ContextA>::default(),
+                Cons(
+                    EvaluateSide::<Right, Inherited, ContextB>::default(),
+                    Cons(
+                        CopyContext::<ContextA, ContextOut>::default(),
+                        Cons(
+                            BooleanConditional(
+                                Lt,
+                                Id,
+                                CopyProperty::<Gradient<Vec2>, ContextB, ContextOut>::default(),
+                                PhantomData::<Distance<f32>>,
+                            ),
+                            Nil,
+                        ),
+                    ),
+                ),
+            ),
+        );
+        */
 
         let _positioned = adt() << Set(Position(Vec2::default())) << combined >> Done;
 

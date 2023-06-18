@@ -38,7 +38,6 @@ impl<R, F> LiftAdt for RasterToImage<R, F> {
         Run(self)
     }
 }
-
 impl<R, F> Evaluable for RasterToImage<R, F> {
     type Evaluable = LiftModify;
 }

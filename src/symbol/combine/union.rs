@@ -1,8 +1,7 @@
-use std::marker::PhantomData;
-
 use t_funk::{
-    closure::{Compose, ComposeT},
+    collection::hlist::{Cons, Nil},
     function::Lt,
+    typeclass::monad::Identity,
 };
 
 use crate::{
@@ -31,10 +30,10 @@ pub trait Union<T> {
 
 impl_adt! {
     impl<A, B, C, R> Union<R> for Run<A> | Then<A, B> | Combine<A, B, C> {
-        type Union = Combine<Self, R, UnionS>;
+        type Union = Combine<Self, R, Identity<UnionS>>;
 
         fn union(self, rhs: R) -> Self::Union {
-            Combine(self, rhs, UnionS)
+            Combine(self, rhs, Identity(UnionS))
         }
     }
 }
@@ -44,25 +43,24 @@ impl_adt! {
 pub struct UnionS;
 
 impl LiftEvaluate<Dist<f32>> for UnionS {
-    type LiftEvaluate = ComposeT<
-        BooleanConditional<
-            Lt,
-            CopyContext<ContextA, ContextOut>,
-            CopyContext<ContextB, ContextOut>,
-            Distance<f32>,
+    type LiftEvaluate = Cons<
+        EvaluateSide<Left, Inherited, ContextA>,
+        Cons<
+            EvaluateSide<Right, Inherited, ContextB>,
+            Cons<
+                BooleanConditional<
+                    Lt,
+                    CopyContext<ContextA, ContextOut>,
+                    CopyContext<ContextB, ContextOut>,
+                    Distance<f32>,
+                >,
+                Nil,
+            >,
         >,
-        ComposeT<EvaluateSide<Right, Inherited, ContextB>, EvaluateSide<Left, Inherited, ContextA>>,
     >;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        EvaluateSide::<Left, Inherited, ContextA>::default()
-            .compose_l(EvaluateSide::<Right, Inherited, ContextB>::default())
-            .compose_l(BooleanConditional(
-                Lt,
-                CopyContext::default(),
-                CopyContext::default(),
-                PhantomData::<Distance<f32>>,
-            ))
+        Default::default()
     }
 }
 
@@ -70,24 +68,23 @@ impl<D> LiftEvaluate<(Distance<f32>, D)> for UnionS
 where
     D: Pair,
 {
-    type LiftEvaluate = ComposeT<
-        BooleanConditional<
-            Lt,
-            EvaluateSide<Left, Inherited, ContextOut>,
-            EvaluateSide<Right, Inherited, ContextOut>,
-            Distance<f32>,
+    type LiftEvaluate = Cons<
+        EvaluateSide<Left, Dist<f32>, ContextA>,
+        Cons<
+            EvaluateSide<Right, Dist<f32>, ContextB>,
+            Cons<
+                BooleanConditional<
+                    Lt,
+                    EvaluateSide<Left, Inherited, ContextOut>,
+                    EvaluateSide<Right, Inherited, ContextOut>,
+                    Distance<f32>,
+                >,
+                Nil,
+            >,
         >,
-        ComposeT<EvaluateSide<Right, Dist<f32>, ContextB>, EvaluateSide<Left, Dist<f32>, ContextA>>,
     >;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        EvaluateSide::<Left, Dist<f32>, ContextA>::default()
-            .compose_l(EvaluateSide::<Right, Dist<f32>, ContextB>::default())
-            .compose_l(BooleanConditional(
-                Lt,
-                EvaluateSide::<Left, Inherited, ContextOut>::default(),
-                EvaluateSide::<Right, Inherited, ContextOut>::default(),
-                PhantomData::<Distance<f32>>,
-            ))
+        Default::default()
     }
 }

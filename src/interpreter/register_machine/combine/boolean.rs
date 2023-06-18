@@ -4,15 +4,23 @@ use t_funk::{
     closure::{Closure, OutputT},
     collection::{
         map::{Get as GetM, GetT as GetMT},
-        set::Get as GetS,
+        set::Get as GetS, hlist::{Cons, Nil},
     },
 };
 
-use crate::{ContextA, ContextB};
+use crate::{ContextA, ContextB, LiftEvaluate};
 
 // Call FA or FB depending on the output of a binary function
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BooleanConditional<F, FA, FB, T>(pub F, pub FA, pub FB, pub PhantomData<T>);
+
+impl<F, FA, FB, T, D> LiftEvaluate<D> for BooleanConditional<F, FA, FB, T> {
+    type LiftEvaluate = Cons<Self, Nil>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        Cons(self, Nil)
+    }
+}
 
 impl<F, FA, FB, T, C> Closure<C> for BooleanConditional<F, FA, FB, T>
 where

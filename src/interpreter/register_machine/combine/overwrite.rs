@@ -2,7 +2,10 @@ use std::marker::PhantomData;
 
 use t_funk::{
     collection::map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
-    collection::set::{Get as GetS, Insert as InsertS, InsertT as InsertST},
+    collection::{
+        hlist::{Cons, Nil},
+        set::{Get as GetS, Insert as InsertS, InsertT as InsertST},
+    },
     function::Function,
     macros::{
         phantom::{PhantomClone, PhantomCopy, PhantomDefault},
@@ -10,9 +13,19 @@ use t_funk::{
     },
 };
 
+use crate::LiftEvaluate;
+
 /// Overwrite O with I
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure)]
 pub struct CopyContext<I, O>(PhantomData<(I, O)>);
+
+impl<I, O, D> LiftEvaluate<D> for CopyContext<I, O> {
+    type LiftEvaluate = Cons<Self, Nil>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        Cons(self, Nil)
+    }
+}
 
 impl<I, O, C> Function<C> for CopyContext<I, O>
 where
@@ -30,6 +43,14 @@ where
     Debug, PhantomDefault, PhantomCopy, PhantomClone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure,
 )]
 pub struct CopyProperty<T, I, O>(PhantomData<(T, I, O)>);
+
+impl<T, I, O, D> LiftEvaluate<D> for CopyProperty<T, I, O> {
+    type LiftEvaluate = Cons<Self, Nil>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        Cons(self, Nil)
+    }
+}
 
 impl<T, I, O, C> Function<C> for CopyProperty<T, I, O>
 where
