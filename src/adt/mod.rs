@@ -60,13 +60,17 @@ pub use t_funk::op_chain::Done;
 
 #[cfg(test)]
 mod test {
+    use std::marker::PhantomData;
+
     use glam::Vec2;
     use image::{ImageBuffer, Rgb};
+    use t_funk::function::{Id, Lt};
 
     use crate::{
-        adt, proxy, Context, ContextRasterImage, DistGrad, DistGradToRgb, Distance, Done, Evaluate,
-        Gradient, Isosurface, Point, PosDistGrad, Position, Raster, RasterToImage, Rasterizer, Set,
-        Translate, ViuerPrinter,
+        adt, proxy, BooleanConditional, Combine, Context, ContextA, ContextB, ContextOut,
+        ContextRasterImage, CopyContext, CopyProperty, DistGrad, DistGradToRgb, Distance, Done,
+        Evaluate, EvaluateSide, Gradient, Inherited, Isosurface, Left, Point, PosDistGrad,
+        Position, Raster, RasterToImage, Rasterizer, Right, Set, Translate, ViuerPrinter,
     };
 
     #[test]
@@ -82,30 +86,21 @@ mod test {
 
         let combined = proxy::<Gradient<Vec2>>() << shape_a << shape_b >> Done; // << shape_c >> intersection() << shape_d >> Done;
 
-        /*
         let combined = Combine(
             shape_a,
             shape_b,
-            Cons(
+            (
                 EvaluateSide::<Left, Inherited, ContextA>::default(),
-                Cons(
-                    EvaluateSide::<Right, Inherited, ContextB>::default(),
-                    Cons(
-                        CopyContext::<ContextA, ContextOut>::default(),
-                        Cons(
-                            BooleanConditional(
-                                Lt,
-                                Id,
-                                CopyProperty::<Gradient<Vec2>, ContextB, ContextOut>::default(),
-                                PhantomData::<Distance<f32>>,
-                            ),
-                            Nil,
-                        ),
-                    ),
+                EvaluateSide::<Right, Inherited, ContextB>::default(),
+                CopyContext::<ContextA, ContextOut>::default(),
+                BooleanConditional(
+                    Lt,
+                    Id,
+                    CopyProperty::<Gradient<Vec2>, ContextB, ContextOut>::default(),
+                    PhantomData::<Distance<f32>>,
                 ),
             ),
         );
-        */
 
         let _positioned = adt() << Set(Position(Vec2::default())) << combined >> Done;
 

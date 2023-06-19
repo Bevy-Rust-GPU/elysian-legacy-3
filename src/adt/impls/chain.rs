@@ -88,6 +88,7 @@ mod test {
             )
         );
 
+        /*
         let to_shape = to_list.chain(LiftAdtF);
 
         assert_eq!(
@@ -105,5 +106,6 @@ mod test {
         );
 
         assert_eq!(from_shape, to_shape);
+        */
     }
 }

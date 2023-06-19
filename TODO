@@ -465,6 +465,10 @@
 
 =======================================================================================================================
 
+* Switch from Cons to tuples now they have a monad interface
+  * Can start moving in the direction of tuples for API composition
+  * Eventually switch param + evaluate lifting to use FoldMap (i.e. Fmap -> Foldl)
+
 * ADT-ify combine functions
   * Currently using function composition, needs a higher-order symbol lifting approach
   * Should be able to represent as a simple list, compose via Monoid
