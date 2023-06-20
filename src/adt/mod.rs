@@ -64,13 +64,22 @@ mod test {
 
     use glam::Vec2;
     use image::{ImageBuffer, Rgb};
-    use t_funk::function::{Id, Lt};
+    use t_funk::{
+        closure::{Closure, ComposeLF, Curry2},
+        function::{Id, Lt},
+        typeclass::{
+            foldable::{FoldMap, Foldl, Foldr},
+            functor::{Fmap, FmapF},
+            monad::Identity,
+        },
+    };
 
     use crate::{
         adt, proxy, BooleanConditional, Combine, Context, ContextA, ContextB, ContextOut,
         ContextRasterImage, CopyContext, CopyProperty, DistGrad, DistGradToRgb, Distance, Done,
-        Evaluate, EvaluateSide, Gradient, Inherited, Isosurface, Left, Point, PosDistGrad,
-        Position, Raster, RasterToImage, Rasterizer, Right, Set, Translate, ViuerPrinter,
+        Evaluate, EvaluateSide, Gradient, Inherited, Isosurface, Left, LiftAdtF, LiftEvaluateF,
+        LiftParamF, Point, PosDistGrad, Position, Raster, RasterToImage, Rasterizer, Right, Set,
+        Translate, UnionS, ViuerPrinter,
     };
 
     #[test]
@@ -142,5 +151,22 @@ mod test {
             >> Done;
 
         Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
+    }
+
+    #[test]
+    fn test_composition() {
+        let shape_a = (Translate(Vec2::new(-0.2, -0.2)), Point, Isosurface(0.8_f32));
+        let shape_b = (Translate(Vec2::new(0.2, 0.2)), Point, Isosurface(0.8_f32));
+        let combined = Combine(shape_a, shape_b, Identity(UnionS));
+
+        let context = PosDistGrad::<Position<Vec2>, Distance<f32>, Gradient<Vec2>>::default();
+
+        let foo = combined;
+        let foo = foo.fmap(LiftParamF.suffix2(context));
+        let foo = foo.fmap(LiftAdtF);
+        let foo = foo.fmap(LiftEvaluateF::<DistGrad<f32, Vec2>>::default());
+        let foo = foo.foldr(ComposeLF, Id);
+        let foo = foo.call(context);
+        panic!("{foo:#?}");
     }
 }

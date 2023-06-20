@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    collection::hlist::{Cons, Nil},
     function::{Id, Lt},
     typeclass::monad::Identity,
 };
@@ -45,24 +44,12 @@ impl_adt! {
 pub struct ProxyS<T>(pub PhantomData<T>);
 
 impl<T, D> LiftEvaluate<D> for ProxyS<T> {
-    type LiftEvaluate = Cons<
+    type LiftEvaluate = (
         EvaluateSide<Left, Inherited, ContextA>,
-        Cons<
-            EvaluateSide<Right, Inherited, ContextB>,
-            Cons<
-                CopyContext<ContextA, ContextOut>,
-                Cons<
-                    BooleanConditional<
-                        Lt,
-                        Id,
-                        CopyProperty<T, ContextB, ContextOut>,
-                        Distance<f32>,
-                    >,
-                    Nil,
-                >,
-            >,
-        >,
-    >;
+        EvaluateSide<Right, Inherited, ContextB>,
+        CopyContext<ContextA, ContextOut>,
+        BooleanConditional<Lt, Id, CopyProperty<T, ContextB, ContextOut>, Distance<f32>>,
+    );
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
         Default::default()

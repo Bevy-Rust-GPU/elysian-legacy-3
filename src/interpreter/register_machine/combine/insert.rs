@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use t_funk::{
     closure::Closure,
-    collection::{map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT}, hlist::{Cons, Nil}},
+    collection::{map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT}},
     collection::set::{Insert as InsertS, InsertT as InsertST},
 };
 
@@ -13,10 +13,10 @@ use crate::LiftEvaluate;
 pub struct InsertProperty<T, O>(pub T, pub PhantomData<O>);
 
 impl<T, O, D> LiftEvaluate<D> for InsertProperty<T, O> {
-    type LiftEvaluate = Cons<Self, Nil>;
+    type LiftEvaluate = (Self,);
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        Cons(self, Nil)
+        (self,)
     }
 }
 

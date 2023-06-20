@@ -2,10 +2,7 @@ use std::marker::PhantomData;
 
 use t_funk::{
     collection::map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
-    collection::{
-        hlist::{Cons, Nil},
-        set::{Get as GetS, Insert as InsertS, InsertT as InsertST},
-    },
+    collection::set::{Get as GetS, Insert as InsertS, InsertT as InsertST},
     function::Function,
     macros::{
         phantom::{PhantomClone, PhantomCopy, PhantomDefault},
@@ -20,10 +17,10 @@ use crate::LiftEvaluate;
 pub struct CopyContext<I, O>(PhantomData<(I, O)>);
 
 impl<I, O, D> LiftEvaluate<D> for CopyContext<I, O> {
-    type LiftEvaluate = Cons<Self, Nil>;
+    type LiftEvaluate = (Self,);
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        Cons(self, Nil)
+        (self,)
     }
 }
 
@@ -45,10 +42,10 @@ where
 pub struct CopyProperty<T, I, O>(PhantomData<(T, I, O)>);
 
 impl<T, I, O, D> LiftEvaluate<D> for CopyProperty<T, I, O> {
-    type LiftEvaluate = Cons<Self, Nil>;
+    type LiftEvaluate = (Self,);
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        Cons(self, Nil)
+        (self,)
     }
 }
 

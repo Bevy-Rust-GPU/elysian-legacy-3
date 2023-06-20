@@ -28,14 +28,13 @@ where
 impl_adt! {
     impl<A, B, C, F, Z> Foldr<F, Z> for Then<A, B> | Combine<A, B, C>
     where
-        A: Foldr<F, Z>,
-        B: Foldr<F, FoldrT<A, F, Z>>,
-        F: Clone,
+        F: Clone + Closure<(A, Z)>,
+        B: Foldr<F, OutputT<F, (A, Z)>>,
     {
-        type Foldr = FoldrT<B, F, FoldrT<A, F, Z>>;
+        type Foldr = FoldrT<B, F, OutputT<F, (A, Z)>>;
 
         fn foldr(self, f: F, z: Z) -> Self::Foldr {
-            self.1.foldr(f.clone(), self.0.foldr(f, z))
+            self.1.foldr(f.clone(), f.call((self.0, z)))
         }
     }
 }
@@ -63,9 +62,6 @@ mod test {
             adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> adt() >> Done;
         let folded = adt.fmap(FormatDebug).foldr(Concat, String::default());
 
-        assert_eq!(
-            folded,
-            "Isosurface(0.0)PointTranslate(Vec2(0.0, 0.0))"
-        )
+        assert_eq!(folded, "Run(Isosurface(0.0))Run(Point)Run(Translate(Vec2(0.0, 0.0)))")
     }
 }

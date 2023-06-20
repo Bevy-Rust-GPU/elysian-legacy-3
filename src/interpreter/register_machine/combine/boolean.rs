@@ -4,7 +4,7 @@ use t_funk::{
     closure::{Closure, OutputT},
     collection::{
         map::{Get as GetM, GetT as GetMT},
-        set::Get as GetS, hlist::{Cons, Nil},
+        set::Get as GetS,
     },
 };
 
@@ -15,10 +15,10 @@ use crate::{ContextA, ContextB, LiftEvaluate};
 pub struct BooleanConditional<F, FA, FB, T>(pub F, pub FA, pub FB, pub PhantomData<T>);
 
 impl<F, FA, FB, T, D> LiftEvaluate<D> for BooleanConditional<F, FA, FB, T> {
-    type LiftEvaluate = Cons<Self, Nil>;
+    type LiftEvaluate = (Self,);
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        Cons(self, Nil)
+        (self,)
     }
 }
 

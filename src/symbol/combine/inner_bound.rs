@@ -2,7 +2,6 @@ use std::marker::PhantomData;
 
 use t_funk::{
     closure::{Compose, ComposeT},
-    collection::hlist::{Cons, Nil},
     function::Lt,
     macros::{functions, types},
     typeclass::monad::Identity,
@@ -44,47 +43,31 @@ impl_adt! {
 pub struct InnerBoundS;
 
 impl<D> LiftEvaluate<D> for InnerBoundS {
-    type LiftEvaluate = Cons<
+    type LiftEvaluate = (
         EvaluateSide<Left, (Distance<f32>, ()), ContextA>,
-        Cons<
-            CopyContext<ContextA, ContextB>,
-            Cons<
-                InsertProperty<Distance<f32>, ContextB>,
-                Cons<
-                    BooleanConditional<
-                        Lt,
-                        EvaluateSide<Right, Inherited, ContextOut>,
-                        ComposeT<
-                            InsertProperty<Distance<f32>, ContextOut>,
-                            CopyContext<ContextB, ContextOut>,
-                        >,
-                        Distance<f32>,
-                    >,
-                    Nil,
-                >,
-            >,
+        CopyContext<ContextA, ContextB>,
+        InsertProperty<Distance<f32>, ContextB>,
+        BooleanConditional<
+            Lt,
+            EvaluateSide<Right, Inherited, ContextOut>,
+            ComposeT<InsertProperty<Distance<f32>, ContextOut>, CopyContext<ContextB, ContextOut>>,
+            Distance<f32>,
         >,
-    >;
+    );
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        Cons(
+        (
             EvaluateSide::<Left, Dist<f32>, ContextA>::default(),
-            Cons(
-                CopyContext::<ContextA, ContextB>::default(),
-                Cons(
-                    InsertProperty(Distance(0.0), PhantomData::<ContextB>),
-                    Cons(
-                        BooleanConditional(
-                            Lt,
-                            EvaluateSide::<Right, Inherited, ContextOut>::default(),
-                            CopyContext::<ContextB, ContextOut>::default().compose_l(
-                                InsertProperty(Distance(f32::INFINITY), PhantomData::<ContextOut>),
-                            ),
-                            PhantomData::<Distance<f32>>,
-                        ),
-                        Nil,
-                    ),
-                ),
+            CopyContext::<ContextA, ContextB>::default(),
+            InsertProperty(Distance(0.0), PhantomData::<ContextB>),
+            BooleanConditional(
+                Lt,
+                EvaluateSide::<Right, Inherited, ContextOut>::default(),
+                CopyContext::<ContextB, ContextOut>::default().compose_l(InsertProperty(
+                    Distance(f32::INFINITY),
+                    PhantomData::<ContextOut>,
+                )),
+                PhantomData::<Distance<f32>>,
             ),
         )
     }

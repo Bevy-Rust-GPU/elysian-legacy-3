@@ -2,7 +2,6 @@ use glam::Vec2;
 use std::marker::PhantomData;
 use t_funk::{
     closure::Closure,
-    collection::hlist::{Cons, Nil},
     function::Lt,
     macros::{functions, impl_adt, types},
     op_chain::OpChain,
@@ -42,54 +41,36 @@ impl_adt! {
 pub struct SmoothUnionS(f32);
 
 impl<D> LiftEvaluate<D> for SmoothUnionS {
-    type LiftEvaluate = Cons<
+    type LiftEvaluate = (
         EvaluateSide<Left, Inherited, ContextA>,
-        Cons<
-            EvaluateSide<Right, Inherited, ContextB>,
-            Cons<
-                BooleanConditional<
-                    Lt,
-                    CopyContext<ContextA, ContextOut>,
-                    CopyContext<ContextB, ContextOut>,
-                    Distance<f32>,
-                >,
-                Cons<
-                    BlendProperty<PolynomialSmoothMin<Distance<f32>>, Distance<f32>>,
-                    Cons<
-                        BlendPropertyDist<PolynomialSmoothMin<Gradient<Vec2>>, Gradient<Vec2>>,
-                        Nil,
-                    >,
-                >,
-            >,
+        EvaluateSide<Right, Inherited, ContextB>,
+        BooleanConditional<
+            Lt,
+            CopyContext<ContextA, ContextOut>,
+            CopyContext<ContextB, ContextOut>,
+            Distance<f32>,
         >,
-    >;
+        BlendProperty<PolynomialSmoothMin<Distance<f32>>, Distance<f32>>,
+        BlendPropertyDist<PolynomialSmoothMin<Gradient<Vec2>>, Gradient<Vec2>>,
+    );
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        Cons(
+        (
             EvaluateSide::<Left, Inherited, ContextA>::default(),
-            Cons(
-                EvaluateSide::<Right, Inherited, ContextB>::default(),
-                Cons(
-                    BooleanConditional(
-                        Lt,
-                        CopyContext::default(),
-                        CopyContext::default(),
-                        PhantomData::<Distance<f32>>,
-                    ),
-                    Cons(
-                        BlendProperty(
-                            PolynomialSmoothMin(self.0, PhantomData::<Distance<f32>>),
-                            PhantomData::<Distance<f32>>,
-                        ),
-                        Cons(
-                            BlendPropertyDist(
-                                PolynomialSmoothMin(self.0, PhantomData::<Gradient<Vec2>>),
-                                PhantomData::<Gradient<Vec2>>,
-                            ),
-                            Nil,
-                        ),
-                    ),
-                ),
+            EvaluateSide::<Right, Inherited, ContextB>::default(),
+            BooleanConditional(
+                Lt,
+                CopyContext::default(),
+                CopyContext::default(),
+                PhantomData::<Distance<f32>>,
+            ),
+            BlendProperty(
+                PolynomialSmoothMin(self.0, PhantomData::<Distance<f32>>),
+                PhantomData::<Distance<f32>>,
+            ),
+            BlendPropertyDist(
+                PolynomialSmoothMin(self.0, PhantomData::<Gradient<Vec2>>),
+                PhantomData::<Gradient<Vec2>>,
             ),
         )
     }

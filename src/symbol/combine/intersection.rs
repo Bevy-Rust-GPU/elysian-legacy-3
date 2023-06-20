@@ -1,8 +1,4 @@
-use t_funk::{
-    collection::hlist::{Cons, Nil},
-    function::Gt,
-    typeclass::monad::Identity,
-};
+use t_funk::{function::Gt, typeclass::monad::Identity};
 
 use crate::{
     BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
@@ -43,21 +39,16 @@ impl_adt! {
 pub struct IntersectionS;
 
 impl LiftEvaluate<Dist<f32>> for IntersectionS {
-    type LiftEvaluate = Cons<
+    type LiftEvaluate = (
         EvaluateSide<Left, Inherited, ContextA>,
-        Cons<
-            EvaluateSide<Right, Inherited, ContextB>,
-            Cons<
-                BooleanConditional<
-                    Gt,
-                    CopyContext<ContextA, ContextOut>,
-                    CopyContext<ContextB, ContextOut>,
-                    Distance<f32>,
-                >,
-                Nil,
-            >,
+        EvaluateSide<Right, Inherited, ContextB>,
+        BooleanConditional<
+            Gt,
+            CopyContext<ContextA, ContextOut>,
+            CopyContext<ContextB, ContextOut>,
+            Distance<f32>,
         >,
-    >;
+    );
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
         Default::default()
@@ -68,21 +59,16 @@ impl<D> LiftEvaluate<(Distance<f32>, D)> for IntersectionS
 where
     D: Pair,
 {
-    type LiftEvaluate = Cons<
+    type LiftEvaluate = (
         EvaluateSide<Left, Dist<f32>, ContextA>,
-        Cons<
-            EvaluateSide<Right, Dist<f32>, ContextB>,
-            Cons<
-                BooleanConditional<
-                    Gt,
-                    EvaluateSide<Left, Inherited, ContextOut>,
-                    EvaluateSide<Right, Inherited, ContextOut>,
-                    Distance<f32>,
-                >,
-                Nil,
-            >,
+        EvaluateSide<Right, Dist<f32>, ContextB>,
+        BooleanConditional<
+            Gt,
+            EvaluateSide<Left, Inherited, ContextOut>,
+            EvaluateSide<Right, Inherited, ContextOut>,
+            Distance<f32>,
         >,
-    >;
+    );
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
         Default::default()

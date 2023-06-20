@@ -20,29 +20,27 @@ where
 
 impl<A, B, T> Apply<T> for Then<A, B>
 where
-    A: Apply<T>,
+    T: Clone + Fmap<A>,
     B: Apply<T>,
-    T: Clone,
-    ApplyT<A, T>: Mappend<ApplyT<B, T>>,
+    FmapT<T, A>: Mappend<ApplyT<B, T>>,
 {
-    type Apply = MappendT<ApplyT<A, T>, ApplyT<B, T>>;
+    type Apply = MappendT<FmapT<T, A>, ApplyT<B, T>>;
 
     fn apply(self, t: T) -> Self::Apply {
-        self.0.apply(t.clone()).mappend(self.1.apply(t))
+        t.clone().fmap(self.0).mappend(self.1.apply(t))
     }
 }
 
 impl<A, B, F, T> Apply<T> for Combine<A, B, F>
 where
-    A: Apply<T>,
+    T: Clone + Fmap<A>,
     B: Apply<T>,
-    T: Clone,
-    ApplyT<A, T>: Mappend<ApplyT<B, T>>,
+    FmapT<T, A>: Mappend<ApplyT<B, T>>,
 {
-    type Apply = MappendT<ApplyT<A, T>, ApplyT<B, T>>;
+    type Apply = MappendT<FmapT<T, A>, ApplyT<B, T>>;
 
     fn apply(self, t: T) -> Self::Apply {
-        self.0.apply(t.clone()).mappend(self.1.apply(t))
+        t.clone().fmap(self.0).mappend(self.1.apply(t))
     }
 }
 
@@ -62,7 +60,6 @@ mod test {
     use glam::Vec2;
     use t_funk::{
         closure::{Const, Curry2},
-        collection::hlist::{Cons, Nil},
         function::Mul,
         op_chain::Done,
         typeclass::{applicative::Apply, functor::Fmap},
@@ -78,13 +75,7 @@ mod test {
             >> Done;
 
         let funcs = shape.fmap(Const(Mul.suffix2(2)));
-        let vals = funcs.apply(Cons(2, Cons(3, Nil)));
-        assert_eq!(
-            vals,
-            Cons(
-                4,
-                Cons(6, Cons(4, Cons(6, Cons(4, Cons(6, Cons(4, Cons(6, Nil)))))))
-            )
-        );
+        let vals = funcs.apply((2, 3));
+        assert_eq!(vals, (4, 6, 4, 6, 4, 6, 4, 6));
     }
 }

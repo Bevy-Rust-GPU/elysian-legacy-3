@@ -1,6 +1,5 @@
 use t_funk::{
     closure::Composed,
-    collection::hlist::{Cons, Nil},
     function::{Gt, Neg},
     typeclass::{arrow::Firsted, monad::Identity},
 };
@@ -44,21 +43,16 @@ impl_adt! {
 pub struct SubtractionS;
 
 impl LiftEvaluate<Dist<f32>> for SubtractionS {
-    type LiftEvaluate = Cons<
+    type LiftEvaluate = (
         EvaluateSide<Left, Inherited, ContextA>,
-        Cons<
-            EvaluateSide<Right, Inherited, ContextB>,
-            Cons<
-                BooleanConditional<
-                    Composed<Gt, Firsted<Neg>>,
-                    CopyContext<ContextA, ContextOut>,
-                    CopyContext<ContextB, ContextOut>,
-                    Distance<f32>,
-                >,
-                Nil,
-            >,
+        EvaluateSide<Right, Inherited, ContextB>,
+        BooleanConditional<
+            Composed<Gt, Firsted<Neg>>,
+            CopyContext<ContextA, ContextOut>,
+            CopyContext<ContextB, ContextOut>,
+            Distance<f32>,
         >,
-    >;
+    );
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
         Default::default()
@@ -69,21 +63,16 @@ impl<D> LiftEvaluate<(Distance<f32>, D)> for SubtractionS
 where
     D: Pair,
 {
-    type LiftEvaluate = Cons<
+    type LiftEvaluate = (
         EvaluateSide<Left, Dist<f32>, ContextA>,
-        Cons<
-            EvaluateSide<Right, Dist<f32>, ContextB>,
-            Cons<
-                BooleanConditional<
-                    Composed<Gt, Firsted<Neg>>,
-                    EvaluateSide<Left, Inherited, ContextOut>,
-                    EvaluateSide<Right, Inherited, ContextOut>,
-                    Distance<f32>,
-                >,
-                Nil,
-            >,
+        EvaluateSide<Right, Dist<f32>, ContextB>,
+        BooleanConditional<
+            Composed<Gt, Firsted<Neg>>,
+            EvaluateSide<Left, Inherited, ContextOut>,
+            EvaluateSide<Right, Inherited, ContextOut>,
+            Distance<f32>,
         >,
-    >;
+    );
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
         Default::default()

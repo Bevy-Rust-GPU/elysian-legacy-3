@@ -5,23 +5,13 @@ use t_funk::{
 
 use crate::{AdtEnd, Combine, Run, Then};
 
-impl Mempty for AdtEnd {
-    type Mempty = AdtEnd;
-
-    fn mempty() -> Self::Mempty {
-        AdtEnd
-    }
-}
-
 impl_adt! {
-    impl<A, B> Mempty for Run<A> | Then<A, B>
-    where
-        A: Mempty,
+    impl<A, B> Mempty for Run<A> | Then<A, B> | AdtEnd
     {
-        type Mempty = MemptyT<A>;
+        type Mempty = AdtEnd;
 
         fn mempty() -> Self::Mempty {
-            A::mempty()
+            AdtEnd
         }
     }
 }

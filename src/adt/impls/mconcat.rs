@@ -49,7 +49,6 @@ mod test {
     use glam::Vec2;
     use t_funk::{
         closure::Const,
-        collection::hlist::{Cons, Nil},
         op_chain::Done,
         typeclass::{functor::Fmap, monoid::Mconcat, semigroup::Sum},
     };
@@ -59,13 +58,7 @@ mod test {
     #[test]
     fn test_adt_mconcat() {
         let adt = adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> Done;
-        let foo = adt.fmap(Const(t_funk::collection::hlist::Cons(
-            Sum(1),
-            t_funk::collection::hlist::Nil,
-        )));
-        assert_eq!(
-            foo.mconcat(),
-            Cons(Sum(1), Cons(Sum(1), Cons(Sum(1), Nil),),)
-        );
+        let foo = adt.fmap(Const((Sum(1),)));
+        assert_eq!(foo.mconcat(), (Sum(1), Sum(1), Sum(1)));
     }
 }

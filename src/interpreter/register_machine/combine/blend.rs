@@ -3,7 +3,6 @@ use std::marker::PhantomData;
 use t_funk::{
     closure::{Closure, OutputT},
     collection::{
-        hlist::{Cons, Nil},
         map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
         set::{Get as GetS, Insert as InsertS, InsertT as InsertST},
     },
@@ -17,10 +16,10 @@ use crate::{ContextA, ContextB, ContextOut, Distance, LiftEvaluate};
 pub struct BlendProperty<F, T>(pub F, pub PhantomData<T>);
 
 impl<F, T, D> LiftEvaluate<D> for BlendProperty<F, T> {
-    type LiftEvaluate = Cons<Self, Nil>;
+    type LiftEvaluate = (Self,);
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        Cons(self, Nil)
+        (self,)
     }
 }
 
@@ -57,10 +56,10 @@ where
 pub struct BlendPropertyDist<F, T>(pub F, pub PhantomData<T>);
 
 impl<F, T, D> LiftEvaluate<D> for BlendPropertyDist<F, T> {
-    type LiftEvaluate = Cons<Self, Nil>;
+    type LiftEvaluate = (Self,);
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        Cons(self, Nil)
+        (self,)
     }
 }
 

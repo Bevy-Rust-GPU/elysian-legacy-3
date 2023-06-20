@@ -463,11 +463,13 @@
         with a C -> C function chaining approach and map semantics so participating functions
         can name their desired (likely fluid - contexts etc) data by slot instead of knowing its type.
 
-=======================================================================================================================
-
 * Switch from Cons to tuples now they have a monad interface
   * Can start moving in the direction of tuples for API composition
   * Eventually switch param + evaluate lifting to use FoldMap (i.e. Fmap -> Foldl)
+
+  DONE: All uses of Cons are now tuple-based
+
+=======================================================================================================================
 
 * ADT-ify combine functions
   * Currently using function composition, needs a higher-order symbol lifting approach
