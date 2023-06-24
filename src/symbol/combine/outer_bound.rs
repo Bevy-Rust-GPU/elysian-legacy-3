@@ -9,12 +9,12 @@ use t_funk::{
 
 use crate::{
     BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
-    Inherited, InsertProperty, Left, LiftEvaluate, Right,
+    Inherited, InsertProperty, Left, LiftEvaluate, Right, Alias,
 };
 
 use t_funk::{macros::impl_adt, op_chain::OpChain};
 
-use crate::{Combine, LiftAdtF, Run, Then};
+use crate::{Combine, LiftAdtF, Run};
 
 #[functions]
 #[types]
@@ -29,7 +29,7 @@ pub fn outer_bound() -> OpChain<LiftAdtF, OuterBoundF> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> OuterBound<R> for Run<A> | Then<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> OuterBound<R> for Run<A> | Alias<A> | Combine<A, B, C> {
         type OuterBound = Combine<Self, R, Identity<OuterBoundS>>;
 
         fn outer_bound(self, rhs: R) -> Self::OuterBound {

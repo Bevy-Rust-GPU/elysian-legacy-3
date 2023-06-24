@@ -469,21 +469,32 @@
 
   DONE: All uses of Cons are now tuple-based
 
-=======================================================================================================================
-
-* ADT-ify combine functions
-  * Currently using function composition, needs a higher-order symbol lifting approach
-  * Should be able to represent as a simple list, compose via Monoid
-    * Good example case for a prospective future ADT refactor
-
 * Split ADT expansion out from ADT lifting
   * Symbols like Circle aren't usable as-is, so expand to evaluable symbols inside LiftAdt
   * This is undesirable for type-based notation, where preserving the abstraction is preferable
   * Thus, this should be refactored as a LiftAdt-like trait (ex. ExpandAdt)
     * Existing instances lift as Run, then expand when the trait method is called as part of evaluation
 
+  DONE: Implemented via Alias newtype and ExpandAlias trait,
+        which is called after LiftAdt and LiftParam during evaluation
+
 * Reconsider splitting Combine out of the ADT as a freestanding wrapper
   * How does this factor in now combine is refactored around a context approach?
+
+  SKIPPED: Took the inverse approach of eliding Then
+
+=======================================================================================================================
+
+* Consider splitting ADT into discrete types
+  * Practically the same as it is now,
+    but with stronger module organization and no define_adt / impl_adt
+  * Better semantically, since an ADT implies a closed set,
+    when there's no reason it shouldn't be extensible by downstream code
+
+* ADT-ify combine functions
+  * Currently using function composition, needs a higher-order symbol lifting approach
+  * Should be able to represent as a simple list, compose via Monoid
+    * Good example case for a prospective future ADT refactor
 
 * Reconsider Combine typeclass impls
   * Foldr / Foldl / Mappend should produce a single value for each Combine,
@@ -506,6 +517,9 @@
 * Look into convenience functions for composing monadic structure
   * RepeatM etc, various utilities from Haskell's base libraries
   * Bare minimum, whatever is needed to recreate the diagrams example that inspired Elysian
+
+* Implement Replace combinator
+  * Similar to Proxy, but overwrites a parameter unconditionally instead of predicating on distance
 
 * Abstract over multi-frame evaluation
   * ex:

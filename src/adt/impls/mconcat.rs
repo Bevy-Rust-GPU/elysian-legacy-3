@@ -7,18 +7,10 @@ use t_funk::{
     },
 };
 
-use crate::{AdtEnd, Combine, Run, Then};
-
-impl Mconcat for AdtEnd {
-    type Mconcat = Self;
-
-    fn mconcat(self) -> Self::Mconcat {
-        self
-    }
-}
+use crate::{Combine, Run, Alias};
 
 impl_adt! {
-    impl<A, B> Mconcat for Run<A> | Then<A, B>
+    impl<A, B> Mconcat for Run<A> | Alias<A>
     where
         A: Mempty,
         Self: Foldl<MappendF, MemptyT<A>>,
@@ -49,15 +41,14 @@ mod test {
     use glam::Vec2;
     use t_funk::{
         closure::Const,
-        op_chain::Done,
         typeclass::{functor::Fmap, monoid::Mconcat, semigroup::Sum},
     };
 
-    use crate::{adt, Isosurface, Point, Translate};
+    use crate::{Isosurface, Point, Translate};
 
     #[test]
     fn test_adt_mconcat() {
-        let adt = adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> Done;
+        let adt = (Translate(Vec2::new(0.0, 0.0)), Point, Isosurface(0.0));
         let foo = adt.fmap(Const((Sum(1),)));
         assert_eq!(foo.mconcat(), (Sum(1), Sum(1), Sum(1)));
     }

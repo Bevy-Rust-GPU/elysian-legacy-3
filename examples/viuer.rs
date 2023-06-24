@@ -1,11 +1,11 @@
 use elysian::{
-    adt, intersection, subtraction, union, AdtEnd, Circle, Color, Context, ContextRasterImage,
-    Dist, DistColorToRgb, Distance, Done, Evaluate, Isosurface, Manifold, PosDistColor, Position,
-    Raster, RasterToImage, Rasterizer, Run, Scale, Set, Then, Translate, ViuerPrinter,
+    Circle, Color, Combine, Context, ContextRasterImage, Dist, DistColorToRgb, Distance, Evaluate,
+    Isosurface, Manifold, PosDistColor, Position, Raster, RasterToImage, Rasterizer, Scale, Set,
+    SubtractionS, Translate, UnionS, ViuerPrinter, IntoMonad, IntoMonadT
 };
 use glam::{Vec2, Vec3};
 use image::{ImageBuffer, Rgb};
-use t_funk::{macros::lift, op_chain::tap};
+use t_funk::{closure::Closure, macros::lift, typeclass::monad::Identity};
 
 // TODO: Reimplement printing behaviour
 /*
@@ -43,58 +43,76 @@ fn main() {
     #[lift]
     fn viuer<T>(t: T)
     where
-        Then<
-            Run<Rasterizer<T, ShapeCtxFrom>>,
-            Then<
-                Run<RasterToImage<ShapeCtxTo, DistColorToRgb>>,
-                Then<Run<ViuerPrinter<ImageBuffer<Rgb<f32>, Vec<f32>>>>, AdtEnd>,
-            >,
-        >: Evaluate<Domains, RasterCtx>,
+        T: IntoMonad,
+        (
+            Rasterizer<IntoMonadT<T>, ShapeCtxFrom>,
+            RasterToImage<ShapeCtxTo, DistColorToRgb>,
+            ViuerPrinter<ImageBuffer<Rgb<f32>, Vec<f32>>>,
+        ): Evaluate<Domains, RasterCtx>,
     {
-        let comp = adt()
-            << Rasterizer::<T, ShapeCtxFrom> {
+        let t = t.into_monad();
+
+        let comp = (
+            Rasterizer::<IntoMonadT<T>, ShapeCtxFrom> {
                 width: 48,
                 height: 48,
                 shape: t,
                 context: Default::default(),
-            }
-            << RasterToImage::<ShapeCtxTo, DistColorToRgb>::default()
-            << ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default()
-            >> Done;
+            },
+            RasterToImage::<ShapeCtxTo, DistColorToRgb>::default(),
+            ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default(),
+        );
 
         comp.evaluate(Default::default());
     }
 
-    let shape_a =
-        adt() << Translate(Vec2::new(-0.5, -0.5)) << Circle(1.2_f32) << Set(Color(Vec3::X))
-            >> tap(Viuer)
-            >> Done;
-    let shape_b = adt() << Translate(Vec2::new(0.5, 0.5)) << Circle(1.1_f32) << Set(Color(Vec3::Y))
-        >> tap(Viuer)
-        >> Done;
-    let shape_c = adt() << Translate(Vec2::new(0.0, 0.5)) << Circle(1.3_f32) << Set(Color(Vec3::Z))
-        >> tap(Viuer)
-        >> Done;
-    let shape_d =
-        adt() << Translate(Vec2::new(0.0, -0.5)) << Circle(1.15_f32) << Set(Color(Vec3::ONE))
-            >> tap(Viuer)
-            >> Done;
+    let shape_a = (
+        Translate(Vec2::new(-0.5, -0.5)),
+        Circle(1.2_f32),
+        Set(Color(Vec3::X)),
+    );
+    Viuer.call(shape_a);
 
-    let combined = intersection() << shape_a >> union() << shape_b << shape_c >> subtraction()
-        << shape_d
-        >> tap(Viuer)
-        >> Done;
+    let shape_b = (
+        Translate(Vec2::new(0.5, 0.5)),
+        Circle(1.1_f32),
+        Set(Color(Vec3::Y)),
+    );
+    Viuer.call(shape_b);
 
-    let _shape = adt()
-        << Scale(
-            0.5_f32,
-            adt()
-                << Translate(Vec2::new(0.25, 0.25))
-                << combined
-                << Manifold
-                << Isosurface(0.5_f32)
-                >> Done,
-        )
-        >> tap(Viuer)
-        >> Done;
+    let shape_c = (
+        Translate(Vec2::new(0.0, 0.5)),
+        Circle(1.3_f32),
+        Set(Color(Vec3::Z)),
+    );
+    Viuer.call(shape_c);
+
+    let shape_d = (
+        Translate(Vec2::new(0.0, -0.5)),
+        Circle(1.15_f32),
+        Set(Color(Vec3::ONE)),
+    );
+    Viuer.call(shape_d);
+
+    let combined = Combine(
+        Identity(Combine(
+            Identity(Combine(shape_a, shape_b, Identity(UnionS))),
+            shape_c,
+            Identity(UnionS),
+        )),
+        shape_d,
+        Identity(SubtractionS),
+    );
+    Viuer.call(Identity(combined));
+
+    let shape = Scale(
+        0.5_f32,
+        (
+            Translate(Vec2::new(0.25, 0.25)),
+            combined,
+            Manifold,
+            Isosurface(0.5_f32),
+        ),
+    );
+    Viuer.call(Identity(shape));
 }

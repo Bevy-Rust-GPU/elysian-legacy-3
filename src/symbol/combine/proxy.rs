@@ -7,7 +7,7 @@ use t_funk::{
 
 use crate::{
     BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, CopyProperty, Distance,
-    EvaluateSide, Inherited, Left, LiftEvaluate, Right,
+    EvaluateSide, Inherited, Left, LiftEvaluate, Right, Alias,
 };
 
 use t_funk::{
@@ -15,7 +15,7 @@ use t_funk::{
     op_chain::OpChain,
 };
 
-use crate::{Combine, LiftAdtF, Run, Then};
+use crate::{Combine, LiftAdtF, Run};
 
 pub fn proxy<T>() -> OpChain<LiftAdtF, ProxyF<T>> {
     Default::default()
@@ -30,7 +30,7 @@ pub trait Proxy<R, T> {
 }
 
 impl_adt! {
-    impl<A, B, C, R, T> Proxy<R, T> for Run<A> | Then<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R, T> Proxy<R, T> for Run<A> | Alias<A> | Combine<A, B, C> {
         type Proxy = Combine<Self, R, Identity<ProxyS<T>>>;
 
         fn proxy(self, rhs: R) -> Self::Proxy {

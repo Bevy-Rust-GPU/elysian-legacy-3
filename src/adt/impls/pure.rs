@@ -1,9 +1,9 @@
 use t_funk::{macros::impl_adt, typeclass::applicative::Pure};
 
-use crate::{AdtEnd, Combine, Run, Then};
+use crate::{Alias, Combine, Run};
 
 impl_adt! {
-    impl<A, B, C, T> Pure<T> for AdtEnd | Run<A> | Then<A, B> | Combine<A, B, C> {
+    impl<A, B, C, T> Pure<T> for Run<A> | Alias<A> | Combine<A, B, C> {
         type Pure = Run<T>;
 
         fn pure(t: T) -> Self::Pure {

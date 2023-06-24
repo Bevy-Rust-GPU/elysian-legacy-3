@@ -7,10 +7,10 @@ use t_funk::{
     },
 };
 
-use crate::{AdtEnd, Combine, Run, Then};
+use crate::{Combine, Run, Alias};
 
 impl_adt! {
-    impl<F, A, B, C> Chain<F> for AdtEnd | Run<A> | Then<A, B> | Combine<A, B, C>
+    impl<F, A, B, C> Chain<F> for Run<A> | Alias<A> | Combine<A, B, C>
     where
         Self: Fmap<F>,
         FmapT<Self, F>: Mconcat,
@@ -26,14 +26,9 @@ impl_adt! {
 #[cfg(test)]
 mod test {
     use glam::Vec2;
-    use t_funk::{
-        macros::lift,
-        typeclass::{copointed::CopointF, functor::Fmap, monad::Chain},
-    };
+    use t_funk::{macros::lift, typeclass::functor::Fmap};
 
-    use crate::{
-        adt, AdtEnd, Distance, Done, Get, Isosurface, LiftAdtF, Point, Run, Then, Translate,
-    };
+    use crate::{Distance, Get, Isosurface, LiftAdtF, Point, Run, Translate};
 
     #[lift]
     fn make_tuple<A>(a: A) -> (A,) {
@@ -42,40 +37,23 @@ mod test {
 
     #[test]
     fn test_adt_monad() {
-        // Nondestructive transform from shape w/no Combine to list and back
-        let from_shape = adt() << Translate(Vec2::new(0.5, 0.5)) << Point << Isosurface(0.2)
-            >> adt()
-            << Get::<Distance<f32>>::default()
-            >> Done;
-
-        let to_list = from_shape.fmap(CopointF).chain(MakeTuple);
-
-        assert_eq!(
-            to_list,
-            (
-                Translate(Vec2::new(0.5, 0.5)),
-                Point,
-                Isosurface(0.2),
-                Get::<Distance<f32>>::default(),
-            )
+        let from_shape = (
+            Translate(Vec2::new(0.5, 0.5)),
+            Point,
+            Isosurface(0.2),
+            Get::<Distance<f32>>::default(),
         );
 
-        let to_shape = to_list.chain(LiftAdtF);
+        let to_shape = from_shape.fmap(LiftAdtF);
 
         assert_eq!(
             to_shape,
-            Then(
+            (
                 Run(Translate(Vec2::new(0.5, 0.5))),
-                Then(
-                    Run(Point),
-                    Then(
-                        Run(Isosurface(0.2)),
-                        Then(Run(Get::<Distance<f32>>::default()), AdtEnd),
-                    ),
-                ),
+                Run(Point),
+                Run(Isosurface(0.2)),
+                Run(Get::<Distance<f32>>::default()),
             )
         );
-
-        assert_eq!(from_shape, to_shape);
     }
 }

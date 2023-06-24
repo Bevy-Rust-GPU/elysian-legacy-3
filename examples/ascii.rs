@@ -1,12 +1,12 @@
 use std::marker::PhantomData;
 
 use elysian::{
-    adt, union, AdtEnd, Circle, Context, ContextRasterString, Dist, Distance, Done, Evaluate,
-    Isosurface, Manifold, PosDist, Position, Print, Raster, RasterToAscii, Rasterizer, Run, Scale,
-    Then, Translate, ASCII_RAMP, outer_bound,
+    Circle, Combine, Context, ContextRasterString, Dist, Distance, Evaluate, IntoMonad, IntoMonadT,
+    Isosurface, Manifold, OuterBoundS, PosDist, Position, Print, Raster, RasterToAscii, Rasterizer,
+    Scale, Translate, UnionS, ASCII_RAMP,
 };
 use glam::Vec2;
-use t_funk::{macros::lift, op_chain::tap};
+use t_funk::{closure::Closure, macros::lift, typeclass::monad::Identity};
 
 fn main() {
     pub type ShapeContextFrom = PosDist<Position<Vec2>, ()>;
@@ -18,44 +18,63 @@ fn main() {
     #[lift]
     fn ascii<T>(t: T)
     where
-        Then<
-            Run<Rasterizer<T, ShapeContextFrom>>,
-            Then<Run<RasterToAscii<11, ShapeContextTo>>, Then<Run<Print>, AdtEnd>>,
-        >: Evaluate<Domain, RasterCtx>,
+        T: IntoMonad,
+        (
+            Rasterizer<IntoMonadT<T>, ShapeContextFrom>,
+            RasterToAscii<11, ShapeContextTo>,
+            Print,
+        ): Evaluate<Domain, RasterCtx>,
     {
-        let comp = adt()
-            << Rasterizer::<T, ShapeContextFrom> {
+        let t = t.into_monad();
+
+        let comp = (
+            Rasterizer::<IntoMonadT<T>, ShapeContextFrom> {
                 width: 48,
                 height: 24,
                 shape: t,
                 context: Default::default(),
-            }
-            << RasterToAscii(ASCII_RAMP, PhantomData::<ShapeContextTo>)
-            << Print
-            >> Done;
+            },
+            RasterToAscii(ASCII_RAMP, PhantomData::<ShapeContextTo>),
+            Print,
+        );
 
         comp.evaluate(Default::default());
     }
 
-    let shape_a = adt() << Translate(Vec2::new(0.8, -0.8)) << Circle(0.2_f32) >> tap(Ascii) >> Done;
-    let shape_b = adt() << Translate(Vec2::new(0.8, 0.8)) << Circle(0.1_f32) >> tap(Ascii) >> Done;
-    let shape_c = adt() << Translate(Vec2::new(0.0, 0.8)) << Circle(0.3_f32) >> tap(Ascii) >> Done;
-    let shape_d =
-        adt() << Translate(Vec2::new(0.0, -0.8)) << Circle(0.15_f32) >> tap(Ascii) >> Done;
+    let shape_a = (Translate(Vec2::new(0.8, -0.8)), Circle(0.2_f32));
+    Ascii.call(shape_a);
 
-    let combined = union() << shape_a << shape_b << shape_c << shape_d >> tap(Ascii) >> Done;
-    let combined = outer_bound() << shape_a << combined >> Done;
+    let shape_b = (Translate(Vec2::new(0.8, 0.8)), Circle(0.1_f32));
+    Ascii.call(shape_b);
 
-    let _shape = adt()
-        << Scale(
-            0.5_f32,
-            adt()
-                << Translate(Vec2::new(0.25, 0.25))
-                << combined
-                << Isosurface(0.2_f32)
-                << Manifold
-                >> Done,
-        )
-        >> tap(Ascii)
-        >> Done;
+    let shape_c = (Translate(Vec2::new(0.0, 0.8)), Circle(0.3_f32));
+    Ascii.call(shape_c);
+
+    let shape_d = (Translate(Vec2::new(0.0, -0.8)), Circle(0.15_f32));
+    Ascii.call(shape_d);
+
+    let combined = Combine(
+        shape_a,
+        Identity(Combine(
+            shape_b,
+            Identity(Combine(shape_c, shape_d, Identity(UnionS))),
+            Identity(UnionS),
+        )),
+        Identity(UnionS),
+    );
+    Ascii.call(combined);
+
+    let combined = Combine(shape_a, Identity(combined), Identity(OuterBoundS));
+
+    let shape = Scale(
+        0.5_f32,
+        (
+            Translate(Vec2::new(0.25, 0.25)),
+            combined,
+            Isosurface(0.2_f32),
+            Manifold,
+        ),
+    );
+
+    Ascii.call(shape);
 }

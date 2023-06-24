@@ -10,11 +10,11 @@ use crate::{
 };
 
 use t_funk::{
-    macros::{functions, impl_adt, types},
+    macros::{functions, types},
     op_chain::OpChain,
 };
 
-use crate::{Combine, LiftAdtF, Then};
+use crate::{Combine, LiftAdtF};
 
 #[functions]
 #[types]
@@ -28,13 +28,11 @@ pub fn subtraction() -> OpChain<LiftAdtF, SubtractionF> {
     Default::default()
 }
 
-impl_adt! {
-    impl<A, B, C, R> Subtraction<R> for Then<A, B> | Combine<A, B, C> {
-        type Subtraction = Combine<Self, R, Identity<SubtractionS>>;
+impl<A, B, C, R> Subtraction<R> for Combine<A, B, C> {
+    type Subtraction = Combine<Self, R, Identity<SubtractionS>>;
 
-        fn subtraction(self, rhs: R) -> Self::Subtraction {
-            Combine(self, rhs, Identity(SubtractionS))
-        }
+    fn subtraction(self, rhs: R) -> Self::Subtraction {
+        Combine(self, rhs, Identity(SubtractionS))
     }
 }
 

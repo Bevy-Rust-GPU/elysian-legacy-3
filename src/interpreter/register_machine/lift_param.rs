@@ -5,7 +5,7 @@ use t_funk::{
     typeclass::functor::{Fmap, FmapT},
 };
 
-use crate::{AdtEnd, Combine, Run, Then};
+use crate::{Alias, Combine, Run};
 
 #[functions]
 #[types]
@@ -41,7 +41,6 @@ impl_adt! {
             | IVec2
             | IVec3
             | IVec4
-            | AdtEnd
     {
         type LiftParam = Self;
 
@@ -62,31 +61,29 @@ where
     }
 }
 
-impl<A, B, C> LiftParam<C> for Then<A, B>
+impl<A, B> LiftParam<B> for Alias<A>
 where
-    A: LiftParam<C>,
-    B: LiftParam<C>,
-    C: Clone,
+    A: Fmap<Curry2B<LiftParamF, B>>,
 {
-    type LiftParam = Then<LiftParamT<A, C>, LiftParamT<B, C>>;
+    type LiftParam = Alias<FmapT<A, Curry2B<LiftParamF, B>>>;
 
-    fn lift_param(self, input: C) -> Self::LiftParam {
-        Then(self.0.lift_param(input.clone()), self.1.lift_param(input))
+    fn lift_param(self, input: B) -> Self::LiftParam {
+        Alias(self.0.fmap(LiftParamF.suffix2(input)))
     }
 }
 
 impl<A, B, F, C> LiftParam<C> for Combine<A, B, F>
 where
-    A: LiftParam<C>,
-    B: LiftParam<C>,
+    A: Fmap<Curry2B<LiftParamF, C>>,
+    B: Fmap<Curry2B<LiftParamF, C>>,
     C: Clone,
 {
-    type LiftParam = Combine<LiftParamT<A, C>, LiftParamT<B, C>, F>;
+    type LiftParam = Combine<FmapT<A, Curry2B<LiftParamF, C>>, FmapT<B, Curry2B<LiftParamF, C>>, F>;
 
     fn lift_param(self, input: C) -> Self::LiftParam {
         Combine(
-            self.0.lift_param(input.clone()),
-            self.1.lift_param(input),
+            self.0.fmap(LiftParamF.suffix2(input.clone())),
+            self.1.fmap(LiftParamF.suffix2(input)),
             self.2,
         )
     }

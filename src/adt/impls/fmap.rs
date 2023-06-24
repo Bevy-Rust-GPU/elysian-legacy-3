@@ -1,39 +1,20 @@
 use t_funk::{
     closure::{Closure, OutputT},
-    typeclass::functor::{Fmap, FmapT},
+    typeclass::functor::Fmap, macros::impl_adt,
 };
 
-use crate::{AdtEnd, Combine, Run, Then};
+use crate::{Combine, Run, Alias};
 
-impl<F> Fmap<F> for AdtEnd {
-    type Fmap = Self;
+impl_adt! {
+    impl<A, F> Fmap<F> for Run<A> | Alias<A>
+    where
+        F: Clone + Closure<A>,
+    {
+        type Fmap = Run<OutputT<F, A>>;
 
-    fn fmap(self, _: F) -> Self::Fmap {
-        self
-    }
-}
-
-impl<A, F> Fmap<F> for Run<A>
-where
-    F: Clone + Closure<A>,
-{
-    type Fmap = Run<OutputT<F, A>>;
-
-    fn fmap(self, f: F) -> Self::Fmap {
-        Run(f.clone().call(self.0))
-    }
-}
-
-impl<T, N, F> Fmap<F> for Then<T, N>
-where
-    F: Closure<T>,
-    N: Fmap<F>,
-    F: Clone,
-{
-    type Fmap = Then<OutputT<F, T>, FmapT<N, F>>;
-
-    fn fmap(self, f: F) -> Self::Fmap {
-        Then(f.clone().call(self.0), self.1.fmap(f))
+        fn fmap(self, f: F) -> Self::Fmap {
+            Run(f.clone().call(self.0))
+        }
     }
 }
 
@@ -51,15 +32,14 @@ where
 #[cfg(test)]
 mod test {
     use glam::Vec2;
-    use t_funk::{closure::Const, op_chain::Done, typeclass::functor::Fmap};
+    use t_funk::{closure::Const, typeclass::functor::Fmap};
 
-    use crate::{adt, AdtEnd, Isosurface, Point, Then, Translate};
+    use crate::{Isosurface, Point, Translate};
 
     #[test]
     fn test_adt_fmap() {
-        let adt =
-            adt() << Translate(Vec2::new(0.0, 0.0)) << Point << Isosurface(0.0) >> adt() >> Done;
+        let adt = (Translate(Vec2::new(0.0, 0.0)), Point, Isosurface(0.0));
         let mapped = adt.fmap(Const(()));
-        assert_eq!(mapped, Then((), Then((), Then((), AdtEnd))));
+        assert_eq!(mapped, ((), (), ()));
     }
 }

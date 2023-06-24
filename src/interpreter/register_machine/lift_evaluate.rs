@@ -1,19 +1,20 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    closure::{Closure, Compose, ComposeLF, ComposeLT, OutputT},
+    closure::{Closure, ComposeLF, OutputT},
     collection::map::{Get, GetT},
     function::Id,
     macros::{functions, types},
     typeclass::{
         foldable::{Foldr, FoldrT},
+        functor::{Fmap, FmapT},
         monad::{Chain, ChainT},
     },
 };
 
 use crate::{
-    AdtEnd, Combine, CombineContext, ContextOut, Evaluable, EvaluableT, LiftEvaluable,
-    LiftEvaluableT, NotAdtEnd, Run, Then,
+    Alias, Combine, CombineContext, ContextOut, Evaluable, EvaluableT, LiftEvaluable,
+    LiftEvaluableT, Run,
 };
 
 #[functions]
@@ -36,28 +37,15 @@ where
     }
 }
 
-impl<A, B, D> LiftEvaluate<D> for Then<A, B>
+impl<A, D> LiftEvaluate<D> for Alias<A>
 where
-    A: LiftEvaluate<D>,
-    B: LiftEvaluate<D>,
-    LiftEvaluateT<A, D>: Compose<LiftEvaluateT<B, D>>,
-    B: NotAdtEnd,
+    A: Evaluable,
+    EvaluableT<A>: LiftEvaluable<A, D>,
 {
-    type LiftEvaluate = ComposeLT<LiftEvaluateT<A, D>, LiftEvaluateT<B, D>>;
+    type LiftEvaluate = LiftEvaluableT<EvaluableT<A>, A, D>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        self.0.lift_evaluate().compose_l(self.1.lift_evaluate())
-    }
-}
-
-impl<A, D> LiftEvaluate<D> for Then<A, AdtEnd>
-where
-    A: LiftEvaluate<D>,
-{
-    type LiftEvaluate = LiftEvaluateT<A, D>;
-
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        self.0.lift_evaluate()
+        EvaluableT::<A>::lift_evaluable(self.0)
     }
 }
 
@@ -86,14 +74,50 @@ pub struct LiftEvaluateCombine<A, B, F, D>(pub A, pub B, pub F, pub PhantomData<
 
 impl<A, B, F, D, CI> Closure<CI> for LiftEvaluateCombine<A, B, F, D>
 where
-    A: Clone + LiftEvaluate<D>,
-    B: Clone + LiftEvaluate<D>,
-    F: Closure<CombineContext<A, B, CI, (), (), (), LiftEvaluateT<A, D>, LiftEvaluateT<B, D>>>,
-    OutputT<F, CombineContext<A, B, CI, (), (), (), LiftEvaluateT<A, D>, LiftEvaluateT<B, D>>>:
-        Get<ContextOut>,
+    A: Clone + Fmap<LiftEvaluateF<D>>,
+    FmapT<A, LiftEvaluateF<D>>: Foldr<ComposeLF, Id>,
+    B: Clone + Fmap<LiftEvaluateF<D>>,
+    FmapT<B, LiftEvaluateF<D>>: Foldr<ComposeLF, Id>,
+    F: Closure<
+        CombineContext<
+            A,
+            B,
+            CI,
+            (),
+            (),
+            (),
+            FoldrT<FmapT<A, LiftEvaluateF<D>>, ComposeLF, Id>,
+            FoldrT<FmapT<B, LiftEvaluateF<D>>, ComposeLF, Id>,
+        >,
+    >,
+    OutputT<
+        F,
+        CombineContext<
+            A,
+            B,
+            CI,
+            (),
+            (),
+            (),
+            FoldrT<FmapT<A, LiftEvaluateF<D>>, ComposeLF, Id>,
+            FoldrT<FmapT<B, LiftEvaluateF<D>>, ComposeLF, Id>,
+        >,
+    >: Get<ContextOut>,
 {
     type Output = GetT<
-        OutputT<F, CombineContext<A, B, CI, (), (), (), LiftEvaluateT<A, D>, LiftEvaluateT<B, D>>>,
+        OutputT<
+            F,
+            CombineContext<
+                A,
+                B,
+                CI,
+                (),
+                (),
+                (),
+                FoldrT<FmapT<A, LiftEvaluateF<D>>, ComposeLF, Id>,
+                FoldrT<FmapT<B, LiftEvaluateF<D>>, ComposeLF, Id>,
+            >,
+        >,
         ContextOut,
     >;
 
@@ -106,8 +130,14 @@ where
                 context_a: (),
                 context_b: (),
                 context_out: (),
-                inherited_a: LiftEvaluate::<D>::lift_evaluate(self.0),
-                inherited_b: LiftEvaluate::<D>::lift_evaluate(self.1),
+                inherited_a: self
+                    .0
+                    .fmap(LiftEvaluateF::<D>::default())
+                    .foldr(ComposeLF, Id),
+                inherited_b: self
+                    .1
+                    .fmap(LiftEvaluateF::<D>::default())
+                    .foldr(ComposeLF, Id),
             })
             .get()
     }

@@ -8,13 +8,13 @@ use t_funk::{
 };
 
 use crate::{
-    BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
-    Inherited, InsertProperty, Left, LiftEvaluate, Right,
+    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
+    EvaluateSide, Inherited, InsertProperty, Left, LiftEvaluate, Right,
 };
 
 use t_funk::{macros::impl_adt, op_chain::OpChain};
 
-use crate::{Combine, LiftAdtF, Run, Then};
+use crate::{Combine, LiftAdtF, Run};
 
 #[functions]
 #[types]
@@ -29,7 +29,7 @@ pub fn inner_bound() -> OpChain<LiftAdtF, InnerBoundF> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> InnerBound<R> for Run<A> | Then<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> InnerBound<R> for Run<A> | Alias<A> | Combine<A, B, C> {
         type InnerBound = Combine<Self, R, Identity<InnerBoundS>>;
 
         fn inner_bound(self, rhs: R) -> Self::InnerBound {

@@ -2,7 +2,7 @@
 
 mod apply;
 mod chain;
-mod compose;
+mod expand_alias;
 mod fmap;
 mod foldl;
 mod foldr;
@@ -15,7 +15,7 @@ mod r#return;
 
 pub use apply::*;
 pub use chain::*;
-pub use compose::*;
+pub use expand_alias::*;
 pub use fmap::*;
 pub use foldl::*;
 pub use foldr::*;

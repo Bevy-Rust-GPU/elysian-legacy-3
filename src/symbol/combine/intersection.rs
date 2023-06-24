@@ -6,11 +6,11 @@ use crate::{
 };
 
 use t_funk::{
-    macros::{functions, impl_adt, types},
+    macros::{functions, types},
     op_chain::OpChain,
 };
 
-use crate::{Combine, LiftAdtF, Then};
+use crate::{Combine, LiftAdtF};
 
 #[functions]
 #[types]
@@ -24,13 +24,11 @@ pub fn intersection() -> OpChain<LiftAdtF, IntersectionF> {
     Default::default()
 }
 
-impl_adt! {
-    impl<A, B, C, R> Intersection<R> for Then<A, B> | Combine<A, B, C> {
-        type Intersection = Combine<Self, R, Identity<IntersectionS>>;
+impl<A, B, C, R> Intersection<R> for Combine<A, B, C> {
+    type Intersection = Combine<Self, R, Identity<IntersectionS>>;
 
-        fn intersection(self, rhs: R) -> Self::Intersection {
-            Combine(self, rhs, Identity(IntersectionS))
-        }
+    fn intersection(self, rhs: R) -> Self::Intersection {
+        Combine(self, rhs, Identity(IntersectionS))
     }
 }
 

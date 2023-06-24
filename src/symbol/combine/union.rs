@@ -1,8 +1,8 @@
 use t_funk::{function::Lt, typeclass::monad::Identity};
 
 use crate::{
-    BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
-    Inherited, Left, LiftEvaluate, Pair, Right,
+    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
+    EvaluateSide, Inherited, Left, LiftEvaluate, Pair, Right,
 };
 
 use t_funk::{
@@ -10,7 +10,7 @@ use t_funk::{
     op_chain::OpChain,
 };
 
-use crate::{Combine, LiftAdtF, Run, Then};
+use crate::{Combine, LiftAdtF, Run};
 
 pub fn union() -> OpChain<LiftAdtF, UnionF> {
     Default::default()
@@ -25,7 +25,7 @@ pub trait Union<T> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> Union<R> for Run<A> | Then<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> Union<R> for Run<A> | Alias<A> | Combine<A, B, C> {
         type Union = Combine<Self, R, Identity<UnionS>>;
 
         fn union(self, rhs: R) -> Self::Union {

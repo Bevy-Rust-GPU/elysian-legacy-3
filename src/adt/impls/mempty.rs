@@ -3,15 +3,17 @@ use t_funk::{
     typeclass::monoid::{Mempty, MemptyT},
 };
 
-use crate::{AdtEnd, Combine, Run, Then};
+use crate::{Alias, Combine, Run};
 
 impl_adt! {
-    impl<A, B> Mempty for Run<A> | Then<A, B> | AdtEnd
+    impl<A> Mempty for Run<A> | Alias<A>
+    where
+        A: Mempty,
     {
-        type Mempty = AdtEnd;
+        type Mempty = MemptyT<A>;
 
         fn mempty() -> Self::Mempty {
-            AdtEnd
+            A::mempty()
         }
     }
 }

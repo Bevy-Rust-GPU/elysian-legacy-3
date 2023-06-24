@@ -1,36 +1,60 @@
 use std::ops::{Div, Mul};
 
 use crate::{
-    AdtEnd, Distance, Evaluable, EvaluateFunction, LiftAdt, LiftAdtT, LiftModify, Position, Run,
-    Then,
+    Alias, Distance, Evaluable, EvaluateFunction, ExpandAlias, ExpandAliasF, LiftAdt, LiftAdtF,
+    LiftModify, Position, Run,
 };
 
 use glam::Vec2;
 use t_funk::{
     closure::{Curry2, Curry2B},
     macros::{applicative::Applicative, functor::Functor, lift, monad::Monad},
+    typeclass::{
+        functor::{Fmap, FmapT},
+        monad::{Chain, ChainT},
+        semigroup::{Mappend, MappendT},
+    },
 };
 
 // Wrapper to pre-scale a Position, then post-inverse-scale a resulting Distance
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Scale<S, T>(pub S, pub T);
 
+impl<S, T, F> Fmap<F> for Scale<S, T> {
+    type Fmap = Self;
+
+    fn fmap(self, _: F) -> Self::Fmap {
+        self
+    }
+}
+
 impl<S, T> LiftAdt for Scale<S, T>
 where
-    S: Clone,
-    T: LiftAdt,
+    T: Fmap<LiftAdtF>,
 {
-    type LiftAdt =
-        Then<Run<ScalePosition<S>>, Then<LiftAdtT<T>, Then<Run<InverseScaleDistance<S>>, AdtEnd>>>;
+    type LiftAdt = Alias<Scale<S, FmapT<T, LiftAdtF>>>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Then(
-            Run(ScalePosition(self.0.clone())),
-            Then(
-                self.1.lift_adt(),
-                Then(Run(InverseScaleDistance(self.0)), AdtEnd),
-            ),
-        )
+        Alias(Scale(self.0, self.1.fmap(LiftAdtF)))
+    }
+}
+
+impl<S, T> ExpandAlias for Scale<S, T>
+where
+    S: Clone,
+    T: Chain<ExpandAliasF>,
+    (ScalePosition<S>,): Mappend<ChainT<T, ExpandAliasF>>,
+    MappendT<(ScalePosition<S>,), ChainT<T, ExpandAliasF>>: Mappend<(InverseScaleDistance<S>,)>,
+{
+    type ExpandAlias = MappendT<
+        MappendT<(ScalePosition<S>,), ChainT<T, ExpandAliasF>>,
+        (InverseScaleDistance<S>,),
+    >;
+
+    fn expand_alias(self) -> Self::ExpandAlias {
+        (ScalePosition(self.0.clone()),)
+            .mappend(self.1.chain(ExpandAliasF))
+            .mappend((InverseScaleDistance(self.0),))
     }
 }
 

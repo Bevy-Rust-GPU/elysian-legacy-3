@@ -1,13 +1,16 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    closure::{Closure, OutputT},
-    collection::{
-        map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
+    closure::{Closure, ComposeLF, OutputT},
+    collection::map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
+    function::Id,
+    typeclass::{
+        foldable::{Foldr, FoldrT},
+        functor::{Fmap, FmapT},
     },
 };
 
-use crate::{LiftEvaluate, LiftEvaluateT, Pair, ShapeA, ShapeB};
+use crate::{LiftEvaluate, LiftEvaluateF, Pair, ShapeA, ShapeB};
 
 use super::{ContextIn, InheritedA, InheritedB};
 
@@ -54,17 +57,36 @@ where
     C: Clone
         + GetM<ContextIn>
         + GetM<ShapeA>
-        + InsertM<O, OutputT<LiftEvaluateT<GetMT<C, ShapeA>, D>, GetMT<C, ContextIn>>>,
-    GetMT<C, ShapeA>: LiftEvaluate<D>,
-    LiftEvaluateT<GetMT<C, ShapeA>, D>: Closure<GetMT<C, ContextIn>>,
+        + InsertM<
+            O,
+            OutputT<
+                FoldrT<FmapT<GetMT<C, ShapeA>, LiftEvaluateF<D>>, ComposeLF, Id>,
+                GetMT<C, ContextIn>,
+            >,
+        >,
+    GetMT<C, ShapeA>: Fmap<LiftEvaluateF<D>>,
+    FmapT<GetMT<C, ShapeA>, LiftEvaluateF<D>>: Foldr<ComposeLF, Id>,
+    FoldrT<FmapT<GetMT<C, ShapeA>, LiftEvaluateF<D>>, ComposeLF, Id>: Closure<GetMT<C, ContextIn>>,
     D: Pair,
 {
-    type Output = InsertMT<C, O, OutputT<LiftEvaluateT<GetMT<C, ShapeA>, D>, GetMT<C, ContextIn>>>;
+    type Output = InsertMT<
+        C,
+        O,
+        OutputT<
+            FoldrT<FmapT<GetMT<C, ShapeA>, LiftEvaluateF<D>>, ComposeLF, Id>,
+            GetMT<C, ContextIn>,
+        >,
+    >;
 
     fn call(self, ctx: C) -> Self::Output {
         let context_in = GetM::<ContextIn>::get(ctx.clone());
         let shape_a = GetM::<ShapeA>::get(ctx.clone());
-        ctx.insert(shape_a.lift_evaluate().call(context_in))
+        ctx.insert(
+            shape_a
+                .fmap(LiftEvaluateF::<D>::default())
+                .foldr(ComposeLF, Id)
+                .call(context_in),
+        )
     }
 }
 
@@ -90,16 +112,35 @@ where
     C: Clone
         + GetM<ContextIn>
         + GetM<ShapeB>
-        + InsertM<O, OutputT<LiftEvaluateT<GetMT<C, ShapeB>, D>, GetMT<C, ContextIn>>>,
-    GetMT<C, ShapeB>: LiftEvaluate<D>,
-    LiftEvaluateT<GetMT<C, ShapeB>, D>: Closure<GetMT<C, ContextIn>>,
+        + InsertM<
+            O,
+            OutputT<
+                FoldrT<FmapT<GetMT<C, ShapeB>, LiftEvaluateF<D>>, ComposeLF, Id>,
+                GetMT<C, ContextIn>,
+            >,
+        >,
+    GetMT<C, ShapeB>: Fmap<LiftEvaluateF<D>>,
+    FmapT<GetMT<C, ShapeB>, LiftEvaluateF<D>>: Foldr<ComposeLF, Id>,
+    FoldrT<FmapT<GetMT<C, ShapeB>, LiftEvaluateF<D>>, ComposeLF, Id>: Closure<GetMT<C, ContextIn>>,
     D: Pair,
 {
-    type Output = InsertMT<C, O, OutputT<LiftEvaluateT<GetMT<C, ShapeB>, D>, GetMT<C, ContextIn>>>;
+    type Output = InsertMT<
+        C,
+        O,
+        OutputT<
+            FoldrT<FmapT<GetMT<C, ShapeB>, LiftEvaluateF<D>>, ComposeLF, Id>,
+            GetMT<C, ContextIn>,
+        >,
+    >;
 
     fn call(self, ctx: C) -> Self::Output {
         let context_in = GetM::<ContextIn>::get(ctx.clone());
         let shape_b = GetM::<ShapeB>::get(ctx.clone());
-        ctx.insert(shape_b.lift_evaluate().call(context_in))
+        ctx.insert(
+            shape_b
+                .fmap(LiftEvaluateF::<D>::default())
+                .foldr(ComposeLF, Id)
+                .call(context_in),
+        )
     }
 }

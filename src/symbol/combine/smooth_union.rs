@@ -9,9 +9,9 @@ use t_funk::{
 };
 
 use crate::{
-    BlendProperty, BlendPropertyDist, BooleanConditional, Combine, ContextA, ContextB, ContextOut,
-    CopyContext, Distance, EvaluateSide, Gradient, Inherited, Left, LiftAdtF, LiftEvaluate, Right,
-    Run, Then,
+    Alias, BlendProperty, BlendPropertyDist, BooleanConditional, Combine, ContextA, ContextB,
+    ContextOut, CopyContext, Distance, EvaluateSide, Gradient, Inherited, Left, LiftAdtF,
+    LiftEvaluate, Right, Run,
 };
 
 pub fn smooth_union() -> OpChain<LiftAdtF, SmoothUnionF> {
@@ -27,7 +27,7 @@ pub trait SmoothUnion<T> {
 }
 
 impl_adt! {
-    impl<A, B, C, R> SmoothUnion<R> for Run<A> | Then<A, B> | Combine<A, B, C> {
+    impl<A, B, C, R> SmoothUnion<R> for Run<A> | Alias<A> | Combine<A, B, C> {
         type SmoothUnion = Combine<Self, R, Identity<SmoothUnionS>>;
 
         fn smooth_union(self, rhs: R, k: f32) -> Self::SmoothUnion {

@@ -34,11 +34,10 @@
 //!
 
 mod impls;
+mod into_monad;
 
 pub use impls::*;
-
-mod bounds;
-pub(crate) use bounds::*;
+pub use into_monad::*;
 
 use t_funk::macros::{define_adt, Copointed, Pointed};
 
@@ -48,12 +47,10 @@ define_adt!(
     pub struct ADT
       // Run a computation
       = Run<A>(pub A)
-      // Sequence two computations
-      | Then<A, B>(pub A, pub B)
+      // Expand to some other ADT structure
+      | Alias<A>(pub A)
       // Combine two computations
-      | Combine<A, B, F>(pub A, pub B, pub F)
-      // Terminating type
-      | AdtEnd;
+      | Combine<A, B, F>(pub A, pub B, pub F);
 );
 
 pub use t_funk::op_chain::Done;
@@ -68,32 +65,26 @@ mod test {
         closure::{Closure, ComposeLF, Curry2},
         function::{Id, Lt},
         typeclass::{
-            foldable::{FoldMap, Foldl, Foldr},
-            functor::{Fmap, FmapF},
-            monad::Identity,
+            foldable::Foldr,
+            functor::Fmap,
+            monad::{Chain, Identity},
         },
     };
 
     use crate::{
-        adt, proxy, BooleanConditional, Combine, Context, ContextA, ContextB, ContextOut,
-        ContextRasterImage, CopyContext, CopyProperty, DistGrad, DistGradToRgb, Distance, Done,
-        Evaluate, EvaluateSide, Gradient, Inherited, Isosurface, Left, LiftAdtF, LiftEvaluateF,
-        LiftParamF, Point, PosDistGrad, Position, Raster, RasterToImage, Rasterizer, Right, Set,
-        Translate, UnionS, ViuerPrinter,
+        BooleanConditional, Circle, Combine, Context, ContextA, ContextB, ContextOut,
+        ContextRasterImage, CopyContext, CopyProperty, DistGrad, DistGradToRgb, Distance, Evaluate,
+        EvaluateSide, ExpandAliasF, Gradient, Inherited, Isosurface, Left, LiftAdtF, LiftEvaluateF,
+        LiftParamF, Point, PosDistGrad, Position, ProxyS, Raster, RasterToImage, Rasterizer, Right,
+        Set, Translate, UnionS, ViuerPrinter, IntoMonad
     };
 
     #[test]
     fn test_adt() {
-        let shape_a =
-            adt() << Translate(Vec2::new(-0.2, -0.2)) << Point << Isosurface(0.8_f32) >> Done;
-        let shape_b =
-            adt() << Translate(Vec2::new(0.2, 0.2)) << Point << Isosurface(0.8_f32) >> Done;
-        let shape_c =
-            adt() << Translate(Vec2::new(0.0, 0.4)) << Point << Isosurface(0.8_f32) >> Done;
-        let shape_d =
-            adt() << Translate(Vec2::new(0.0, -0.4)) << Point << Isosurface(0.8_f32) >> Done;
-
-        let combined = proxy::<Gradient<Vec2>>() << shape_a << shape_b >> Done; // << shape_c >> intersection() << shape_d >> Done;
+        let shape_a = (Translate(Vec2::new(-0.2, -0.2)), Circle(0.8_f32));
+        let shape_b = (Translate(Vec2::new(0.2, 0.2)), Circle(0.8_f32));
+        let shape_c = (Translate(Vec2::new(0.0, 0.4)), Circle(0.8_f32));
+        let shape_d = (Translate(Vec2::new(0.0, -0.4)), Circle(0.8_f32));
 
         let combined = Combine(
             shape_a,
@@ -111,7 +102,28 @@ mod test {
             ),
         );
 
-        let _positioned = adt() << Set(Position(Vec2::default())) << combined >> Done;
+        let shape = combined.into_monad();
+        let context = PosDistGrad::<Position<Vec2>, Distance<f32>, Gradient<Vec2>>::default();
+
+        let bar = shape.fmap(LiftAdtF);
+        let bar = bar.fmap(LiftParamF.suffix2(context.clone()));
+        let bar = bar.chain(ExpandAliasF);
+        let bar = bar.fmap(LiftEvaluateF::<DistGrad<f32, Vec2>>::default());
+        let bar = bar.foldr(ComposeLF, Id);
+        let bar = bar.call(context);
+
+        let foo = Evaluate::<
+            DistGrad<f32, Vec2>,
+            PosDistGrad<Position<Vec2>, Distance<f32>, Gradient<Vec2>>,
+        >::evaluate(shape, Default::default());
+
+        let combined = Combine(
+            shape_a,
+            shape_b,
+            Identity(ProxyS(PhantomData::<Gradient<f32>>)),
+        );
+
+        let _positioned = (Set(Position(Vec2::default())), combined);
 
         /*
         let input = PosDistColor::<(), (), Color<Vec3>>::default();
@@ -135,20 +147,20 @@ mod test {
 
         let context = RasterCtx::default();
 
-        let rasterizer = adt()
-            << Rasterizer::<_, ShapeCtxFrom> {
+        let rasterizer = (
+            Rasterizer::<_, ShapeCtxFrom> {
                 width: 48,
                 height: 48,
-                shape: combined,
+                shape,
                 ..Default::default()
-            }
-            << RasterToImage::<ShapeCtxTo, DistGradToRgb>::default()
-            << ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default()
-        /*
-            << RasterToAscii(ASCII_RAMP, PhantomData::<PosDistGrad<Vec2, f32, Vec2>>)
-            << Print
-        */
-            >> Done;
+            },
+            RasterToImage::<ShapeCtxTo, DistGradToRgb>::default(),
+            ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default(),
+            /*
+            RasterToAscii(ASCII_RAMP, PhantomData::<PosDistGrad<Vec2, f32, Vec2>>),
+            Print,
+            */
+        );
 
         Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
     }
@@ -156,14 +168,16 @@ mod test {
     #[test]
     fn test_composition() {
         let shape_a = (Translate(Vec2::new(-0.2, -0.2)), Point, Isosurface(0.8_f32));
+        //let shape_a = (Translate(Vec2::new(0.8, -0.8)), Circle(0.2_f32));
         let shape_b = (Translate(Vec2::new(0.2, 0.2)), Point, Isosurface(0.8_f32));
         let combined = Combine(shape_a, shape_b, Identity(UnionS));
 
         let context = PosDistGrad::<Position<Vec2>, Distance<f32>, Gradient<Vec2>>::default();
 
-        let foo = combined;
+        let shape = combined.into_monad();
+
+        let foo = shape.fmap(LiftAdtF);
         let foo = foo.fmap(LiftParamF.suffix2(context));
-        let foo = foo.fmap(LiftAdtF);
         let foo = foo.fmap(LiftEvaluateF::<DistGrad<f32, Vec2>>::default());
         let foo = foo.foldr(ComposeLF, Id);
         let foo = foo.call(context);
