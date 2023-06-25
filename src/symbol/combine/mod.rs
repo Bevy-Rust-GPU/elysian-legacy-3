@@ -1,17 +1,16 @@
-mod inner_bound;
-mod intersection;
-mod outer_bound;
-mod proxy;
-mod replace;
-mod smooth_union;
-mod subtraction;
-mod union;
+mod blend;
+mod boolean;
+mod context;
+mod evaluation;
+mod overwrite;
+mod insert;
+mod alias;
 
-pub use inner_bound::*;
-pub use intersection::*;
-pub use outer_bound::*;
-pub use proxy::*;
-pub use replace::*;
-pub use smooth_union::*;
-pub use subtraction::*;
-pub use union::*;
+pub use blend::*;
+pub use boolean::*;
+pub use context::*;
+pub use evaluation::*;
+pub use overwrite::*;
+pub use insert::*;
+pub use alias::*;
+

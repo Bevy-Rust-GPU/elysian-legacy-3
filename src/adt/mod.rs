@@ -1,38 +1,3 @@
-//! Elysian ADT
-//! Elysian = Input a
-//! | Field b
-//! | Output c
-//! | Modify d
-//! | Sequence [In|Field|Out|Modify]
-//! | Combine Field|Shape|Combine Field|Shape|Combine f
-//! where
-//!   a: InputModifer
-//!   b: FieldMorphism
-//!   c: OutputModifier
-//!   f: CombineFunction
-//!
-//! Example:
-//!
-//! Shape [
-//!   In Translate -0.1 -0.3,
-//!   Combine (
-//!     Shape [
-//!       In Translate 0.2 0.2,
-//!       Field Point,
-//!       Out Isosurface 0.3,
-//!     ],
-//!     Shape [
-//!       In Translate -0.2 -0.2,
-//!       Field Point,
-//!       Out Isosurface 0.5,
-//!       Out Manifold,
-//!     ],
-//!     Boolean(Lt),
-//!   ),
-//!   Out Isosurface 0.2,
-//! ]
-//!
-
 mod expand_alias;
 mod impls;
 mod into_monad;
@@ -80,8 +45,8 @@ mod test {
     use crate::{
         Circle, Combine, Context, ContextRasterImage, DistGrad, DistGradToRgb, Distance, Evaluate,
         ExpandAliasF, Gradient, IntoMonad, Isosurface, LiftAdtF, LiftEvaluateF, LiftParamF, Point,
-        PosDistGrad, Position, Proxy, Raster, RasterToImage, Rasterizer, Set, Translate, UnionS,
-        ViuerPrinter, Replace,
+        PosDistGrad, Position, Proxy, Raster, RasterToImage, Rasterizer, Replace, Set, Translate,
+        UnionS, ViuerPrinter,
     };
 
     #[test]

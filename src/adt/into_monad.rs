@@ -1,11 +1,12 @@
 //! Lift a concrete value into a monadic value
 
 use t_funk::{
+    collection::hlist::{Cons, Nil},
     macros::{functions, impl_adt, types},
     typeclass::monad::Identity,
 };
 
-use crate::{Alias, Combine, Modify, Run, Domains};
+use crate::{Alias, Combine, Domains, Modify, Run};
 
 #[functions]
 #[types]
@@ -72,6 +73,22 @@ impl<A, B, C, D, E, F> IntoMonad for (A, B, C, D, E, F) {
 }
 
 impl<A, B, C, D, E, F, G> IntoMonad for (A, B, C, D, E, F, G) {
+    type IntoMonad = Self;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        self
+    }
+}
+
+impl<A, B> IntoMonad for Cons<A, B> {
+    type IntoMonad = Self;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        self
+    }
+}
+
+impl IntoMonad for Nil {
     type IntoMonad = Self;
 
     fn into_monad(self) -> Self::IntoMonad {
