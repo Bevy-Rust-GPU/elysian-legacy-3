@@ -61,13 +61,11 @@ pub use t_funk::op_chain::Done;
 
 #[cfg(test)]
 mod test {
-    use std::marker::PhantomData;
-
     use glam::Vec2;
     use image::{ImageBuffer, Rgb};
     use t_funk::{
         closure::{Closure, ComposeLF, Curry2},
-        function::{Id, Lt},
+        function::Id,
         typeclass::{
             foldable::Foldr,
             functor::Fmap,
@@ -76,11 +74,10 @@ mod test {
     };
 
     use crate::{
-        BooleanConditional, Circle, Combine, Context, ContextA, ContextB, ContextOut,
-        ContextRasterImage, CopyContext, CopyProperty, DistGrad, DistGradToRgb, Distance, Evaluate,
-        EvaluateSide, ExpandAliasF, Gradient, Inherited, IntoMonad, Isosurface, Left, LiftAdtF,
-        LiftEvaluateF, LiftParamF, Point, PosDistGrad, Position, Raster, RasterToImage,
-        Rasterizer, Right, Set, Translate, UnionS, ViuerPrinter, Proxy,
+        Circle, Combine, Context, ContextRasterImage, DistGrad, DistGradToRgb, Distance, Evaluate,
+        ExpandAliasF, Gradient, IntoMonad, Isosurface, LiftAdtF, LiftEvaluateF, LiftParamF, Point,
+        PosDistGrad, Position, Proxy, Raster, RasterToImage, Rasterizer, Set, Translate, UnionS,
+        ViuerPrinter, Replace,
     };
 
     #[test]
@@ -90,28 +87,14 @@ mod test {
         let shape_c = (Translate(Vec2::new(0.0, 0.4)), Circle(0.8_f32));
         let shape_d = (Translate(Vec2::new(0.0, -0.4)), Circle(0.8_f32));
 
-        let combined = Combine(
-            shape_a,
-            shape_b,
-            (
-                EvaluateSide::<Left, Inherited, ContextA>::default(),
-                EvaluateSide::<Right, Inherited, ContextB>::default(),
-                CopyContext::<ContextA, ContextOut>::default(),
-                BooleanConditional(
-                    Lt,
-                    Id,
-                    CopyProperty::<Gradient<Vec2>, ContextB, ContextOut>::default(),
-                    PhantomData::<Distance<f32>>,
-                ),
-            ),
-        );
+        let combined = shape_a.replace::<Gradient<Vec2>>(shape_b);
 
         let shape = combined.into_monad();
         let context = PosDistGrad::<Position<Vec2>, Distance<f32>, Gradient<Vec2>>::default();
 
         let bar = shape.fmap(LiftAdtF);
         let bar = bar.fmap(LiftParamF.suffix2(context.clone()));
-        let bar = bar.chain(ExpandAliasF);
+        let bar = bar.chain(ExpandAliasF::<DistGrad<f32, Vec2>>::default());
         let bar = bar.fmap(LiftEvaluateF::<DistGrad<f32, Vec2>>::default());
         let bar = bar.foldr(ComposeLF, Id);
         let bar = bar.call(context);
@@ -178,6 +161,7 @@ mod test {
 
         let foo = shape.fmap(LiftAdtF);
         let foo = foo.fmap(LiftParamF.suffix2(context));
+        let foo = foo.chain(ExpandAliasF::<DistGrad<f32, Vec2>>::default());
         let foo = foo.fmap(LiftEvaluateF::<DistGrad<f32, Vec2>>::default());
         let foo = foo.foldr(ComposeLF, Id);
         let foo = foo.call(context);

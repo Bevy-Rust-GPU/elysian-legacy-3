@@ -10,7 +10,7 @@ use t_funk::{
     },
 };
 
-use crate::{LiftEvaluate, LiftEvaluateF, Pair, ShapeA, ShapeB};
+use crate::{LiftEvaluate, LiftEvaluateF, Pair, ShapeA, ShapeB, LiftAdt};
 
 use super::{ContextIn, InheritedA, InheritedB};
 
@@ -26,6 +26,14 @@ pub struct Inherited;
 // Evaluate side S with domains I (or Inherited), and store output in O
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EvaluateSide<S, I, O>(pub PhantomData<(S, I, O)>);
+
+impl<S, I, O> LiftAdt for EvaluateSide<S, I, O> {
+    type LiftAdt = Self;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        self
+    }
+}
 
 impl<S, I, O, D> LiftEvaluate<D> for EvaluateSide<S, I, O> {
     type LiftEvaluate = (Self,);

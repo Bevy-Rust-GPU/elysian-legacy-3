@@ -76,15 +76,20 @@ impl<A, B, F, C> LiftParam<C> for Combine<A, B, F>
 where
     A: Fmap<Curry2B<LiftParamF, C>>,
     B: Fmap<Curry2B<LiftParamF, C>>,
+    F: Fmap<Curry2B<LiftParamF, C>>,
     C: Clone,
 {
-    type LiftParam = Combine<FmapT<A, Curry2B<LiftParamF, C>>, FmapT<B, Curry2B<LiftParamF, C>>, F>;
+    type LiftParam = Combine<
+        FmapT<A, Curry2B<LiftParamF, C>>,
+        FmapT<B, Curry2B<LiftParamF, C>>,
+        FmapT<F, Curry2B<LiftParamF, C>>,
+    >;
 
     fn lift_param(self, input: C) -> Self::LiftParam {
         Combine(
             self.0.fmap(LiftParamF.suffix2(input.clone())),
-            self.1.fmap(LiftParamF.suffix2(input)),
-            self.2,
+            self.1.fmap(LiftParamF.suffix2(input.clone())),
+            self.2.fmap(LiftParamF.suffix2(input)),
         )
     }
 }

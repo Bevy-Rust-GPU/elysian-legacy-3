@@ -4,13 +4,13 @@ use t_funk::{
     closure::Closure,
     function::Lt,
     macros::{functions, types},
-    typeclass::monad::Identity,
+    typeclass::{monad::Identity, functor::Fmap},
 };
 
 use crate::{
     BlendProperty, BlendPropertyDist, BooleanConditional, Combine, ContextA, ContextB, ContextOut,
-    CopyContext, Distance, EvaluateSide, Gradient, Inherited, IntoMonad, IntoMonadT, Left,
-    LiftEvaluate, Right,
+    CopyContext, Distance, EvaluateSide, ExpandAlias, Gradient, Inherited, IntoMonad, IntoMonadT,
+    Left, Right, LiftAdt, Alias,
 };
 
 #[functions]
@@ -41,6 +41,14 @@ where
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SmoothUnionS(f32);
 
+impl<F> Fmap<F> for SmoothUnionS {
+    type Fmap = Self;
+
+    fn fmap(self, f: F) -> Self::Fmap {
+        self
+    }
+}
+
 impl IntoMonad for SmoothUnionS {
     type IntoMonad = Identity<Self>;
 
@@ -49,8 +57,16 @@ impl IntoMonad for SmoothUnionS {
     }
 }
 
-impl<D> LiftEvaluate<D> for SmoothUnionS {
-    type LiftEvaluate = (
+impl LiftAdt for SmoothUnionS {
+    type LiftAdt = Alias<Self>;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        Alias(self)
+    }
+}
+
+impl<D> ExpandAlias<D> for SmoothUnionS {
+    type ExpandAlias = (
         EvaluateSide<Left, Inherited, ContextA>,
         EvaluateSide<Right, Inherited, ContextB>,
         BooleanConditional<
@@ -63,7 +79,7 @@ impl<D> LiftEvaluate<D> for SmoothUnionS {
         BlendPropertyDist<PolynomialSmoothMin<Gradient<Vec2>>, Gradient<Vec2>>,
     );
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
+    fn expand_alias(self) -> Self::ExpandAlias {
         (
             EvaluateSide::<Left, Inherited, ContextA>::default(),
             EvaluateSide::<Right, Inherited, ContextB>::default(),

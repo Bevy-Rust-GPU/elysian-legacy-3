@@ -4,12 +4,12 @@ use t_funk::{
     closure::{Compose, ComposeT},
     function::Gt,
     macros::{functions, types},
-    typeclass::monad::Identity,
+    typeclass::{monad::Identity, functor::Fmap},
 };
 
 use crate::{
     BooleanConditional, Combine, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
-    EvaluateSide, Inherited, InsertProperty, IntoMonad, IntoMonadT, Left, LiftEvaluate, Right,
+    EvaluateSide, ExpandAlias, Inherited, InsertProperty, IntoMonad, IntoMonadT, Left, Right, LiftAdt, Alias,
 };
 
 #[functions]
@@ -40,6 +40,14 @@ where
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OuterBoundS;
 
+impl<F> Fmap<F> for OuterBoundS {
+    type Fmap = Self;
+
+    fn fmap(self, f: F) -> Self::Fmap {
+        self
+    }
+}
+
 impl IntoMonad for OuterBoundS {
     type IntoMonad = Identity<Self>;
 
@@ -48,8 +56,16 @@ impl IntoMonad for OuterBoundS {
     }
 }
 
-impl<D> LiftEvaluate<D> for OuterBoundS {
-    type LiftEvaluate = (
+impl LiftAdt for OuterBoundS {
+    type LiftAdt = Alias<Self>;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        Alias(self)
+    }
+}
+
+impl<D> ExpandAlias<D> for OuterBoundS {
+    type ExpandAlias = (
         EvaluateSide<Left, (Distance<f32>, ()), ContextA>,
         CopyContext<ContextA, ContextB>,
         InsertProperty<Distance<f32>, ContextB>,
@@ -61,7 +77,7 @@ impl<D> LiftEvaluate<D> for OuterBoundS {
         >,
     );
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
+    fn expand_alias(self) -> Self::ExpandAlias {
         (
             EvaluateSide::<Left, Dist<f32>, ContextA>::default(),
             CopyContext::<ContextA, ContextB>::default(),

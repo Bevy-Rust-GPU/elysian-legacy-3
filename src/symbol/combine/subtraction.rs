@@ -1,12 +1,12 @@
 use t_funk::{
     closure::Composed,
     function::{Gt, Neg},
-    typeclass::{arrow::Firsted, monad::Identity},
+    typeclass::{arrow::Firsted, monad::Identity, functor::Fmap},
 };
 
 use crate::{
-    BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
-    Inherited, IntoMonad, IntoMonadT, Left, LiftEvaluate, Pair, Right,
+    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
+    EvaluateSide, ExpandAlias, Inherited, IntoMonad, IntoMonadT, Left, LiftAdt, Pair, Right,
 };
 
 use t_funk::macros::{functions, types};
@@ -41,6 +41,14 @@ where
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SubtractionS;
 
+impl<F> Fmap<F> for SubtractionS {
+    type Fmap = Self;
+
+    fn fmap(self, f: F) -> Self::Fmap {
+        self
+    }
+}
+
 impl IntoMonad for SubtractionS {
     type IntoMonad = Identity<Self>;
 
@@ -49,8 +57,16 @@ impl IntoMonad for SubtractionS {
     }
 }
 
-impl LiftEvaluate<Dist<f32>> for SubtractionS {
-    type LiftEvaluate = (
+impl LiftAdt for SubtractionS {
+    type LiftAdt = Alias<Self>;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        Alias(self)
+    }
+}
+
+impl ExpandAlias<Dist<f32>> for SubtractionS {
+    type ExpandAlias = (
         EvaluateSide<Left, Inherited, ContextA>,
         EvaluateSide<Right, Inherited, ContextB>,
         BooleanConditional<
@@ -61,16 +77,16 @@ impl LiftEvaluate<Dist<f32>> for SubtractionS {
         >,
     );
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
+    fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()
     }
 }
 
-impl<D> LiftEvaluate<(Distance<f32>, D)> for SubtractionS
+impl<D> ExpandAlias<(Distance<f32>, D)> for SubtractionS
 where
     D: Pair,
 {
-    type LiftEvaluate = (
+    type ExpandAlias = (
         EvaluateSide<Left, Dist<f32>, ContextA>,
         EvaluateSide<Right, Dist<f32>, ContextB>,
         BooleanConditional<
@@ -81,7 +97,7 @@ where
         >,
     );
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
+    fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()
     }
 }

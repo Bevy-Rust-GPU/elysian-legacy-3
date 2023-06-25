@@ -8,12 +8,20 @@ use t_funk::{
     },
 };
 
-use crate::{ContextA, ContextB, ContextOut, Distance, LiftEvaluate};
+use crate::{ContextA, ContextB, ContextOut, Distance, LiftEvaluate, LiftAdt};
 
 // Fetch a given property P from ContextA and ContextB,
 // combine using a (P, P) -> P function, and write it to ContextOut
 #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
 pub struct BlendProperty<F, T>(pub F, pub PhantomData<T>);
+
+impl<F, T> LiftAdt for BlendProperty<F, T> {
+    type LiftAdt = Self;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        self
+    }
+}
 
 impl<F, T, D> LiftEvaluate<D> for BlendProperty<F, T> {
     type LiftEvaluate = (Self,);
@@ -54,6 +62,14 @@ where
 // combine using a (D, D, P, P) -> P function, and write it to ContextOut
 #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
 pub struct BlendPropertyDist<F, T>(pub F, pub PhantomData<T>);
+
+impl<F, T> LiftAdt for BlendPropertyDist<F, T> {
+    type LiftAdt = Self;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        self
+    }
+}
 
 impl<F, T, D> LiftEvaluate<D> for BlendPropertyDist<F, T> {
     type LiftEvaluate = (Self,);

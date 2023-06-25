@@ -39,21 +39,21 @@ where
     }
 }
 
-impl<S, T> ExpandAlias for Scale<S, T>
+impl<S, T, D> ExpandAlias<D> for Scale<S, T>
 where
     S: Clone,
-    T: Chain<ExpandAliasF>,
-    (ScalePosition<S>,): Mappend<ChainT<T, ExpandAliasF>>,
-    MappendT<(ScalePosition<S>,), ChainT<T, ExpandAliasF>>: Mappend<(InverseScaleDistance<S>,)>,
+    T: Chain<ExpandAliasF<D>>,
+    (ScalePosition<S>,): Mappend<ChainT<T, ExpandAliasF<D>>>,
+    MappendT<(ScalePosition<S>,), ChainT<T, ExpandAliasF<D>>>: Mappend<(InverseScaleDistance<S>,)>,
 {
     type ExpandAlias = MappendT<
-        MappendT<(ScalePosition<S>,), ChainT<T, ExpandAliasF>>,
+        MappendT<(ScalePosition<S>,), ChainT<T, ExpandAliasF<D>>>,
         (InverseScaleDistance<S>,),
     >;
 
     fn expand_alias(self) -> Self::ExpandAlias {
         (ScalePosition(self.0.clone()),)
-            .mappend(self.1.chain(ExpandAliasF))
+            .mappend(self.1.chain(ExpandAliasF::<D>::default()))
             .mappend((InverseScaleDistance(self.0),))
     }
 }

@@ -39,10 +39,11 @@ impl<A, B, C> LiftAdt for Combine<A, B, C>
 where
     A: Fmap<LiftAdtF>,
     B: Fmap<LiftAdtF>,
+    C: Fmap<LiftAdtF>,
 {
-    type LiftAdt = Combine<FmapT<A, LiftAdtF>, FmapT<B, LiftAdtF>, C>;
+    type LiftAdt = Combine<FmapT<A, LiftAdtF>, FmapT<B, LiftAdtF>, FmapT<C, LiftAdtF>>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Combine(self.0.fmap(LiftAdtF), self.1.fmap(LiftAdtF), self.2)
+        Combine(self.0.fmap(LiftAdtF), self.1.fmap(LiftAdtF), self.2.fmap(LiftAdtF))
     }
 }

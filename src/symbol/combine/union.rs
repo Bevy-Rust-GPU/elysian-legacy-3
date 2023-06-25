@@ -1,8 +1,11 @@
-use t_funk::{function::Lt, typeclass::monad::Identity};
+use t_funk::{
+    function::Lt,
+    typeclass::{functor::Fmap, monad::Identity},
+};
 
 use crate::{
-    BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
-    Inherited, IntoMonad, IntoMonadT, Left, LiftEvaluate, Pair, Right,
+    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
+    EvaluateSide, ExpandAlias, Inherited, IntoMonad, IntoMonadT, Left, LiftAdt, Pair, Right,
 };
 
 use t_funk::macros::{functions, types};
@@ -33,6 +36,14 @@ where
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnionS;
 
+impl<F> Fmap<F> for UnionS {
+    type Fmap = Self;
+
+    fn fmap(self, f: F) -> Self::Fmap {
+        self
+    }
+}
+
 impl IntoMonad for UnionS {
     type IntoMonad = Identity<Self>;
 
@@ -41,8 +52,16 @@ impl IntoMonad for UnionS {
     }
 }
 
-impl LiftEvaluate<Dist<f32>> for UnionS {
-    type LiftEvaluate = (
+impl LiftAdt for UnionS {
+    type LiftAdt = Alias<Self>;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        Alias(self)
+    }
+}
+
+impl ExpandAlias<Dist<f32>> for UnionS {
+    type ExpandAlias = (
         EvaluateSide<Left, Inherited, ContextA>,
         EvaluateSide<Right, Inherited, ContextB>,
         BooleanConditional<
@@ -53,16 +72,16 @@ impl LiftEvaluate<Dist<f32>> for UnionS {
         >,
     );
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
+    fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()
     }
 }
 
-impl<D> LiftEvaluate<(Distance<f32>, D)> for UnionS
+impl<D> ExpandAlias<(Distance<f32>, D)> for UnionS
 where
     D: Pair,
 {
-    type LiftEvaluate = (
+    type ExpandAlias = (
         EvaluateSide<Left, Dist<f32>, ContextA>,
         EvaluateSide<Right, Dist<f32>, ContextB>,
         BooleanConditional<
@@ -73,7 +92,7 @@ where
         >,
     );
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
+    fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()
     }
 }

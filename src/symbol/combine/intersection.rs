@@ -1,8 +1,8 @@
-use t_funk::{function::Gt, typeclass::monad::Identity};
+use t_funk::{function::Gt, typeclass::{monad::Identity, functor::Fmap}};
 
 use crate::{
-    BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
-    Inherited, IntoMonad, IntoMonadT, Left, LiftEvaluate, Pair, Right,
+    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
+    EvaluateSide, ExpandAlias, Inherited, IntoMonad, IntoMonadT, Left, LiftAdt, Pair, Right,
 };
 
 use t_funk::macros::{functions, types};
@@ -37,6 +37,14 @@ where
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct IntersectionS;
 
+impl<F> Fmap<F> for IntersectionS {
+    type Fmap = Self;
+
+    fn fmap(self, f: F) -> Self::Fmap {
+        self
+    }
+}
+
 impl IntoMonad for IntersectionS {
     type IntoMonad = Identity<Self>;
 
@@ -45,8 +53,16 @@ impl IntoMonad for IntersectionS {
     }
 }
 
-impl LiftEvaluate<Dist<f32>> for IntersectionS {
-    type LiftEvaluate = (
+impl LiftAdt for IntersectionS {
+    type LiftAdt = Alias<Self>;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        Alias(self)
+    }
+}
+
+impl ExpandAlias<Dist<f32>> for IntersectionS {
+    type ExpandAlias = (
         EvaluateSide<Left, Inherited, ContextA>,
         EvaluateSide<Right, Inherited, ContextB>,
         BooleanConditional<
@@ -57,16 +73,16 @@ impl LiftEvaluate<Dist<f32>> for IntersectionS {
         >,
     );
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
+    fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()
     }
 }
 
-impl<D> LiftEvaluate<(Distance<f32>, D)> for IntersectionS
+impl<D> ExpandAlias<(Distance<f32>, D)> for IntersectionS
 where
     D: Pair,
 {
-    type LiftEvaluate = (
+    type ExpandAlias = (
         EvaluateSide<Left, Dist<f32>, ContextA>,
         EvaluateSide<Right, Dist<f32>, ContextB>,
         BooleanConditional<
@@ -77,7 +93,7 @@ where
         >,
     );
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
+    fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()
     }
 }

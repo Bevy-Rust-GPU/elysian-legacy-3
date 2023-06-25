@@ -17,7 +17,7 @@ impl<T> LiftAdt for Circle<T> {
     }
 }
 
-impl<T> ExpandAlias for Circle<T> {
+impl<T, D> ExpandAlias<D> for Circle<T> {
     type ExpandAlias = (Point, Isosurface<T>);
 
     fn expand_alias(self) -> Self::ExpandAlias {

@@ -26,15 +26,15 @@ where
     C: Clone,
     T: Fmap<LiftAdtF>,
     FmapT<T, LiftAdtF>: Fmap<Curry2B<LiftParamF, C>>,
-    FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>: Chain<ExpandAliasF>,
-    ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF>: Fmap<LiftEvaluateF<D>>,
+    FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>: Chain<ExpandAliasF<D>>,
+    ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF<D>>: Fmap<LiftEvaluateF<D>>,
     FmapT<
-        ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF>,
+        ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF<D>>,
         LiftEvaluateF<D>,
     >: Foldr<ComposeLF, Id>,
     FoldrT<
         FmapT<
-            ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF>,
+            ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF<D>>,
             LiftEvaluateF<D>,
         >,
         ComposeLF,
@@ -44,7 +44,7 @@ where
     type Evaluate = OutputT<
         FoldrT<
             FmapT<
-                ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF>,
+                ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF<D>>,
                 LiftEvaluateF<D>,
             >,
             ComposeLF,
@@ -56,7 +56,7 @@ where
     fn evaluate(self, input: C) -> Self::Evaluate {
         self.fmap(LiftAdtF)
             .fmap(LiftParamF.suffix2(input.clone()))
-            .chain(ExpandAliasF)
+            .chain(ExpandAliasF::<D>::default())
             .fmap(LiftEvaluateF::<D>::default())
             .foldr(ComposeLF, Id)
             .call(input)
