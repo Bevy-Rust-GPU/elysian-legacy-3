@@ -4,10 +4,10 @@ use t_funk::{
     typeclass::foldable::{Foldr, FoldrT},
 };
 
-use crate::{Combine, Run, Alias};
+use crate::{Alias, Combine, Domains, Modify, Run};
 
 impl_adt! {
-    impl<A, F, Z> Foldr<F, Z> for Run<A> | Alias<A>
+    impl<A, F, Z> Foldr<F, Z> for Run<A> | Modify<A> | Domains<A> | Alias<A>
     where
         F: Closure<(A, Z)>,
     {
@@ -54,9 +54,6 @@ mod test {
         let adt = (Translate(Vec2::new(0.0, 0.0)), Point, Isosurface(0.0));
         let folded = adt.fmap(FormatDebug).foldr(Concat, String::default());
 
-        assert_eq!(
-            folded,
-            "Translate(Vec2(0.0, 0.0))PointIsosurface(0.0)"
-        )
+        assert_eq!(folded, "Translate(Vec2(0.0, 0.0))PointIsosurface(0.0)")
     }
 }

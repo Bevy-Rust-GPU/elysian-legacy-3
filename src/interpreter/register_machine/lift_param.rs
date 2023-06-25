@@ -5,7 +5,7 @@ use t_funk::{
     typeclass::functor::{Fmap, FmapT},
 };
 
-use crate::{Alias, Combine, Run};
+use crate::{Alias, Combine, Domains, Modify, Run};
 
 #[functions]
 #[types]
@@ -50,25 +50,16 @@ impl_adt! {
     }
 }
 
-impl<A, B> LiftParam<B> for Run<A>
-where
-    A: Fmap<Curry2B<LiftParamF, B>>,
-{
-    type LiftParam = Run<FmapT<A, Curry2B<LiftParamF, B>>>;
+impl_adt! {
+    impl<A, B> LiftParam<B> for Run<A> | Modify<A> | Domains<A> | Alias<A>
+    where
+        A: Fmap<Curry2B<LiftParamF, B>>,
+    {
+        type LiftParam = This<FmapT<A, Curry2B<LiftParamF, B>>>;
 
-    fn lift_param(self, input: B) -> Self::LiftParam {
-        Run(self.0.fmap(LiftParamF.suffix2(input)))
-    }
-}
-
-impl<A, B> LiftParam<B> for Alias<A>
-where
-    A: Fmap<Curry2B<LiftParamF, B>>,
-{
-    type LiftParam = Alias<FmapT<A, Curry2B<LiftParamF, B>>>;
-
-    fn lift_param(self, input: B) -> Self::LiftParam {
-        Alias(self.0.fmap(LiftParamF.suffix2(input)))
+        fn lift_param(self, input: B) -> Self::LiftParam {
+            This(self.0.fmap(LiftParamF.suffix2(input)))
+        }
     }
 }
 

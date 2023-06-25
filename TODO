@@ -483,17 +483,20 @@
 
   SKIPPED: Took the inverse approach of eliding Then
 
-=======================================================================================================================
-
-* Finalize API
-  * Should use tuples for heterogeneous lists wherever possible
-  * Should share machinery between shape symbols and combine symbols
-
 * Consider splitting ADT into discrete types
   * Practically the same as it is now,
     but with stronger module organization and no define_adt / impl_adt
   * Better semantically, since an ADT implies a closed set,
     when there's no reason it shouldn't be extensible by downstream code
+
+  SKIPPED: Removing define_adt / impl_adt creates too much boilerplate,
+           and the distinction is purely semantic, since it remains extensible in the same way.
+
+=======================================================================================================================
+
+* Finalize API
+  * Should use tuples for heterogeneous lists wherever possible
+  * Should share machinery between shape symbols and combine symbols
 
 * ADT-ify combine functions
   * Currently using function composition, needs a higher-order symbol lifting approach

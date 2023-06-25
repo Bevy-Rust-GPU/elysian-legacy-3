@@ -1,8 +1,8 @@
 use std::ops::{Div, Mul};
 
 use crate::{
-    Alias, Distance, Evaluable, EvaluateFunction, ExpandAlias, ExpandAliasF, IntoMonad, LiftAdt,
-    LiftAdtF, LiftModify, Position, Run,
+    Alias, Distance, EvaluateFunction, ExpandAlias, ExpandAliasF, IntoMonad, LiftAdt, LiftAdtF,
+    Modify, Position,
 };
 
 use glam::Vec2;
@@ -74,15 +74,11 @@ impl<S, T> IntoMonad for Scale<S, T> {
 pub struct ScalePosition<S>(pub S);
 
 impl<S> LiftAdt for ScalePosition<S> {
-    type LiftAdt = Run<Self>;
+    type LiftAdt = Modify<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Run(self)
+        Modify(self)
     }
-}
-
-impl<S> Evaluable for ScalePosition<S> {
-    type Evaluable = LiftModify;
 }
 
 impl<S, D> EvaluateFunction<D> for ScalePosition<S> {
@@ -111,15 +107,11 @@ where
 pub struct InverseScaleDistance<S>(pub S);
 
 impl<S> LiftAdt for InverseScaleDistance<S> {
-    type LiftAdt = Run<Self>;
+    type LiftAdt = Modify<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Run(self)
+        Modify(self)
     }
-}
-
-impl<S> Evaluable for InverseScaleDistance<S> {
-    type Evaluable = LiftModify;
 }
 
 impl<S, D> EvaluateFunction<D> for InverseScaleDistance<S> {

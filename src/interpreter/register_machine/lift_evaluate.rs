@@ -1,11 +1,16 @@
 use std::marker::PhantomData;
 
 use t_funk::{
-    closure::{Closure, ComposeLF, OutputT},
-    collection::map::{Get, GetT},
+    closure::{CallF, Closure, Compose, ComposeLF, OutputT},
+    collection::{
+        map::{Get, GetT},
+        set::{DropF, LiftContext, LiftContextT},
+    },
     function::Id,
     macros::{functions, types},
     typeclass::{
+        arrow::{Fanout, FanoutT},
+        category::ComposeLT,
         foldable::{Foldr, FoldrT},
         functor::{Fmap, FmapT},
         monad::{Chain, ChainT},
@@ -13,8 +18,9 @@ use t_funk::{
 };
 
 use crate::{
-    Alias, Combine, CombineContext, ContextOut, Evaluable, EvaluableT, LiftEvaluable,
-    LiftEvaluableT, Run,
+    Combine, CombineContext, ContextOut, Domains, EvaluateFunction,
+    FunctionT, InputsT, LiftEvaluates, LiftEvaluatesT, Modify,
+    MovesT, Run,
 };
 
 #[functions]
@@ -27,25 +33,43 @@ pub trait LiftEvaluate<D> {
 
 impl<A, D> LiftEvaluate<D> for Run<A>
 where
-    A: Evaluable,
-    EvaluableT<A>: LiftEvaluable<A, D>,
+    A: EvaluateFunction<D>,
 {
-    type LiftEvaluate = LiftEvaluableT<EvaluableT<A>, A, D>;
+    type LiftEvaluate = FunctionT<A, D>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        EvaluableT::<A>::lift_evaluable(self.0)
+        self.0.evaluate_function()
     }
 }
 
-impl<A, D> LiftEvaluate<D> for Alias<A>
+impl<A, D> LiftEvaluate<D> for Modify<A>
 where
-    A: Evaluable,
-    EvaluableT<A>: LiftEvaluable<A, D>,
+    A: EvaluateFunction<D>,
+    FunctionT<A, D>: LiftContext<InputsT<A, D>>,
+    LiftContextT<FunctionT<A, D>, InputsT<A, D>>: Fanout<DropF<MovesT<A, D>>>,
 {
-    type LiftEvaluate = LiftEvaluableT<EvaluableT<A>, A, D>;
+    type LiftEvaluate = ComposeLT<
+        FanoutT<LiftContextT<FunctionT<A, D>, InputsT<A, D>>, DropF<MovesT<A, D>>>,
+        CallF,
+    >;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        EvaluableT::<A>::lift_evaluable(self.0)
+        self.0
+            .evaluate_function()
+            .lift_context()
+            .fanout(DropF::<MovesT<A, D>>::default())
+            .compose_l(CallF)
+    }
+}
+
+impl<A, D> LiftEvaluate<D> for Domains<A>
+where
+    D: LiftEvaluates<A>,
+{
+    type LiftEvaluate = LiftEvaluatesT<D, A>;
+
+    fn lift_evaluate(self) -> Self::LiftEvaluate {
+        D::lift_evaluates(self.0)
     }
 }
 

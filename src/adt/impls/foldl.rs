@@ -3,10 +3,10 @@ use t_funk::{
     typeclass::foldable::{Foldl, FoldlT}, macros::impl_adt,
 };
 
-use crate::{Combine, Run, Alias};
+use crate::{Combine, Run, Alias, Modify, Domains};
 
 impl_adt! {
-    impl<A, F, Z> Foldl<F, Z> for Run<A> | Alias<A>
+    impl<A, F, Z> Foldl<F, Z> for Run<A> | Modify<A> | Domains<A> | Alias<A>
     where
         F: Closure<(Z, A)>,
     {

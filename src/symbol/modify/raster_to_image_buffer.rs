@@ -14,8 +14,7 @@ use t_funk::{
 };
 
 use crate::{
-    Color, Distance, Evaluable, EvaluateFunction, Gradient, Invert, LiftAdt, LiftModify, Raster,
-    Run, Saturate,
+    Color, Distance, EvaluateFunction, Gradient, Invert, LiftAdt, Modify, Raster, Saturate,
 };
 
 #[derive(
@@ -32,14 +31,11 @@ impl<R, G, F> Fmap<F> for RasterToImage<R, G> {
 }
 
 impl<R, F> LiftAdt for RasterToImage<R, F> {
-    type LiftAdt = Run<Self>;
+    type LiftAdt = Modify<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Run(self)
+        Modify(self)
     }
-}
-impl<R, F> Evaluable for RasterToImage<R, F> {
-    type Evaluable = LiftModify;
 }
 
 impl<R, F, D> EvaluateFunction<D> for RasterToImage<R, F> {

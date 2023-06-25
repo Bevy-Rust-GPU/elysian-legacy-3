@@ -7,10 +7,10 @@ use t_funk::{
     },
 };
 
-use crate::{Combine, Run, Alias};
+use crate::{Alias, Combine, Modify, Run, Domains};
 
 impl_adt! {
-    impl<F, A, B, C> Chain<F> for Run<A> | Alias<A> | Combine<A, B, C>
+    impl<F, A, B, C> Chain<F> for Run<A> | Modify<A> | Domains<A> | Alias<A> | Combine<A, B, C>
     where
         Self: Fmap<F>,
         FmapT<Self, F>: Mconcat,
@@ -28,7 +28,7 @@ mod test {
     use glam::Vec2;
     use t_funk::{macros::lift, typeclass::functor::Fmap};
 
-    use crate::{Distance, Get, Isosurface, LiftAdtF, Point, Run, Translate};
+    use crate::{Distance, Get, Isosurface, LiftAdtF, Modify, Point, Run, Translate, Domains};
 
     #[lift]
     fn make_tuple<A>(a: A) -> (A,) {
@@ -49,9 +49,9 @@ mod test {
         assert_eq!(
             to_shape,
             (
-                Run(Translate(Vec2::new(0.5, 0.5))),
-                Run(Point),
-                Run(Isosurface(0.2)),
+                Modify(Translate(Vec2::new(0.5, 0.5))),
+                Domains(Point),
+                Modify(Isosurface(0.2)),
                 Run(Get::<Distance<f32>>::default()),
             )
         );

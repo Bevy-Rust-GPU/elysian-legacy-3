@@ -1,6 +1,6 @@
 use core::ops::Sub;
 
-use crate::{Distance, Evaluable, EvaluateFunction, LiftAdt, LiftModify, Run};
+use crate::{Distance, EvaluateFunction, LiftAdt, Modify};
 
 use t_funk::{
     closure::{Curry2, Curry2B},
@@ -15,15 +15,11 @@ use t_funk::{
 pub struct Isosurface<T>(pub T);
 
 impl<T> LiftAdt for Isosurface<T> {
-    type LiftAdt = Run<Self>;
+    type LiftAdt = Modify<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Run(self)
+        Modify(self)
     }
-}
-
-impl<T> Evaluable for Isosurface<T> {
-    type Evaluable = LiftModify;
 }
 
 impl<T, D> EvaluateFunction<D> for Isosurface<T> {

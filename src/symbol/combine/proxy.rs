@@ -36,7 +36,7 @@ pub struct ProxyS<T>(pub PhantomData<T>);
 impl<T, F> Fmap<F> for ProxyS<T> {
     type Fmap = Self;
 
-    fn fmap(self, f: F) -> Self::Fmap {
+    fn fmap(self, _: F) -> Self::Fmap {
         self
     }
 }

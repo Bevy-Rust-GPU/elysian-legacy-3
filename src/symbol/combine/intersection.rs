@@ -40,7 +40,7 @@ pub struct IntersectionS;
 impl<F> Fmap<F> for IntersectionS {
     type Fmap = Self;
 
-    fn fmap(self, f: F) -> Self::Fmap {
+    fn fmap(self, _: F) -> Self::Fmap {
         self
     }
 }

@@ -44,7 +44,7 @@ pub struct InnerBoundS;
 impl<F> Fmap<F> for InnerBoundS {
     type Fmap = Self;
 
-    fn fmap(self, f: F) -> Self::Fmap {
+    fn fmap(self, _: F) -> Self::Fmap {
         self
     }
 }

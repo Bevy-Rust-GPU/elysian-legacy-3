@@ -1,12 +1,12 @@
 use t_funk::{
-    macros::{functions, types},
+    macros::{functions, impl_adt, types},
     typeclass::{
         functor::{Fmap, FmapT},
         monad::{Chain, ChainT},
     },
 };
 
-use crate::{Alias, Combine, LiftAdtF, Run};
+use crate::{Alias, Combine, Domains, LiftAdtF, Modify, Run};
 
 #[functions]
 #[types]
@@ -16,11 +16,13 @@ pub trait ExpandAlias<D> {
     fn expand_alias(self) -> Self::ExpandAlias;
 }
 
-impl<A, D> ExpandAlias<D> for Run<A> {
-    type ExpandAlias = (Self,);
+impl_adt! {
+    impl<A, D> ExpandAlias<D> for Run<A> | Modify<A> | Domains<A> {
+        type ExpandAlias = (Self,);
 
-    fn expand_alias(self) -> Self::ExpandAlias {
-        (self,)
+        fn expand_alias(self) -> Self::ExpandAlias {
+            (self,)
+        }
     }
 }
 

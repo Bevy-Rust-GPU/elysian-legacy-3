@@ -1,4 +1,4 @@
-use crate::{Distance, Evaluable, EvaluateFunction, Gradient, LiftAdt, LiftDomains, Position, Run};
+use crate::{Distance, Domains, EvaluateFunction, Gradient, LiftAdt, Position};
 
 use glam::Vec2;
 use t_funk::{macros::lift, typeclass::functor::Fmap};
@@ -17,15 +17,11 @@ impl<F> Fmap<F> for Point {
 }
 
 impl LiftAdt for Point {
-    type LiftAdt = Run<Self>;
+    type LiftAdt = Domains<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Run(self)
+        Domains(self)
     }
-}
-
-impl Evaluable for Point {
-    type Evaluable = LiftDomains;
 }
 
 impl EvaluateFunction<Distance<f32>> for Point {

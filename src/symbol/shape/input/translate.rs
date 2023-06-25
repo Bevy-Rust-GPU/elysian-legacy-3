@@ -1,6 +1,6 @@
 use std::ops::Sub;
 
-use crate::{Evaluable, EvaluateFunction, LiftAdt, LiftModify, Position, Run};
+use crate::{EvaluateFunction, LiftAdt, Modify, Position};
 
 use glam::Vec2;
 use t_funk::{
@@ -16,15 +16,11 @@ use t_funk::{
 pub struct Translate<T>(pub T);
 
 impl<T> LiftAdt for Translate<T> {
-    type LiftAdt = Run<Self>;
+    type LiftAdt = Modify<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Run(self)
+        Modify(self)
     }
-}
-
-impl<T> Evaluable for Translate<T> {
-    type Evaluable = LiftModify;
 }
 
 impl<T, D> EvaluateFunction<D> for Translate<T> {

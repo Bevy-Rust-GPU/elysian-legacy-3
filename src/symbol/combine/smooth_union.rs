@@ -44,7 +44,7 @@ pub struct SmoothUnionS(f32);
 impl<F> Fmap<F> for SmoothUnionS {
     type Fmap = Self;
 
-    fn fmap(self, f: F) -> Self::Fmap {
+    fn fmap(self, _: F) -> Self::Fmap {
         self
     }
 }

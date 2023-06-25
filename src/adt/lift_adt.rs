@@ -9,7 +9,7 @@ use t_funk::{
     },
 };
 
-use crate::{Combine, Run, Alias};
+use crate::{Alias, Combine, Modify, Run, Domains};
 
 #[functions]
 pub trait LiftAdt {
@@ -25,8 +25,8 @@ pub fn adt() -> OpChain<LiftAdtF, ComposeF> {
 
 pub type LiftAdtT<T> = <T as LiftAdt>::LiftAdt;
 
-impl_adt!{
-    impl<A> LiftAdt for Run<A> | Alias<A> {
+impl_adt! {
+    impl<A> LiftAdt for Run<A> | Modify<A> | Domains<A> | Alias<A> {
         type LiftAdt = Self;
 
         fn lift_adt(self) -> Self::LiftAdt {
@@ -44,6 +44,10 @@ where
     type LiftAdt = Combine<FmapT<A, LiftAdtF>, FmapT<B, LiftAdtF>, FmapT<C, LiftAdtF>>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Combine(self.0.fmap(LiftAdtF), self.1.fmap(LiftAdtF), self.2.fmap(LiftAdtF))
+        Combine(
+            self.0.fmap(LiftAdtF),
+            self.1.fmap(LiftAdtF),
+            self.2.fmap(LiftAdtF),
+        )
     }
 }

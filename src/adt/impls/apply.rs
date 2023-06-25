@@ -4,10 +4,10 @@ use t_funk::{typeclass::{
     semigroup::{Mappend, MappendT},
 }, macros::impl_adt};
 
-use crate::{Combine, Run, Alias};
+use crate::{Combine, Run, Alias, Modify, Domains};
 
 impl_adt!{
-    impl<A, T> Apply<T> for Run<A> | Alias<A>
+    impl<A, T> Apply<T> for Run<A> | Modify<A> | Domains<A> | Alias<A>
     where
         T: Fmap<A>,
     {

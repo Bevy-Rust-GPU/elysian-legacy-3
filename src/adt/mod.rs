@@ -51,6 +51,10 @@ define_adt!(
     pub struct ADT
       // Run a computation
       = Run<A>(pub A)
+      // Lift a symbol to a context I/O function and run it
+      | Modify<A>(pub A)
+      // Lift a symbol to a set of fan-joined context I/O functions and run them
+      | Domains<A>(pub A)
       // Expand to some other ADT structure
       | Alias<A>(pub A)
       // Combine two computations

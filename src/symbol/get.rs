@@ -6,7 +6,7 @@ use t_funk::{
     typeclass::functor::Fmap,
 };
 
-use crate::{Evaluable, EvaluateFunction, LiftAdt, LiftNone, LiftParam, Run};
+use crate::{EvaluateFunction, LiftAdt, LiftParam, Run};
 
 #[derive(
     Debug, PhantomDefault, PhantomClone, PhantomCopy, PartialEq, Eq, PartialOrd, Ord, Hash,
@@ -28,10 +28,6 @@ impl<T> LiftAdt for Get<T> {
     fn lift_adt(self) -> Self::LiftAdt {
         Run(self)
     }
-}
-
-impl<T> Evaluable for Get<T> {
-    type Evaluable = LiftNone;
 }
 
 impl<T, D> EvaluateFunction<D> for Get<T> {

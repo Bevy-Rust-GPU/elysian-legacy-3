@@ -3,17 +3,17 @@ use t_funk::{
     typeclass::functor::Fmap, macros::impl_adt,
 };
 
-use crate::{Combine, Run, Alias};
+use crate::{Combine, Run, Alias, Modify, Domains};
 
 impl_adt! {
-    impl<A, F> Fmap<F> for Run<A> | Alias<A>
+    impl<A, F> Fmap<F> for Run<A> | Modify<A> | Domains<A> | Alias<A>
     where
         F: Clone + Closure<A>,
     {
-        type Fmap = Run<OutputT<F, A>>;
+        type Fmap = This<OutputT<F, A>>;
 
         fn fmap(self, f: F) -> Self::Fmap {
-            Run(f.clone().call(self.0))
+            This(f.clone().call(self.0))
         }
     }
 }

@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use crate::{Distance, Evaluable, EvaluateFunction, Gradient, LiftAdt, LiftDomains, Run};
+use crate::{Distance, Domains, EvaluateFunction, Gradient, LiftAdt};
 use glam::Vec2;
 use t_funk::{function::Abs, macros::lift, typeclass::functor::Fmap};
 
@@ -18,15 +18,11 @@ impl<F> Fmap<F> for Manifold {
 }
 
 impl LiftAdt for Manifold {
-    type LiftAdt = Run<Self>;
+    type LiftAdt = Domains<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Run(self)
+        Domains(self)
     }
-}
-
-impl Evaluable for Manifold {
-    type Evaluable = LiftDomains;
 }
 
 impl EvaluateFunction<Distance<f32>> for Manifold {

@@ -7,10 +7,10 @@ use t_funk::{
     },
 };
 
-use crate::{Combine, Run, Alias};
+use crate::{Alias, Combine, Domains, Modify, Run};
 
 impl_adt! {
-    impl<A, B> Mconcat for Run<A> | Alias<A>
+    impl<A, B> Mconcat for Run<A> | Modify<A> | Domains<A> | Alias<A>
     where
         A: Mempty,
         Self: Foldl<MappendF, MemptyT<A>>,

@@ -1,11 +1,11 @@
 //! Lift a concrete value into a monadic value
 
 use t_funk::{
-    macros::{functions, types},
+    macros::{functions, impl_adt, types},
     typeclass::monad::Identity,
 };
 
-use crate::{Alias, Combine, Run};
+use crate::{Alias, Combine, Modify, Run, Domains};
 
 #[functions]
 #[types]
@@ -79,26 +79,12 @@ impl<A, B, C, D, E, F, G> IntoMonad for (A, B, C, D, E, F, G) {
     }
 }
 
-impl<A, B, C> IntoMonad for Combine<A, B, C> {
-    type IntoMonad = Identity<Self>;
+impl_adt! {
+    impl<A, B, C> IntoMonad for Run<A> | Modify<A> | Domains<A> | Alias<A> | Combine<A, B, C> {
+        type IntoMonad = Identity<Self>;
 
-    fn into_monad(self) -> Self::IntoMonad {
-        Identity(self)
-    }
-}
-
-impl<T> IntoMonad for Run<T> {
-    type IntoMonad = Identity<Self>;
-
-    fn into_monad(self) -> Self::IntoMonad {
-        Identity(self)
-    }
-}
-
-impl<T> IntoMonad for Alias<T> {
-    type IntoMonad = Identity<Self>;
-
-    fn into_monad(self) -> Self::IntoMonad {
-        Identity(self)
+        fn into_monad(self) -> Self::IntoMonad {
+            Identity(self)
+        }
     }
 }

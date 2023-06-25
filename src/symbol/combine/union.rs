@@ -39,7 +39,7 @@ pub struct UnionS;
 impl<F> Fmap<F> for UnionS {
     type Fmap = Self;
 
-    fn fmap(self, f: F) -> Self::Fmap {
+    fn fmap(self, _: F) -> Self::Fmap {
         self
     }
 }
