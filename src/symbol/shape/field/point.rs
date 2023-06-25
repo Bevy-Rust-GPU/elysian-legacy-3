@@ -1,4 +1,4 @@
-use crate::{Distance, Domains, EvaluateFunction, Gradient, LiftAdt, Position};
+use crate::{Distance, Domains, EvaluateFunction, EvaluateInputs, Gradient, LiftAdt, Position};
 
 use glam::Vec2;
 use t_funk::{macros::lift, typeclass::functor::Fmap};
@@ -24,9 +24,12 @@ impl LiftAdt for Point {
     }
 }
 
-impl EvaluateFunction<Distance<f32>> for Point {
+impl EvaluateInputs<Distance<f32>> for Point {
     type Inputs = Position<Vec2>;
     type Moves = Position<Vec2>;
+}
+
+impl EvaluateFunction<Distance<f32>> for Point {
     type Function = PointDistance;
 
     fn evaluate_function(self) -> Self::Function {
@@ -34,9 +37,12 @@ impl EvaluateFunction<Distance<f32>> for Point {
     }
 }
 
-impl EvaluateFunction<Gradient<Vec2>> for Point {
+impl EvaluateInputs<Gradient<Vec2>> for Point {
     type Inputs = Position<Vec2>;
     type Moves = Position<Vec2>;
+}
+
+impl EvaluateFunction<Gradient<Vec2>> for Point {
     type Function = PointGradient;
 
     fn evaluate_function(self) -> Self::Function {

@@ -1,6 +1,6 @@
 use t_funk::{function::PrintLn, typeclass::functor::Fmap};
 
-use crate::{EvaluateFunction, LiftAdt, Modify};
+use crate::{EvaluateFunction, EvaluateInputs, LiftAdt, Modify};
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Print;
@@ -21,9 +21,12 @@ impl LiftAdt for Print {
     }
 }
 
-impl<D> EvaluateFunction<D> for Print {
+impl<D> EvaluateInputs<D> for Print {
     type Inputs = String;
     type Moves = String;
+}
+
+impl<D> EvaluateFunction<D> for Print {
     type Function = PrintLn;
 
     fn evaluate_function(self) -> Self::Function {

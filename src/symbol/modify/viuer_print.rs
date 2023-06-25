@@ -4,7 +4,7 @@ use image::DynamicImage;
 use t_funk::{closure::Closure, typeclass::functor::Fmap};
 use viuer::Config;
 
-use crate::{EvaluateFunction, LiftAdt, Modify};
+use crate::{EvaluateFunction, EvaluateInputs, LiftAdt, Modify};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ViuerPrinter<T> {
@@ -75,9 +75,12 @@ impl<T> LiftAdt for ViuerPrinter<T> {
     }
 }
 
-impl<T, D> EvaluateFunction<D> for ViuerPrinter<T> {
+impl<T, D> EvaluateInputs<D> for ViuerPrinter<T> {
     type Inputs = T;
     type Moves = T;
+}
+
+impl<T, D> EvaluateFunction<D> for ViuerPrinter<T> {
     type Function = ViuerPrintF;
 
     fn evaluate_function(self) -> Self::Function {

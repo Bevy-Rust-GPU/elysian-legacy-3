@@ -14,7 +14,8 @@ use t_funk::{
 };
 
 use crate::{
-    Color, Distance, EvaluateFunction, Gradient, Invert, LiftAdt, Modify, Raster, Saturate,
+    Color, Distance, EvaluateFunction, EvaluateInputs, Gradient, Invert, LiftAdt, Modify, Raster,
+    Saturate,
 };
 
 #[derive(
@@ -38,9 +39,12 @@ impl<R, F> LiftAdt for RasterToImage<R, F> {
     }
 }
 
-impl<R, F, D> EvaluateFunction<D> for RasterToImage<R, F> {
+impl<R, F, D> EvaluateInputs<D> for RasterToImage<R, F> {
     type Inputs = Raster<R>;
     type Moves = Raster<R>;
+}
+
+impl<R, F, D> EvaluateFunction<D> for RasterToImage<R, F> {
     type Function = Image<R, F>;
 
     fn evaluate_function(self) -> Self::Function {

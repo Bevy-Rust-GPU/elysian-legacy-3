@@ -1,6 +1,6 @@
 use core::ops::Sub;
 
-use crate::{Distance, EvaluateFunction, LiftAdt, Modify};
+use crate::{Distance, EvaluateFunction, EvaluateInputs, LiftAdt, Modify};
 
 use t_funk::{
     closure::{Curry2, Curry2B},
@@ -22,9 +22,12 @@ impl<T> LiftAdt for Isosurface<T> {
     }
 }
 
-impl<T, D> EvaluateFunction<D> for Isosurface<T> {
+impl<T, D> EvaluateInputs<D> for Isosurface<T> {
     type Inputs = Distance<f32>;
     type Moves = ();
+}
+
+impl<T, D> EvaluateFunction<D> for Isosurface<T> {
     type Function = Curry2B<IsosurfaceDistance, T>;
 
     fn evaluate_function(self) -> Self::Function {

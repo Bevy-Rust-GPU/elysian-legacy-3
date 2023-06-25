@@ -1,6 +1,6 @@
 use std::ops::Sub;
 
-use crate::{EvaluateFunction, LiftAdt, Modify, Position};
+use crate::{EvaluateFunction, EvaluateInputs, LiftAdt, Modify, Position};
 
 use glam::Vec2;
 use t_funk::{
@@ -23,9 +23,12 @@ impl<T> LiftAdt for Translate<T> {
     }
 }
 
-impl<T, D> EvaluateFunction<D> for Translate<T> {
+impl<T, D> EvaluateInputs<D> for Translate<T> {
     type Inputs = Position<Vec2>;
     type Moves = ();
+}
+
+impl<T, D> EvaluateFunction<D> for Translate<T> {
     type Function = Curry2B<TranslateF, T>;
 
     fn evaluate_function(self) -> Self::Function {

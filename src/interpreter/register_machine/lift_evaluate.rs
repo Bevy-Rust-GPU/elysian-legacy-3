@@ -18,9 +18,8 @@ use t_funk::{
 };
 
 use crate::{
-    Combine, CombineContext, ContextOut, Domains, EvaluateFunction,
-    FunctionT, InputsT, LiftEvaluates, LiftEvaluatesT, Modify,
-    MovesT, Run,
+    Combine, CombineContext, ContextOut, Domains, EvaluateFunction, EvaluateInputs, FunctionT,
+    InputsT, LiftEvaluates, LiftEvaluatesT, Modify, MovesT, Run,
 };
 
 #[functions]
@@ -44,7 +43,7 @@ where
 
 impl<A, D> LiftEvaluate<D> for Modify<A>
 where
-    A: EvaluateFunction<D>,
+    A: EvaluateFunction<D> + EvaluateInputs<D>,
     FunctionT<A, D>: LiftContext<InputsT<A, D>>,
     LiftContextT<FunctionT<A, D>, InputsT<A, D>>: Fanout<DropF<MovesT<A, D>>>,
 {

@@ -31,8 +31,6 @@ impl<T> LiftAdt for Get<T> {
 }
 
 impl<T, D> EvaluateFunction<D> for Get<T> {
-    type Inputs = T;
-    type Moves = T;
     type Function = GetF<T>;
 
     fn evaluate_function(self) -> Self::Function {

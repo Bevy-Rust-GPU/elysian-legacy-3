@@ -42,8 +42,6 @@ where
 }
 
 impl<T, D> EvaluateFunction<D> for Set<T> {
-    type Inputs = ();
-    type Moves = ();
     type Function = Curry2B<InsertF, T>;
 
     fn evaluate_function(self) -> Self::Function {

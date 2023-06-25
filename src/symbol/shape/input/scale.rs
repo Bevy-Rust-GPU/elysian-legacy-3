@@ -1,8 +1,8 @@
 use std::ops::{Div, Mul};
 
 use crate::{
-    Alias, Distance, EvaluateFunction, ExpandAlias, ExpandAliasF, IntoMonad, LiftAdt, LiftAdtF,
-    Modify, Position,
+    Alias, Distance, EvaluateFunction, EvaluateInputs, ExpandAlias, ExpandAliasF, IntoMonad,
+    LiftAdt, LiftAdtF, Modify, Position,
 };
 
 use glam::Vec2;
@@ -81,9 +81,12 @@ impl<S> LiftAdt for ScalePosition<S> {
     }
 }
 
-impl<S, D> EvaluateFunction<D> for ScalePosition<S> {
+impl<S, D> EvaluateInputs<D> for ScalePosition<S> {
     type Inputs = Position<Vec2>;
     type Moves = ();
+}
+
+impl<S, D> EvaluateFunction<D> for ScalePosition<S> {
     type Function = Curry2B<ScalePositionF, S>;
 
     fn evaluate_function(self) -> Self::Function {
@@ -114,9 +117,12 @@ impl<S> LiftAdt for InverseScaleDistance<S> {
     }
 }
 
-impl<S, D> EvaluateFunction<D> for InverseScaleDistance<S> {
+impl<S, D> EvaluateInputs<D> for InverseScaleDistance<S> {
     type Inputs = Distance<f32>;
     type Moves = ();
+}
+
+impl<S, D> EvaluateFunction<D> for InverseScaleDistance<S> {
     type Function = Curry2B<InverseScaleDistanceF, S>;
 
     fn evaluate_function(self) -> Self::Function {

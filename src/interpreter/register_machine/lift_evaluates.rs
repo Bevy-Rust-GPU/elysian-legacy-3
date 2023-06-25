@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::{
-    interpreter::register_machine::evaluate_function::MovesT, EvaluateFunction,
+    interpreter::register_machine::evaluate_function::MovesT, EvaluateFunction, EvaluateInputs,
     LiftEvaluateFunctionF, Pair,
 };
 
@@ -201,7 +201,7 @@ pub trait ComposeRemoves<T> {
 
 impl<D, N, T> ComposeRemoves<T> for (D, N)
 where
-    T: EvaluateFunction<D>,
+    T: EvaluateInputs<D>,
     MovesT<T, D>: Default,
     N: Pair + ComposeRemoves<T>,
 {
@@ -216,7 +216,7 @@ where
 
 impl<D, T> ComposeRemoves<T> for (D, ())
 where
-    T: EvaluateFunction<D>,
+    T: EvaluateInputs<D>,
     MovesT<T, D>: Default,
 {
     type ComposeRemoves = Curry2B<InsertF, MovesT<T, D>>;

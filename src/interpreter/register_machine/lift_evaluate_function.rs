@@ -3,7 +3,7 @@ use t_funk::{
     macros::{functions, types},
 };
 
-use crate::{EvaluateFunction, FunctionT, InputsT};
+use crate::{EvaluateFunction, EvaluateInputs, FunctionT, InputsT};
 
 /// Given a `Domain` type and a `DomainFunction` type,
 /// lift the resulting domain function to read input from a context,
@@ -18,7 +18,7 @@ pub trait LiftEvaluateFunction<D> {
 
 impl<T, D> LiftEvaluateFunction<D> for T
 where
-    T: EvaluateFunction<D>,
+    T: EvaluateFunction<D> + EvaluateInputs<D>,
     FunctionT<T, D>: LiftContext<InputsT<T, D>>,
 {
     type LiftEvaluateFunction = LiftContextT<FunctionT<T, D>, InputsT<T, D>>;
