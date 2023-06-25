@@ -8,25 +8,25 @@ use t_funk::{
     },
 };
 
-use crate::{ContextA, ContextB, LiftEvaluate, LiftAdt};
+use crate::{ContextA, ContextB, EvaluateFunction, LiftAdt, Run};
 
 // Call FA or FB depending on the output of a binary function
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BooleanConditional<F, FA, FB, T>(pub F, pub FA, pub FB, pub PhantomData<T>);
 
 impl<F, FA, FB, T> LiftAdt for BooleanConditional<F, FA, FB, T> {
-    type LiftAdt = Self;
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        self
+        Run(self)
     }
 }
 
-impl<F, FA, FB, T, D> LiftEvaluate<D> for BooleanConditional<F, FA, FB, T> {
-    type LiftEvaluate = (Self,);
+impl<F, FA, FB, T, D> EvaluateFunction<D> for BooleanConditional<F, FA, FB, T> {
+    type Function = Self;
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        (self,)
+    fn evaluate_function(self) -> Self::Function {
+        self
     }
 }
 

@@ -492,11 +492,14 @@
   SKIPPED: Removing define_adt / impl_adt creates too much boilerplate,
            and the distinction is purely semantic, since it remains extensible in the same way.
 
-=======================================================================================================================
-
 * Finalize API
   * Should use tuples for heterogeneous lists wherever possible
   * Should share machinery between shape symbols and combine symbols
+
+  DONE: Tuples are now the first-class monadic type, and lifting machinery has been
+        generalized to the point where it can be used for both shapes and combinators
+
+=======================================================================================================================
 
 * ADT-ify combine functions
   * Currently using function composition, needs a higher-order symbol lifting approach

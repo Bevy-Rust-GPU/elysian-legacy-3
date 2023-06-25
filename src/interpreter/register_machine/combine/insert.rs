@@ -6,25 +6,25 @@ use t_funk::{
     collection::set::{Insert as InsertS, InsertT as InsertST},
 };
 
-use crate::{LiftAdt, LiftEvaluate};
+use crate::{EvaluateFunction, LiftAdt, Run};
 
 /// Overwrite O with the provided property T
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct InsertProperty<T, O>(pub T, pub PhantomData<O>);
 
 impl<T, O> LiftAdt for InsertProperty<T, O> {
-    type LiftAdt = Self;
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        self
+        Run(self)
     }
 }
 
-impl<T, O, D> LiftEvaluate<D> for InsertProperty<T, O> {
-    type LiftEvaluate = (Self,);
+impl<T, O, D> EvaluateFunction<D> for InsertProperty<T, O> {
+    type Function = Self;
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        (self,)
+    fn evaluate_function(self) -> Self::Function {
+        self
     }
 }
 

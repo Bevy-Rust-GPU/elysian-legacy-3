@@ -10,25 +10,25 @@ use t_funk::{
     },
 };
 
-use crate::{LiftEvaluate, LiftAdt};
+use crate::{EvaluateFunction, LiftAdt, Run};
 
 /// Overwrite O with I
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure)]
 pub struct CopyContext<I, O>(PhantomData<(I, O)>);
 
 impl<I, O> LiftAdt for CopyContext<I, O> {
-    type LiftAdt = Self;
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        self
+        Run(self)
     }
 }
 
-impl<I, O, D> LiftEvaluate<D> for CopyContext<I, O> {
-    type LiftEvaluate = (Self,);
+impl<I, O, D> EvaluateFunction<D> for CopyContext<I, O> {
+    type Function = Self;
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        (self,)
+    fn evaluate_function(self) -> Self::Function {
+        self
     }
 }
 
@@ -50,18 +50,18 @@ where
 pub struct CopyProperty<T, I, O>(PhantomData<(T, I, O)>);
 
 impl<T, I, O> LiftAdt for CopyProperty<T, I, O> {
-    type LiftAdt = Self;
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        self
+        Run(self)
     }
 }
 
-impl<T, I, O, D> LiftEvaluate<D> for CopyProperty<T, I, O> {
-    type LiftEvaluate = (Self,);
+impl<T, I, O, D> EvaluateFunction<D> for CopyProperty<T, I, O> {
+    type Function = Self;
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        (self,)
+    fn evaluate_function(self) -> Self::Function {
+        self
     }
 }
 

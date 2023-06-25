@@ -1,10 +1,10 @@
 use t_funk::{
     closure::{Closure, OutputT},
     macros::impl_adt,
-    typeclass::foldable::{Foldr, FoldrT},
+    typeclass::foldable::Foldr,
 };
 
-use crate::{Alias, Combine, Domains, Modify, Run};
+use crate::{Alias, Domains, Modify, Run};
 
 impl_adt! {
     impl<A, F, Z> Foldr<F, Z> for Run<A> | Modify<A> | Domains<A> | Alias<A>
@@ -15,20 +15,6 @@ impl_adt! {
 
         fn foldr(self, f: F, z: Z) -> Self::Foldr {
             f.call((self.0, z))
-        }
-    }
-}
-
-impl_adt! {
-    impl<A, B, C, F, Z> Foldr<F, Z> for Combine<A, B, C>
-    where
-        F: Clone + Closure<(A, Z)>,
-        B: Foldr<F, OutputT<F, (A, Z)>>,
-    {
-        type Foldr = FoldrT<B, F, OutputT<F, (A, Z)>>;
-
-        fn foldr(self, f: F, z: Z) -> Self::Foldr {
-            self.1.foldr(f.clone(), f.call((self.0, z)))
         }
     }
 }

@@ -1,9 +1,10 @@
 use t_funk::{
     closure::{Closure, OutputT},
-    typeclass::foldable::{Foldl, FoldlT}, macros::impl_adt,
+    macros::impl_adt,
+    typeclass::foldable::Foldl,
 };
 
-use crate::{Combine, Run, Alias, Modify, Domains};
+use crate::{Alias, Domains, Modify, Run};
 
 impl_adt! {
     impl<A, F, Z> Foldl<F, Z> for Run<A> | Modify<A> | Domains<A> | Alias<A>
@@ -15,18 +16,6 @@ impl_adt! {
         fn foldl(self, f: F, z: Z) -> Self::Foldl {
             f.call((z, self.0))
         }
-    }
-}
-
-impl<A, B, C, F, Z> Foldl<F, Z> for Combine<A, B, C>
-where
-    F: Clone + Closure<(Z, A)>,
-    B: Foldl<F, OutputT<F, (Z, A)>>,
-{
-    type Foldl = FoldlT<B, F, OutputT<F, (Z, A)>>;
-
-    fn foldl(self, f: F, z: Z) -> Self::Foldl {
-        self.1.foldl(f.clone(), f.call((z, self.0)))
     }
 }
 
@@ -50,9 +39,6 @@ mod test {
         let mapped = adt.fmap(FormatDebug);
         let folded = mapped.foldl(Concat, String::default());
 
-        assert_eq!(
-            folded,
-            "Translate(Vec2(0.0, 0.0))PointIsosurface(0.0)"
-        )
+        assert_eq!(folded, "Translate(Vec2(0.0, 0.0))PointIsosurface(0.0)")
     }
 }

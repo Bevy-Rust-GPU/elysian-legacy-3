@@ -13,13 +13,12 @@ use t_funk::{
         category::ComposeLT,
         foldable::{Foldr, FoldrT},
         functor::{Fmap, FmapT},
-        monad::{Chain, ChainT},
     },
 };
 
 use crate::{
     Combine, CombineContext, ContextOut, Domains, EvaluateFunction, EvaluateInputs, FunctionT,
-    InputsT, LiftDomains, Modify, MovesT, Run, LiftDomainsT,
+    InputsT, LiftDomains, LiftDomainsT, Modify, MovesT, Run,
 };
 
 #[functions]
@@ -74,18 +73,18 @@ where
 
 impl<A, B, F, D> LiftEvaluate<D> for Combine<A, B, F>
 where
-    F: Chain<LiftEvaluateF<D>>,
-    ChainT<F, LiftEvaluateF<D>>: Foldr<ComposeLF, Id>,
+    F: Fmap<LiftEvaluateF<D>>,
+    FmapT<F, LiftEvaluateF<D>>: Foldr<ComposeLF, Id>,
 {
     type LiftEvaluate =
-        LiftEvaluateCombine<A, B, FoldrT<ChainT<F, LiftEvaluateF<D>>, ComposeLF, Id>, D>;
+        LiftEvaluateCombine<A, B, FoldrT<FmapT<F, LiftEvaluateF<D>>, ComposeLF, Id>, D>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
         LiftEvaluateCombine(
             self.0,
             self.1,
             self.2
-                .chain(LiftEvaluateF::<D>::default())
+                .fmap(LiftEvaluateF::<D>::default())
                 .foldr(ComposeLF::default(), Id),
             PhantomData,
         )

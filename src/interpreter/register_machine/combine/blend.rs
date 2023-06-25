@@ -8,7 +8,7 @@ use t_funk::{
     },
 };
 
-use crate::{ContextA, ContextB, ContextOut, Distance, LiftEvaluate, LiftAdt};
+use crate::{ContextA, ContextB, ContextOut, Distance, EvaluateFunction, LiftAdt, Run};
 
 // Fetch a given property P from ContextA and ContextB,
 // combine using a (P, P) -> P function, and write it to ContextOut
@@ -16,18 +16,18 @@ use crate::{ContextA, ContextB, ContextOut, Distance, LiftEvaluate, LiftAdt};
 pub struct BlendProperty<F, T>(pub F, pub PhantomData<T>);
 
 impl<F, T> LiftAdt for BlendProperty<F, T> {
-    type LiftAdt = Self;
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        self
+        Run(self)
     }
 }
 
-impl<F, T, D> LiftEvaluate<D> for BlendProperty<F, T> {
-    type LiftEvaluate = (Self,);
+impl<F, T, D> EvaluateFunction<D> for BlendProperty<F, T> {
+    type Function = Self;
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        (self,)
+    fn evaluate_function(self) -> Self::Function {
+        self
     }
 }
 
@@ -64,18 +64,18 @@ where
 pub struct BlendPropertyDist<F, T>(pub F, pub PhantomData<T>);
 
 impl<F, T> LiftAdt for BlendPropertyDist<F, T> {
-    type LiftAdt = Self;
+    type LiftAdt = Run<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        self
+        Run(self)
     }
 }
 
-impl<F, T, D> LiftEvaluate<D> for BlendPropertyDist<F, T> {
-    type LiftEvaluate = (Self,);
+impl<F, T, D> EvaluateFunction<D> for BlendPropertyDist<F, T> {
+    type Function = Self;
 
-    fn lift_evaluate(self) -> Self::LiftEvaluate {
-        (self,)
+    fn evaluate_function(self) -> Self::Function {
+        self
     }
 }
 
