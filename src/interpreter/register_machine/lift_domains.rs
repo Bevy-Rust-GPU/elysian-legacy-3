@@ -2,62 +2,86 @@ use std::marker::PhantomData;
 
 use crate::{
     interpreter::register_machine::evaluate_function::MovesT, EvaluateFunction, EvaluateInputs,
-    LiftEvaluateFunctionF, Pair,
+    FunctionT, InputsT, Pair,
 };
 
 use t_funk::{
     closure::{CallF, Closure, Compose, ComposeLF, ComposeLT, Curry2, Curry2B, OutputT},
     collection::set::{EmptyF, InsertF, SubtractFromF},
+    collection::set::{LiftContext, LiftContextT},
     function::{Function, Id},
-    macros::{types, Closure},
+    macros::{functions, types, Closure},
     typeclass::arrow::{Fanout, FanoutF, FanoutT, Second, SecondT},
 };
+
+/// Given a `Domain` type and a `DomainFunction` type,
+/// lift the resulting domain function to read input from a context,
+/// and produce a setter function to update that context with computed output
+#[functions]
+#[types]
+pub trait LiftEvaluateFunction<D> {
+    type LiftEvaluateFunction;
+
+    fn lift_evaluate_function(self) -> Self::LiftEvaluateFunction;
+}
+
+impl<T, D> LiftEvaluateFunction<D> for T
+where
+    T: EvaluateFunction<D> + EvaluateInputs<D>,
+    FunctionT<T, D>: LiftContext<InputsT<T, D>>,
+{
+    type LiftEvaluateFunction = LiftContextT<FunctionT<T, D>, InputsT<T, D>>;
+
+    fn lift_evaluate_function(self) -> Self::LiftEvaluateFunction {
+        self.evaluate_function().lift_context()
+    }
+}
 
 /// Given a structure of shape subtypes, and a list of domains,
 /// produce a function that takes a context, reads input from it,
 /// evaluates the relevant domain functions, and produces an updated context
 #[types]
-pub trait LiftEvaluates<T> {
-    type LiftEvaluates;
+pub trait LiftDomains<T> {
+    type LiftDomains;
 
-    fn lift_evaluates(input: T) -> Self::LiftEvaluates;
+    fn lift_domains(input: T) -> Self::LiftDomains;
 }
 
 #[derive(Closure)]
-pub struct LiftEvaluatesF<T>(PhantomData<T>);
+pub struct LiftDomainsF<T>(PhantomData<T>);
 
-impl<T> Default for LiftEvaluatesF<T> {
+impl<T> Default for LiftDomainsF<T> {
     fn default() -> Self {
         Self(PhantomData)
     }
 }
 
-impl<T> Clone for LiftEvaluatesF<T> {
+impl<T> Clone for LiftDomainsF<T> {
     fn clone(&self) -> Self {
         Self(PhantomData)
     }
 }
 
-impl<T> Copy for LiftEvaluatesF<T> {}
+impl<T> Copy for LiftDomainsF<T> {}
 
-impl<D, T> Function<T> for LiftEvaluatesF<D>
+impl<D, T> Function<T> for LiftDomainsF<D>
 where
-    D: LiftEvaluates<T>,
+    D: LiftDomains<T>,
 {
-    type Output = LiftEvaluatesT<D, T>;
+    type Output = LiftDomainsT<D, T>;
 
     fn call(input: T) -> Self::Output {
-        D::lift_evaluates(input)
+        D::lift_domains(input)
     }
 }
 
-impl<D, N, T> LiftEvaluates<T> for (D, N)
+impl<D, N, T> LiftDomains<T> for (D, N)
 where
     Self: LiftDomainsList<T> + FanoutSetters + ComposeSetters + ComposeRemoves<T>,
     LiftDomainsListT<Self, T>: Closure<T>,
     FanoutSettersT<Self>: Closure<OutputT<LiftDomainsListT<Self, T>, T>>,
 {
-    type LiftEvaluates = ComposeLT<
+    type LiftDomains = ComposeLT<
         FanoutT<
             ComposeLT<
                 OutputT<FanoutSettersT<Self>, OutputT<LiftDomainsListT<Self, T>, T>>,
@@ -68,7 +92,7 @@ where
         CallF,
     >;
 
-    fn lift_evaluates(input: T) -> Self::LiftEvaluates {
+    fn lift_domains(input: T) -> Self::LiftDomains {
         Self::lift_domain_list()
             .compose_l(Self::fanout_setters())
             .call(input)

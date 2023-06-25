@@ -19,7 +19,7 @@ use t_funk::{
 
 use crate::{
     Combine, CombineContext, ContextOut, Domains, EvaluateFunction, EvaluateInputs, FunctionT,
-    InputsT, LiftEvaluates, LiftEvaluatesT, Modify, MovesT, Run,
+    InputsT, LiftDomains, Modify, MovesT, Run, LiftDomainsT,
 };
 
 #[functions]
@@ -63,12 +63,12 @@ where
 
 impl<A, D> LiftEvaluate<D> for Domains<A>
 where
-    D: LiftEvaluates<A>,
+    D: LiftDomains<A>,
 {
-    type LiftEvaluate = LiftEvaluatesT<D, A>;
+    type LiftEvaluate = LiftDomainsT<D, A>;
 
     fn lift_evaluate(self) -> Self::LiftEvaluate {
-        D::lift_evaluates(self.0)
+        D::lift_domains(self.0)
     }
 }
 

@@ -38,7 +38,7 @@ impl EvaluateFunction<Distance<f32>> for Manifold {
     }
 }
 
-impl EvaluateInputs<Gradient<f32>> for Manifold {
+impl EvaluateInputs<Gradient<Vec2>> for Manifold {
     type Inputs = (Distance<f32>, Gradient<Vec2>);
     type Moves = ();
 }
