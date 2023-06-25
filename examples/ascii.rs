@@ -1,12 +1,12 @@
 use std::marker::PhantomData;
 
 use elysian::{
-    Circle, Combine, Context, ContextRasterString, Dist, Distance, Evaluate, IntoMonad, IntoMonadT,
-    Isosurface, Manifold, OuterBoundS, PosDist, Position, Print, Raster, RasterToAscii, Rasterizer,
-    Scale, Translate, UnionS, ASCII_RAMP,
+    Circle, Context, ContextRasterString, Dist, Distance, Evaluate, IntoMonad, IntoMonadT,
+    Isosurface, Manifold, PosDist, Position, Print, Raster, RasterToAscii, Rasterizer,
+    Scale, Translate, ASCII_RAMP, Union, OuterBound,
 };
 use glam::Vec2;
-use t_funk::{closure::Closure, macros::lift, typeclass::monad::Identity};
+use t_funk::{closure::Closure, macros::lift};
 
 fn main() {
     pub type ShapeContextFrom = PosDist<Position<Vec2>, ()>;
@@ -53,18 +53,10 @@ fn main() {
     let shape_d = (Translate(Vec2::new(0.0, -0.8)), Circle(0.15_f32));
     Ascii.call(shape_d);
 
-    let combined = Combine(
-        shape_a,
-        Identity(Combine(
-            shape_b,
-            Identity(Combine(shape_c, shape_d, Identity(UnionS))),
-            Identity(UnionS),
-        )),
-        Identity(UnionS),
-    );
+    let combined = shape_a.union(shape_b).union(shape_c).union(shape_d);
     Ascii.call(combined);
 
-    let combined = Combine(shape_a, Identity(combined), Identity(OuterBoundS));
+    let combined = shape_a.outer_bound(combined);
 
     let shape = Scale(
         0.5_f32,

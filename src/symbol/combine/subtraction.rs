@@ -6,15 +6,12 @@ use t_funk::{
 
 use crate::{
     BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
-    Inherited, Left, LiftEvaluate, Pair, Right,
+    Inherited, IntoMonad, IntoMonadT, Left, LiftEvaluate, Pair, Right,
 };
 
-use t_funk::{
-    macros::{functions, types},
-    op_chain::OpChain,
-};
+use t_funk::macros::{functions, types};
 
-use crate::{Combine, LiftAdtF};
+use crate::Combine;
 
 #[functions]
 #[types]
@@ -24,21 +21,33 @@ pub trait Subtraction<R> {
     fn subtraction(self, rhs: R) -> Self::Subtraction;
 }
 
-pub fn subtraction() -> OpChain<LiftAdtF, SubtractionF> {
-    Default::default()
-}
+impl<T, U> Subtraction<U> for T
+where
+    T: IntoMonad,
+    U: IntoMonad,
+{
+    type Subtraction = Combine<IntoMonadT<T>, IntoMonadT<U>, IntoMonadT<SubtractionS>>;
 
-impl<A, B, C, R> Subtraction<R> for Combine<A, B, C> {
-    type Subtraction = Combine<Self, R, Identity<SubtractionS>>;
-
-    fn subtraction(self, rhs: R) -> Self::Subtraction {
-        Combine(self, rhs, Identity(SubtractionS))
+    fn subtraction(self, rhs: U) -> Self::Subtraction {
+        Combine(
+            self.into_monad(),
+            rhs.into_monad(),
+            SubtractionS.into_monad(),
+        )
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SubtractionS;
+
+impl IntoMonad for SubtractionS {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
 
 impl LiftEvaluate<Dist<f32>> for SubtractionS {
     type LiftEvaluate = (

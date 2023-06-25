@@ -33,11 +33,15 @@
 //! ]
 //!
 
+mod expand_alias;
 mod impls;
 mod into_monad;
+mod lift_adt;
 
+pub use expand_alias::*;
 pub use impls::*;
 pub use into_monad::*;
+pub use lift_adt::*;
 
 use t_funk::macros::{define_adt, Copointed, Pointed};
 
@@ -74,9 +78,9 @@ mod test {
     use crate::{
         BooleanConditional, Circle, Combine, Context, ContextA, ContextB, ContextOut,
         ContextRasterImage, CopyContext, CopyProperty, DistGrad, DistGradToRgb, Distance, Evaluate,
-        EvaluateSide, ExpandAliasF, Gradient, Inherited, Isosurface, Left, LiftAdtF, LiftEvaluateF,
-        LiftParamF, Point, PosDistGrad, Position, ProxyS, Raster, RasterToImage, Rasterizer, Right,
-        Set, Translate, UnionS, ViuerPrinter, IntoMonad
+        EvaluateSide, ExpandAliasF, Gradient, Inherited, IntoMonad, Isosurface, Left, LiftAdtF,
+        LiftEvaluateF, LiftParamF, Point, PosDistGrad, Position, Raster, RasterToImage,
+        Rasterizer, Right, Set, Translate, UnionS, ViuerPrinter, Proxy,
     };
 
     #[test]
@@ -117,11 +121,7 @@ mod test {
             PosDistGrad<Position<Vec2>, Distance<f32>, Gradient<Vec2>>,
         >::evaluate(shape, Default::default());
 
-        let combined = Combine(
-            shape_a,
-            shape_b,
-            Identity(ProxyS(PhantomData::<Gradient<f32>>)),
-        );
+        let combined = shape_a.proxy::<Gradient<f32>>(shape_b);
 
         let _positioned = (Set(Position(Vec2::default())), combined);
 

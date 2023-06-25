@@ -1,11 +1,11 @@
 use elysian::{
-    Circle, Color, Combine, Context, ContextRasterImage, Dist, DistColorToRgb, Distance, Evaluate,
-    Isosurface, Manifold, PosDistColor, Position, Raster, RasterToImage, Rasterizer, Scale, Set,
-    SubtractionS, Translate, UnionS, ViuerPrinter, IntoMonad, IntoMonadT
+    Circle, Color, Context, ContextRasterImage, Dist, DistColorToRgb, Distance, Evaluate,
+    IntoMonad, IntoMonadT, Isosurface, Manifold, PosDistColor, Position, Raster, RasterToImage,
+    Rasterizer, Scale, Set, Subtraction, Translate, Union, ViuerPrinter,
 };
 use glam::{Vec2, Vec3};
 use image::{ImageBuffer, Rgb};
-use t_funk::{closure::Closure, macros::lift, typeclass::monad::Identity};
+use t_funk::{closure::Closure, macros::lift};
 
 // TODO: Reimplement printing behaviour
 /*
@@ -94,16 +94,8 @@ fn main() {
     );
     Viuer.call(shape_d);
 
-    let combined = Combine(
-        Identity(Combine(
-            Identity(Combine(shape_a, shape_b, Identity(UnionS))),
-            shape_c,
-            Identity(UnionS),
-        )),
-        shape_d,
-        Identity(SubtractionS),
-    );
-    Viuer.call(Identity(combined));
+    let combined = shape_a.union(shape_b).union(shape_c).subtraction(shape_d);
+    Viuer.call(combined);
 
     let shape = Scale(
         0.5_f32,
@@ -114,5 +106,5 @@ fn main() {
             Isosurface(0.5_f32),
         ),
     );
-    Viuer.call(Identity(shape));
+    Viuer.call(shape);
 }

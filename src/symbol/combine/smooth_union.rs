@@ -3,20 +3,15 @@ use std::marker::PhantomData;
 use t_funk::{
     closure::Closure,
     function::Lt,
-    macros::{functions, impl_adt, types},
-    op_chain::OpChain,
+    macros::{functions, types},
     typeclass::monad::Identity,
 };
 
 use crate::{
-    Alias, BlendProperty, BlendPropertyDist, BooleanConditional, Combine, ContextA, ContextB,
-    ContextOut, CopyContext, Distance, EvaluateSide, Gradient, Inherited, Left, LiftAdtF,
-    LiftEvaluate, Right, Run,
+    BlendProperty, BlendPropertyDist, BooleanConditional, Combine, ContextA, ContextB, ContextOut,
+    CopyContext, Distance, EvaluateSide, Gradient, Inherited, IntoMonad, IntoMonadT, Left,
+    LiftEvaluate, Right,
 };
-
-pub fn smooth_union() -> OpChain<LiftAdtF, SmoothUnionF> {
-    Default::default()
-}
 
 #[functions]
 #[types]
@@ -26,19 +21,33 @@ pub trait SmoothUnion<T> {
     fn smooth_union(self, rhs: T, k: f32) -> Self::SmoothUnion;
 }
 
-impl_adt! {
-    impl<A, B, C, R> SmoothUnion<R> for Run<A> | Alias<A> | Combine<A, B, C> {
-        type SmoothUnion = Combine<Self, R, Identity<SmoothUnionS>>;
+impl<T, U> SmoothUnion<U> for T
+where
+    T: IntoMonad,
+    U: IntoMonad,
+{
+    type SmoothUnion = Combine<IntoMonadT<T>, IntoMonadT<U>, IntoMonadT<SmoothUnionS>>;
 
-        fn smooth_union(self, rhs: R, k: f32) -> Self::SmoothUnion {
-            Combine(self, rhs, Identity(SmoothUnionS(k)))
-        }
+    fn smooth_union(self, rhs: U, k: f32) -> Self::SmoothUnion {
+        Combine(
+            self.into_monad(),
+            rhs.into_monad(),
+            SmoothUnionS(k).into_monad(),
+        )
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SmoothUnionS(f32);
+
+impl IntoMonad for SmoothUnionS {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
 
 impl<D> LiftEvaluate<D> for SmoothUnionS {
     type LiftEvaluate = (

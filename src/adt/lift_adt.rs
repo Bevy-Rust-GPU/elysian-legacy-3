@@ -1,3 +1,5 @@
+//! Lift a concrete value into the Elysian ADT
+
 use t_funk::{
     macros::{functions, impl_adt},
     op_chain::{op_chain_lift, OpChain},

@@ -1,20 +1,13 @@
 use t_funk::{function::Lt, typeclass::monad::Identity};
 
 use crate::{
-    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
-    EvaluateSide, Inherited, Left, LiftEvaluate, Pair, Right,
+    BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
+    Inherited, IntoMonad, IntoMonadT, Left, LiftEvaluate, Pair, Right,
 };
 
-use t_funk::{
-    macros::{functions, impl_adt, types},
-    op_chain::OpChain,
-};
+use t_funk::macros::{functions, types};
 
-use crate::{Combine, LiftAdtF, Run};
-
-pub fn union() -> OpChain<LiftAdtF, UnionF> {
-    Default::default()
-}
+use crate::Combine;
 
 #[functions]
 #[types]
@@ -24,19 +17,29 @@ pub trait Union<T> {
     fn union(self, rhs: T) -> Self::Union;
 }
 
-impl_adt! {
-    impl<A, B, C, R> Union<R> for Run<A> | Alias<A> | Combine<A, B, C> {
-        type Union = Combine<Self, R, Identity<UnionS>>;
+impl<T, U> Union<U> for T
+where
+    T: IntoMonad,
+    U: IntoMonad,
+{
+    type Union = Combine<IntoMonadT<T>, IntoMonadT<U>, IntoMonadT<UnionS>>;
 
-        fn union(self, rhs: R) -> Self::Union {
-            Combine(self, rhs, Identity(UnionS))
-        }
+    fn union(self, rhs: U) -> Self::Union {
+        Combine(self.into_monad(), rhs.into_monad(), UnionS.into_monad())
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct UnionS;
+
+impl IntoMonad for UnionS {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
 
 impl LiftEvaluate<Dist<f32>> for UnionS {
     type LiftEvaluate = (

@@ -5,7 +5,7 @@ use t_funk::{
     typeclass::monad::Identity,
 };
 
-use crate::{Alias, Combine, Run, Scale};
+use crate::{Alias, Combine, Run};
 
 #[functions]
 #[types]
@@ -79,14 +79,6 @@ impl<A, B, C, D, E, F, G> IntoMonad for (A, B, C, D, E, F, G) {
     }
 }
 
-impl<S, T> IntoMonad for Scale<S, T> {
-    type IntoMonad = Identity<Self>;
-
-    fn into_monad(self) -> Self::IntoMonad {
-        Identity(self)
-    }
-}
-
 impl<A, B, C> IntoMonad for Combine<A, B, C> {
     type IntoMonad = Identity<Self>;
 
@@ -110,4 +102,3 @@ impl<T> IntoMonad for Alias<T> {
         Identity(self)
     }
 }
-

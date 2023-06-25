@@ -8,13 +8,9 @@ use t_funk::{
 };
 
 use crate::{
-    BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
-    Inherited, InsertProperty, Left, LiftEvaluate, Right, Alias,
+    BooleanConditional, Combine, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
+    EvaluateSide, Inherited, InsertProperty, IntoMonad, IntoMonadT, Left, LiftEvaluate, Right,
 };
-
-use t_funk::{macros::impl_adt, op_chain::OpChain};
-
-use crate::{Combine, LiftAdtF, Run};
 
 #[functions]
 #[types]
@@ -24,23 +20,33 @@ pub trait OuterBound<R> {
     fn outer_bound(self, rhs: R) -> Self::OuterBound;
 }
 
-pub fn outer_bound() -> OpChain<LiftAdtF, OuterBoundF> {
-    Default::default()
-}
+impl<T, U> OuterBound<U> for T
+where
+    T: IntoMonad,
+    U: IntoMonad,
+{
+    type OuterBound = Combine<IntoMonadT<T>, IntoMonadT<U>, IntoMonadT<OuterBoundS>>;
 
-impl_adt! {
-    impl<A, B, C, R> OuterBound<R> for Run<A> | Alias<A> | Combine<A, B, C> {
-        type OuterBound = Combine<Self, R, Identity<OuterBoundS>>;
-
-        fn outer_bound(self, rhs: R) -> Self::OuterBound {
-            Combine(self, rhs, Identity(OuterBoundS))
-        }
+    fn outer_bound(self, rhs: U) -> Self::OuterBound {
+        Combine(
+            self.into_monad(),
+            rhs.into_monad(),
+            OuterBoundS.into_monad(),
+        )
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct OuterBoundS;
+
+impl IntoMonad for OuterBoundS {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
 
 impl<D> LiftEvaluate<D> for OuterBoundS {
     type LiftEvaluate = (

@@ -2,15 +2,12 @@ use t_funk::{function::Gt, typeclass::monad::Identity};
 
 use crate::{
     BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance, EvaluateSide,
-    Inherited, Left, LiftEvaluate, Pair, Right,
+    Inherited, IntoMonad, IntoMonadT, Left, LiftEvaluate, Pair, Right,
 };
 
-use t_funk::{
-    macros::{functions, types},
-    op_chain::OpChain,
-};
+use t_funk::macros::{functions, types};
 
-use crate::{Combine, LiftAdtF};
+use crate::Combine;
 
 #[functions]
 #[types]
@@ -20,21 +17,33 @@ pub trait Intersection<R> {
     fn intersection(self, rhs: R) -> Self::Intersection;
 }
 
-pub fn intersection() -> OpChain<LiftAdtF, IntersectionF> {
-    Default::default()
-}
+impl<T, U> Intersection<U> for T
+where
+    T: IntoMonad,
+    U: IntoMonad,
+{
+    type Intersection = Combine<IntoMonadT<T>, IntoMonadT<U>, IntoMonadT<IntersectionS>>;
 
-impl<A, B, C, R> Intersection<R> for Combine<A, B, C> {
-    type Intersection = Combine<Self, R, Identity<IntersectionS>>;
-
-    fn intersection(self, rhs: R) -> Self::Intersection {
-        Combine(self, rhs, Identity(IntersectionS))
+    fn intersection(self, rhs: U) -> Self::Intersection {
+        Combine(
+            self.into_monad(),
+            rhs.into_monad(),
+            IntersectionS.into_monad(),
+        )
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct IntersectionS;
+
+impl IntoMonad for IntersectionS {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
 
 impl LiftEvaluate<Dist<f32>> for IntersectionS {
     type LiftEvaluate = (

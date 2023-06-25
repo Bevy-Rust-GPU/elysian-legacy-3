@@ -485,6 +485,10 @@
 
 =======================================================================================================================
 
+* Finalize API
+  * Should use tuples for heterogeneous lists wherever possible
+  * Should share machinery between shape symbols and combine symbols
+
 * Consider splitting ADT into discrete types
   * Practically the same as it is now,
     but with stronger module organization and no define_adt / impl_adt
@@ -528,6 +532,12 @@
   * Can use a parameter function to retrieve time from context and parametrize
   * This is higher-order operation over image-generating contexts
     * Uses another distinct context of its own, likely containing a list / array of outputs
+
+* Implemnt variadic Combine
+  * Use a tuple to store a list of items to be folded over with the provided binary function
+  * Either interpret directly, or expand into the existing nested structure
+    * Interpreting directly is preferable, but may be difficult in practice due to specialized context impl
+    * Expanding is compatible with existing structure, but less correct
 
 * Investigate refactoring register machine interpreter into a State monad impl
   * Effectively equivalent - drags a state (i.e. context) through a chain of functions,

@@ -7,35 +7,25 @@ use t_funk::{
 
 use crate::{
     BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, CopyProperty, Distance,
-    EvaluateSide, Inherited, Left, LiftEvaluate, Right, Alias,
+    EvaluateSide, Inherited, Left, LiftEvaluate, Right,
 };
 
-use t_funk::{
-    macros::{functions, impl_adt, types},
-    op_chain::OpChain,
-};
+use t_funk::macros::types;
 
-use crate::{Combine, LiftAdtF, Run};
+use crate::Combine;
 
-pub fn proxy<T>() -> OpChain<LiftAdtF, ProxyF<T>> {
-    Default::default()
-}
-
-#[functions]
 #[types]
-pub trait Proxy<R, T> {
-    type Proxy;
+pub trait Proxy<U> {
+    type Proxy<T>;
 
-    fn proxy(self, rhs: R) -> Self::Proxy;
+    fn proxy<T>(self, rhs: U) -> Self::Proxy<T>;
 }
 
-impl_adt! {
-    impl<A, B, C, R, T> Proxy<R, T> for Run<A> | Alias<A> | Combine<A, B, C> {
-        type Proxy = Combine<Self, R, Identity<ProxyS<T>>>;
+impl<T, R> Proxy<R> for T {
+    type Proxy<U> = Combine<Self, R, Identity<ProxyS<U>>>;
 
-        fn proxy(self, rhs: R) -> Self::Proxy {
-            Combine(self, rhs, Identity(ProxyS(PhantomData::<T>)))
-        }
+    fn proxy<U>(self, rhs: R) -> Self::Proxy<U> {
+        Combine(self, rhs, Identity(ProxyS(PhantomData::<U>)))
     }
 }
 

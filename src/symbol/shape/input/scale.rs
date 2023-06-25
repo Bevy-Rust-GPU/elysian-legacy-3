@@ -1,8 +1,8 @@
 use std::ops::{Div, Mul};
 
 use crate::{
-    Alias, Distance, Evaluable, EvaluateFunction, ExpandAlias, ExpandAliasF, LiftAdt, LiftAdtF,
-    LiftModify, Position, Run,
+    Alias, Distance, Evaluable, EvaluateFunction, ExpandAlias, ExpandAliasF, IntoMonad, LiftAdt,
+    LiftAdtF, LiftModify, Position, Run,
 };
 
 use glam::Vec2;
@@ -11,7 +11,7 @@ use t_funk::{
     macros::{applicative::Applicative, functor::Functor, lift, monad::Monad},
     typeclass::{
         functor::{Fmap, FmapT},
-        monad::{Chain, ChainT},
+        monad::{Chain, ChainT, Identity},
         semigroup::{Mappend, MappendT},
     },
 };
@@ -55,6 +55,14 @@ where
         (ScalePosition(self.0.clone()),)
             .mappend(self.1.chain(ExpandAliasF))
             .mappend((InverseScaleDistance(self.0),))
+    }
+}
+
+impl<S, T> IntoMonad for Scale<S, T> {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
     }
 }
 
