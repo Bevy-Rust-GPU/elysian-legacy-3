@@ -5,11 +5,7 @@ use image::{ImageBuffer, Luma, Pixel, Rgb};
 use t_funk::{
     closure::{Closure, OutputT},
     collection::set::Get,
-    macros::{
-        lift,
-        phantom::{PhantomClone, PhantomCopy, PhantomDefault},
-        Closure,
-    },
+    macros::{lift, Closure},
     typeclass::{copointed::Copointed, functor::Fmap},
 };
 
@@ -18,10 +14,8 @@ use crate::{
     Saturate,
 };
 
-#[derive(
-    Debug, PhantomDefault, PhantomCopy, PhantomClone, PartialEq, Eq, PartialOrd, Ord, Hash,
-)]
-pub struct RasterToImage<R, F>(pub PhantomData<(R, F)>);
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct RasterToImage<R, F>(pub F, pub PhantomData<R>);
 
 impl<R, G, F> Fmap<F> for RasterToImage<R, G> {
     type Fmap = Self;
@@ -48,7 +42,7 @@ impl<R, F, D> EvaluateFunction<D> for RasterToImage<R, F> {
     type Function = Image<R, F>;
 
     fn evaluate_function(self) -> Self::Function {
-        Image(self.0)
+        Image(self.0, self.1)
     }
 }
 
@@ -77,45 +71,39 @@ where
 }
 
 #[lift]
-pub fn dist_color_to_rgb<C>(c: C) -> Rgb<f32>
+pub fn dist_color_to_rgb<C>((clear, k): (Vec3, f32), ctx: C) -> Rgb<f32>
 where
     C: Get<(Distance<f32>, Color<Vec3>)>,
 {
-    let (Distance(dist), Color(c)) = c.get();
+    let (Distance(dist), Color(color)) = ctx.get();
 
-    let l = (-dist).max(0.0).min(1.0);
-    let c = [c.x * l, c.y * l, c.z * l];
+    let l = (-dist * k).max(0.0).min(1.0);
+    let c = clear.lerp(color, l);
+
+    let c = [c.x, c.y, c.z];
 
     *Pixel::from_slice(&c)
 }
 
-#[derive(Closure)]
-pub struct Image<C, F>(pub PhantomData<(C, F)>);
+#[lift]
+pub fn color_to_rgb<C>(ctx: C) -> Rgb<f32>
+where
+    C: Get<Color<Vec3>>,
+{
+    let Color(c) = ctx.get();
 
-impl<C, F> std::fmt::Debug for Image<C, F> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("Image").field(&self.0).finish()
-    }
+    let c = [c.x, c.y, c.z];
+
+    *Pixel::from_slice(&c)
 }
 
-impl<C, F> Default for Image<C, F> {
-    fn default() -> Self {
-        Self(PhantomData)
-    }
-}
-
-impl<C, F> Clone for Image<C, F> {
-    fn clone(&self) -> Self {
-        Self(PhantomData)
-    }
-}
-
-impl<C, F> Copy for Image<C, F> {}
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Closure)]
+pub struct Image<C, F>(pub F, pub PhantomData<C>);
 
 impl<C, F> Closure<Raster<C>> for Image<C, F>
 where
     C: Clone,
-    F: Default + Closure<C>,
+    F: Clone + Closure<C>,
     OutputT<F, C>: Pixel,
 {
     type Output = ImageBuffer<OutputT<F, C>, Vec<<OutputT<F, C> as Pixel>::Subpixel>>;
@@ -128,7 +116,7 @@ where
 
         for y in 0..h {
             for x in 0..w {
-                let dist = F::default().call(rast[y as usize][x as usize].clone());
+                let dist = self.0.clone().call(rast[y as usize][x as usize].clone());
                 buf.put_pixel(x, y, dist);
             }
         }

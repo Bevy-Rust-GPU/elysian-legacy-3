@@ -80,6 +80,54 @@ impl<A, B, C, D, E, F, G> IntoMonad for (A, B, C, D, E, F, G) {
     }
 }
 
+impl<A, B, C, D, E, F, G, H> IntoMonad for (A, B, C, D, E, F, G, H) {
+    type IntoMonad = Self;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        self
+    }
+}
+
+impl<A, B, C, D, E, F, G, H, I> IntoMonad for (A, B, C, D, E, F, G, H, I) {
+    type IntoMonad = Self;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        self
+    }
+}
+
+impl<A, B, C, D, E, F, G, H, I, J> IntoMonad for (A, B, C, D, E, F, G, H, I, J) {
+    type IntoMonad = Self;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        self
+    }
+}
+
+impl<A, B, C, D, E, F, G, H, I, J, K> IntoMonad for (A, B, C, D, E, F, G, H, I, J, K) {
+    type IntoMonad = Self;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        self
+    }
+}
+
+impl<A, B, C, D, E, F, G, H, I, J, K, L> IntoMonad for (A, B, C, D, E, F, G, H, I, J, K, L) {
+    type IntoMonad = Self;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        self
+    }
+}
+
+impl<A, B, C, D, E, F, G, H, I, J, K, L, M> IntoMonad for (A, B, C, D, E, F, G, H, I, J, K, L, M) {
+    type IntoMonad = Self;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        self
+    }
+}
+
 impl<A, B> IntoMonad for Cons<A, B> {
     type IntoMonad = Self;
 

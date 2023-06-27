@@ -499,12 +499,13 @@
   DONE: Tuples are now the first-class monadic type, and lifting machinery has been
         generalized to the point where it can be used for both shapes and combinators
 
-=======================================================================================================================
-
 * ADT-ify combine functions
   * Currently using function composition, needs a higher-order symbol lifting approach
   * Should be able to represent as a simple list, compose via Monoid
     * Good example case for a prospective future ADT refactor
+
+  DONE: Applied on a case-by-case basis; implementors can choose to
+        implement on self or some other type, which is the important part.
 
 * Reconsider Combine typeclass impls
   * Foldr / Foldl / Mappend should produce a single value for each Combine,
@@ -513,6 +514,104 @@
     * Should allow for proper behaviour, possibly open the door to ADT-based evaluation
   * How to make this work for current usage?
     * Could make the combiner function a constructor for LiftEvaluateCombine
+
+  DONE: Removed unused / invalid typeclass impls from AST newtypes
+
+* Implement Replace combinator
+  * Similar to Proxy, but overwrites a parameter unconditionally instead of predicating on distance
+
+  DONE: Implemented as Proxy minus the final BooleanConditional
+
+
+* Look into convenience functions for composing monadic structure
+  * RepeatM etc, various utilities from Haskell's base libraries
+  * Bare minimum, whatever is needed to recreate the diagrams example that inspired Elysian
+
+  DONE: Implemented UnfoldM for creating monadic structure via function
+
+* Implement elongate operator, Line alias
+
+  DONE: Implemented as input modifier with abs switch for controlling origin
+
+* Correct Triangle implementation
+  * Distance output needs to account for vertex rounding
+    * Instead of a plane, use a line and clamp Y to <= 0 to create a finite rounded plane
+  * Reflect needs to be able to reflect gradients
+    * Needs access to position, but has to occur after position is moved by shape
+    * Either implement as a wrapper / evaluator, or preserve position
+      * Preserving position breaks by-move semantics
+        * However, an EvaluateInputs-implementing wrapper
+          could be used to override moves on a case-by-case basis
+          to account for situations where the move should be deferred
+
+  DONE: Tried caching via context, but insufficient for arbitrarily nestable modifiers.
+        Ended up implementing Reflect and Demanifold as wrapper evaluators, similar to Combine
+
+* Color overlaying
+  * Need to be able to assemble shapes front-to-back, with frontmost ones taking priority for color
+
+  DONE: Implemented via Overlay alias
+
+=======================================================================================================================
+
+* Smooth color overlaying
+  * Need to be able to smoothly blend between background and foreground
+  * Since boolean version uses foreground distance < 0 as a predicate,
+    should be able to control this by mapping it to a range.
+    ex. -0.5 fg distance = full fg, 0.5 fg distance = full bg
+
+* Abstract over multi-frame evaluation
+  * ex:
+    Generating a series of images for ascii / viuer printing
+    Generating an animated GIF for viuer printing
+  * Can use a parameter function to retrieve time from context and parametrize
+  * This is higher-order operation over image-generating contexts
+    * Uses another distinct context of its own, likely containing a list / array of outputs
+
+* Haskell diagrams R&D
+  * Lots of food for thought in the documentation
+    * https://archives.haskell.org/projects.haskell.org/diagrams/doc/quickstart.html
+  * Local origins
+  * Envelope-based layout
+    * Alignment (i.e. envelope fit vs plane)
+  * Snug fit via raycasting
+  * Monoid composition
+  * Points
+  * Segments
+  * Lines
+  * Splines
+  * Loops
+  * Trails
+  * Paths
+  * Arrows
+
+* Formalize interpretation of free structure
+  * Existing type-level register machine behaviour is an interpreter
+  * Could this be unified under Interpret and Interpreter traits?
+    * Traversable is likely relevant here
+  * Alternate interpreters:
+    * Dynamic structuring
+      * Convert ADT into a type-erased value-level equivalent (ex. dyn / impl Trait)
+        * Useful for runtime editing,
+          though may not be mandatory if strongly-typed recursive control flow is viable
+    * EDSL graph visualizer
+      * Create a new EDSL visualizing the graph as UI primitives
+    * Graph optimizer
+    * Bevy hierarchy generator
+      * Interpret boolean union as breaking a child out of its parent hierarchy
+    * Static evaluation
+      * Pre-evaluate expensive operations
+        * ex. Layout:
+          Replace a Combine<A, B, AxialFit> with Combine<Shape<Translate, A>, Shape<Translate, B>, Union>
+          * Where AxialFit is semantically equivalent to raycast-based layout from Haskell diagrams
+          * This raises the question of how AxialFit relates to Union
+            * Suggests the need for composable Combine subtypes?
+              * Devil's advocate says this may be overkill,
+                since ex. horizontal layout aims to avoid overlap
+              * However, making it compositional strengthens semantics
+                and eases implementation for coupled cases
+                (i.e. via type alias or function call wrapping)
+          * Code should be shareable between runtime and static evaluation
 
 * Investigate more idiomatic Raster -> ImageBuffer conversion
   * Currently similar to monadic chaining, but implemented manually
@@ -524,22 +623,7 @@
     to-remove set, since the type is the only relevant aspect for removal
     * Some closure that composes PhantomData<SetType> and wraps type arithmetic?
 
-* Look into convenience functions for composing monadic structure
-  * RepeatM etc, various utilities from Haskell's base libraries
-  * Bare minimum, whatever is needed to recreate the diagrams example that inspired Elysian
-
-* Implement Replace combinator
-  * Similar to Proxy, but overwrites a parameter unconditionally instead of predicating on distance
-
-* Abstract over multi-frame evaluation
-  * ex:
-    Generating a series of images for ascii / viuer printing
-    Generating an animated GIF for viuer printing
-  * Can use a parameter function to retrieve time from context and parametrize
-  * This is higher-order operation over image-generating contexts
-    * Uses another distinct context of its own, likely containing a list / array of outputs
-
-* Implemnt variadic Combine
+* Implement variadic Combine
   * Use a tuple to store a list of items to be folded over with the provided binary function
   * Either interpret directly, or expand into the existing nested structure
     * Interpreting directly is preferable, but may be difficult in practice due to specialized context impl
@@ -595,51 +679,6 @@
     * Solution to interface conflicts is tuple transformers, i.e. newtypes
       * First-class tuple impl should be for flat tuples (1, 2, 3)
       * ex. TList((1, (2, (3, ())))) to apply HList-like semantics, TBTree for HBTree semantics, etc
-
-* Haskell diagrams R&D
-  * Lots of food for thought in the documentation
-    * https://archives.haskell.org/projects.haskell.org/diagrams/doc/quickstart.html
-  * Local origins
-  * Envelope-based layout
-    * Alignment (i.e. envelope fit vs plane)
-  * Snug fit via raycasting
-  * Monoid composition
-  * Points
-  * Segments
-  * Lines
-  * Splines
-  * Loops
-  * Trails
-  * Paths
-  * Arrows
-
-* Formalize interpretation of free structure
-  * Existing type-level register machine behaviour is an interpreter
-  * Could this be unified under Interpret and Interpreter traits?
-    * Traversable is likely relevant here
-  * Alternate interpreters:
-    * Dynamic structuring
-      * Convert ADT into a type-erased value-level equivalent (ex. dyn / impl Trait)
-        * Useful for runtime editing,
-          though may not be mandatory if strongly-typed recursive control flow is viable
-    * EDSL graph visualizer
-      * Create a new EDSL visualizing the graph as UI primitives
-    * Graph optimizer
-    * Bevy hierarchy generator
-      * Interpret boolean union as breaking a child out of its parent hierarchy
-    * Static evaluation
-      * Pre-evaluate expensive operations
-        * ex. Layout:
-          Replace a Combine<A, B, AxialFit> with Combine<Shape<Translate, A>, Shape<Translate, B>, Union>
-          * Where AxialFit is semantically equivalent to raycast-based layout from Haskell diagrams
-          * This raises the question of how AxialFit relates to Union
-            * Suggests the need for composable Combine subtypes?
-              * Devil's advocate says this may be overkill,
-                since ex. horizontal layout aims to avoid overlap
-              * However, making it compositional strengthens semantics
-                and eases implementation for coupled cases
-                (i.e. via type alias or function call wrapping)
-          * Code should be shareable between runtime and static evaluation
 
 * ADT parsing via nom
   * Opens the door to creating a specialized CLI REPL

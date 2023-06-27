@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use t_funk::{
+    closure::{Closure, OutputT},
     collection::map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
     collection::set::{Get as GetS, Insert as InsertS, InsertT as InsertST},
     function::Function,
@@ -79,6 +80,46 @@ where
 
         let c = GetM::<O>::get(ctx.clone());
         let c = InsertS::<T>::insert(c, t);
+
+        ctx.insert(c)
+    }
+}
+
+/// Overwrite O with I
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct MapProperty<I, T, F>(pub F, pub PhantomData<(T, I)>);
+
+impl<I, T, F> LiftAdt for MapProperty<I, T, F> {
+    type LiftAdt = Run<Self>;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        Run(self)
+    }
+}
+
+impl<I, T, F, D> EvaluateFunction<D> for MapProperty<I, T, F> {
+    type Function = Self;
+
+    fn evaluate_function(self) -> Self::Function {
+        self
+    }
+}
+
+impl<I, T, F, C> Closure<C> for MapProperty<I, T, F>
+where
+    C: Clone + GetM<I> + InsertM<I, InsertST<GetMT<C, I>, OutputT<F, T>>>,
+    GetMT<C, I>: Clone + GetS<T> + InsertS<OutputT<F, T>>,
+    F: Closure<T>,
+{
+    type Output = InsertMT<C, I, InsertST<GetMT<C, I>, OutputT<F, T>>>;
+
+    fn call(self, ctx: C) -> Self::Output {
+        let c = GetM::<I>::get(ctx.clone());
+
+        let t = GetS::<T>::get(c.clone());
+        let t = self.0.call(t);
+
+        let c = InsertS::<OutputT<F, T>>::insert(c, t);
 
         ctx.insert(c)
     }

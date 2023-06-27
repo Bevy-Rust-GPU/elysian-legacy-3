@@ -1,12 +1,13 @@
 use t_funk::{
-    closure::Composed,
+    closure::ComposeLT,
     function::{Gt, Neg},
-    typeclass::{arrow::Firsted, monad::Identity, functor::Fmap},
+    typeclass::{functor::Fmap, monad::Identity},
 };
 
 use crate::{
     Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
-    EvaluateSide, ExpandAlias, Inherited, IntoMonad, IntoMonadT, Left, LiftAdt, Pair, Right,
+    EvaluateSide, ExpandAlias, Inherited, IntoMonad, IntoMonadT, Left, LiftAdt, MapProperty, Pair,
+    Right,
 };
 
 use t_funk::macros::{functions, types};
@@ -69,8 +70,9 @@ impl ExpandAlias<Dist<f32>> for SubtractionS {
     type ExpandAlias = (
         EvaluateSide<Left, Inherited, ContextA>,
         EvaluateSide<Right, Inherited, ContextB>,
+        MapProperty<ContextB, Distance<f32>, Neg>,
         BooleanConditional<
-            Composed<Gt, Firsted<Neg>>,
+            Gt,
             CopyContext<ContextA, ContextOut>,
             CopyContext<ContextB, ContextOut>,
             Distance<f32>,
@@ -89,10 +91,14 @@ where
     type ExpandAlias = (
         EvaluateSide<Left, Dist<f32>, ContextA>,
         EvaluateSide<Right, Dist<f32>, ContextB>,
+        MapProperty<ContextB, Distance<f32>, Neg>,
         BooleanConditional<
-            Composed<Gt, Firsted<Neg>>,
+            Gt,
             EvaluateSide<Left, Inherited, ContextOut>,
-            EvaluateSide<Right, Inherited, ContextOut>,
+            ComposeLT<
+                EvaluateSide<Right, Inherited, ContextOut>,
+                MapProperty<ContextOut, Distance<f32>, Neg>,
+            >,
             Distance<f32>,
         >,
     );

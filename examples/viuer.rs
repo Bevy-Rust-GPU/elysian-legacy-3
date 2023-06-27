@@ -5,7 +5,10 @@ use elysian::{
 };
 use glam::{Vec2, Vec3};
 use image::{ImageBuffer, Rgb};
-use t_funk::{closure::Closure, macros::lift};
+use t_funk::{
+    closure::{Closure, Curry2, Curry2A},
+    macros::lift,
+};
 
 // TODO: Reimplement printing behaviour
 /*
@@ -46,7 +49,7 @@ fn main() {
         T: IntoMonad,
         (
             Rasterizer<IntoMonadT<T>, ShapeCtxFrom>,
-            RasterToImage<ShapeCtxTo, DistColorToRgb>,
+            RasterToImage<ShapeCtxTo, Curry2A<DistColorToRgb, (Vec3, f32)>>,
             ViuerPrinter<ImageBuffer<Rgb<f32>, Vec<f32>>>,
         ): Evaluate<Domains, RasterCtx>,
     {
@@ -59,7 +62,7 @@ fn main() {
                 shape: t,
                 context: Default::default(),
             },
-            RasterToImage::<ShapeCtxTo, DistColorToRgb>::default(),
+            RasterToImage(DistColorToRgb.prefix2((Vec3::ZERO, 48.0)), Default::default()),
             ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default(),
         );
 

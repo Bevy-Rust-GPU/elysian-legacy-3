@@ -81,41 +81,16 @@ impl<T, D> EvaluateInputs<D> for ViuerPrinter<T> {
 }
 
 impl<T, D> EvaluateFunction<D> for ViuerPrinter<T> {
-    type Function = ViuerPrintF;
+    type Function = Self;
 
     fn evaluate_function(self) -> Self::Function {
-        ViuerPrintF {
-            transparent: self.transparent,
-            absolute_offset: self.absolute_offset,
-            x: self.x,
-            y: self.y,
-            restore_cursor: self.restore_cursor,
-            width: self.width,
-            height: self.height,
-            truecolor: self.truecolor,
-            use_kitty: self.use_kitty,
-            use_iterm: self.use_iterm,
-        }
+        self
     }
 }
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ViuerPrintF {
-    pub transparent: bool,
-    pub absolute_offset: bool,
-    pub x: u16,
-    pub y: i16,
-    pub restore_cursor: bool,
-    pub width: Option<u32>,
-    pub height: Option<u32>,
-    pub truecolor: bool,
-    pub use_kitty: bool,
-    pub use_iterm: bool,
-}
-
-impl<T> Closure<T> for ViuerPrintF
+impl<T> Closure<T> for ViuerPrinter<T>
 where
-    T: Into<DynamicImage>,
+    T: core::fmt::Debug + Into<DynamicImage>,
 {
     type Output = ();
 

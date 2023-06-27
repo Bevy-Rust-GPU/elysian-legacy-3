@@ -1,7 +1,7 @@
-use crate::{Distance, Domains, EvaluateFunction, EvaluateInputs, Gradient, LiftAdt, Position};
+use crate::{Distance, Domains, EvaluateFunction, EvaluateInputs, Gradient, LiftAdt, Position, IntoMonad};
 
 use glam::Vec2;
-use t_funk::{macros::lift, typeclass::functor::Fmap};
+use t_funk::{macros::lift, typeclass::{functor::Fmap, monad::Identity}};
 
 // Point field symbol
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -13,6 +13,14 @@ impl<F> Fmap<F> for Point {
 
     fn fmap(self, _: F) -> Self::Fmap {
         self
+    }
+}
+
+impl IntoMonad for Point {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
     }
 }
 
@@ -52,10 +60,14 @@ impl EvaluateFunction<Gradient<Vec2>> for Point {
 
 #[lift]
 pub fn point_distance(Position(p): Position<Vec2>) -> Distance<f32> {
-    Distance(p.length())
+    let d = p.length();
+    assert!(!d.is_nan());
+    Distance(d)
 }
 
 #[lift]
 pub fn point_gradient(Position(p): Position<Vec2>) -> Gradient<Vec2> {
-    Gradient(p.normalize())
+    let g = p.normalize_or_zero();
+    assert!(!g.is_nan());
+    Gradient(g)
 }

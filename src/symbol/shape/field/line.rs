@@ -1,15 +1,26 @@
-use crate::{Alias, ExpandAlias, Isosurface, LiftAdt, Point, IntoMonad};
+use crate::{Alias, Elongate, ExpandAlias, LiftAdt, Point, IntoMonad};
 
 use t_funk::{macros::{applicative::Applicative, functor::Functor, monad::Monad}, typeclass::monad::Identity};
 
-// Circle field symbol
+// Line field symbol
 #[derive(
-    Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Functor, Applicative, Monad,
+    Debug,
+    Default,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Functor,
+    Applicative,
+    Monad,
 )]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Circle<T>(pub T);
+pub struct Line<T>(pub T);
 
-impl<T> IntoMonad for Circle<T> {
+impl<T> IntoMonad for Line<T> {
     type IntoMonad = Identity<Self>;
 
     fn into_monad(self) -> Self::IntoMonad {
@@ -17,7 +28,7 @@ impl<T> IntoMonad for Circle<T> {
     }
 }
 
-impl<T> LiftAdt for Circle<T> {
+impl<T> LiftAdt for Line<T> {
     type LiftAdt = Alias<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -25,10 +36,11 @@ impl<T> LiftAdt for Circle<T> {
     }
 }
 
-impl<T, D> ExpandAlias<D> for Circle<T> {
-    type ExpandAlias = (Point, Isosurface<T>);
+impl<T, D> ExpandAlias<D> for Line<T> {
+    type ExpandAlias = (Elongate<T>, Point);
 
     fn expand_alias(self) -> Self::ExpandAlias {
-        (Point, Isosurface(self.0))
+        (Elongate(self.0, true), Point)
     }
 }
+
