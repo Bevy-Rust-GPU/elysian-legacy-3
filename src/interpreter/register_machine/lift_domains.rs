@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use crate::{
     interpreter::register_machine::evaluate_function::MovesT, EvaluateFunction, EvaluateInputs,

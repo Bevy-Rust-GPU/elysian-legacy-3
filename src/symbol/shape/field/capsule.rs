@@ -1,4 +1,4 @@
-use crate::{Alias, ExpandAlias, ExpandAliasT, IntoMonad, Isosurface, LiftAdt, Line};
+use crate::{Alias, ExpandAlias, ExpandAliasT, IntoMonad, IsosurfaceS, LiftAdt, Line};
 
 use t_funk::{
     closure::{Closure, OutputT},
@@ -43,11 +43,11 @@ impl<T, U> LiftAdt for Capsule<T, U> {
 
 impl<T, U, D> ExpandAlias<D> for Capsule<T, U>
 where
-    ExpandAliasT<Line<T>, D>: Mappend<(Isosurface<U>,)>,
+    ExpandAliasT<Line<T>, D>: Mappend<(IsosurfaceS<U>,)>,
 {
-    type ExpandAlias = MappendT<ExpandAliasT<Line<T>, D>, (Isosurface<U>,)>;
+    type ExpandAlias = MappendT<ExpandAliasT<Line<T>, D>, (IsosurfaceS<U>,)>;
 
     fn expand_alias(self) -> Self::ExpandAlias {
-        ExpandAlias::<D>::expand_alias(Line(self.0)).mappend((Isosurface(self.1),))
+        ExpandAlias::<D>::expand_alias(Line(self.0)).mappend((IsosurfaceS(self.1),))
     }
 }

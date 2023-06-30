@@ -1,11 +1,11 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use crate::{
-    Dist, Distance, Evaluate, EvaluateT, ExpandAlias, ExpandAliasF, Gradient, IntoMonad, LiftAdt,
-    LiftAdtF, LiftEvaluate, LiftParam, LiftParamF, Pair, Position,
+    Dist, Distance, EvaluateImpl, EvaluateImplT, ExpandAlias, ExpandAliasF, Gradient, IntoMonad,
+    LiftAdt, LiftAdtF, LiftEvaluate, LiftParam, LiftParamF, Pair, Position,
 };
 
-use glam::Vec2;
+use crate::glam::Vec2;
 use t_funk::{
     closure::{Closure, Curry2, Curry2B},
     collection::set::{Get, Insert, InsertT},
@@ -15,7 +15,8 @@ use t_funk::{
     },
 };
 
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "std", derive(Debug))]
+#[derive(Default, Copy, Clone, PartialEq)]
 pub struct Reflect<T>(pub Vec2, pub T);
 
 impl<T> IntoMonad for Reflect<T> {
@@ -67,15 +68,16 @@ impl<T, D> LiftEvaluate<D> for Reflect<T> {
     }
 }
 
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "std", derive(Debug))]
+#[derive(Default, Copy, Clone, PartialEq)]
 pub struct EvaluateReflect<T, D>(Vec2, T, PhantomData<D>);
 
 impl<T, C> Closure<C> for EvaluateReflect<T, Dist<f32>>
 where
     C: Clone + Get<Position<Vec2>> + Insert<Position<Vec2>, Insert = C>,
-    T: Evaluate<Dist<f32>, C>,
+    T: EvaluateImpl<Dist<f32>, C>,
 {
-    type Output = EvaluateT<T, Dist<f32>, C>;
+    type Output = EvaluateImplT<T, Dist<f32>, C>;
 
     fn call(self, input: C) -> Self::Output {
         let n = self.0;
@@ -87,7 +89,7 @@ where
 
         let input = Insert::<Position<Vec2>>::insert(input, Position(pr));
 
-        Evaluate::<Dist<f32>, C>::evaluate(self.1, input)
+        EvaluateImpl::<Dist<f32>, C>::evaluate_impl(self.1, input)
     }
 }
 
@@ -95,10 +97,10 @@ impl<T, D, C> Closure<C> for EvaluateReflect<T, (Distance<f32>, D)>
 where
     D: Pair,
     C: Clone + Get<Position<Vec2>> + Insert<Position<Vec2>, Insert = C>,
-    T: Evaluate<(Distance<f32>, D), C>,
-    EvaluateT<T, (Distance<f32>, D), C>: Clone + Get<Gradient<Vec2>> + Insert<Gradient<Vec2>>,
+    T: EvaluateImpl<(Distance<f32>, D), C>,
+    EvaluateImplT<T, (Distance<f32>, D), C>: Clone + Get<Gradient<Vec2>> + Insert<Gradient<Vec2>>,
 {
-    type Output = InsertT<EvaluateT<T, (Distance<f32>, D), C>, Gradient<Vec2>>;
+    type Output = InsertT<EvaluateImplT<T, (Distance<f32>, D), C>, Gradient<Vec2>>;
 
     fn call(self, input: C) -> Self::Output {
         let n = self.0;
@@ -110,7 +112,7 @@ where
 
         let input = Insert::<Position<Vec2>>::insert(input, Position(pr));
 
-        let input = Evaluate::<(Distance<f32>, D), C>::evaluate(self.1, input);
+        let input = EvaluateImpl::<(Distance<f32>, D), C>::evaluate_impl(self.1, input);
 
         let Gradient(g) = Get::<Gradient<Vec2>>::get(input.clone());
         let g = if n.dot(p) >= 0.0 {

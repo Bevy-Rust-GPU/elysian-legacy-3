@@ -1,10 +1,14 @@
-use crate::{Alias, Circle, ExpandAlias, ExpandAliasT, Isosurface, LiftAdt, Manifold, IntoMonad};
+use crate::{
+    Alias, Circle, ExpandAlias, ExpandAliasT, IntoMonad, IsomanifoldS, IsosurfaceS, LiftAdt,
+    ManifoldS,
+};
 
 use t_funk::{
     closure::{Closure, OutputT},
     typeclass::{
         functor::Fmap,
-        semigroup::{Mappend, MappendT}, monad::Identity,
+        monad::Identity,
+        semigroup::{Mappend, MappendT},
     },
 };
 
@@ -12,6 +16,20 @@ use t_funk::{
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Ring<T, U>(pub T, pub U);
+
+pub fn ring() -> Ring<f32, f32> {
+    Ring(1.0, 0.2)
+}
+
+impl<T, U> Ring<T, U> {
+    pub fn radius<V>(self, v: V) -> Ring<V, U> {
+        Ring(v, self.1)
+    }
+
+    pub fn width<V>(self, v: V) -> Ring<T, V> {
+        Ring(self.0, v)
+    }
+}
 
 impl<T, U, F> Fmap<F> for Ring<T, U>
 where
@@ -42,11 +60,12 @@ impl<T, U> LiftAdt for Ring<T, U> {
 
 impl<T, U, D> ExpandAlias<D> for Ring<T, U>
 where
-    ExpandAliasT<Circle<T>, D>: Mappend<(Manifold, Isosurface<U>)>,
+    ExpandAliasT<Circle<T>, D>: Mappend<(ManifoldS, IsosurfaceS<U>)>,
 {
-    type ExpandAlias = MappendT<ExpandAliasT<Circle<T>, D>, (Manifold, Isosurface<U>)>;
+    type ExpandAlias = MappendT<ExpandAliasT<Circle<T>, D>, ExpandAliasT<IsomanifoldS<U>, D>>;
 
     fn expand_alias(self) -> Self::ExpandAlias {
-        ExpandAlias::<D>::expand_alias(Circle(self.0)).mappend((Manifold, Isosurface(self.1)))
+        ExpandAlias::<D>::expand_alias(Circle(self.0))
+            .mappend(ExpandAlias::<D>::expand_alias(IsomanifoldS(self.1)))
     }
 }

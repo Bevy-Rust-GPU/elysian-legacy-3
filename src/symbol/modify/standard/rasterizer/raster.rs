@@ -1,6 +1,6 @@
 //! Rasterize a shape into an array of domain outputs
 
-use std::ops::{Deref, DerefMut};
+use core::ops::{Deref, DerefMut};
 
 use t_funk::{
     closure::Closure, closure::OutputT, typeclass::copointed::Copointed, typeclass::functor::Fmap,
@@ -16,8 +16,8 @@ impl<T> Raster<T> {
         T: Default + Clone,
     {
         Raster(Vec::from_iter(
-            std::iter::repeat(Vec::from_iter(
-                std::iter::repeat(Default::default()).take(width),
+            core::iter::repeat(Vec::from_iter(
+                core::iter::repeat(Default::default()).take(width),
             ))
             .take(height),
         ))

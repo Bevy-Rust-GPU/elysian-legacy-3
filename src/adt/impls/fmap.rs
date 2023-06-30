@@ -31,14 +31,14 @@ where
 
 #[cfg(test)]
 mod test {
-    use glam::Vec2;
+    use crate::glam::Vec2;
     use t_funk::{closure::Const, typeclass::functor::Fmap};
 
-    use crate::{Isosurface, Point, Translate};
+    use crate::{IsosurfaceS, Point, TranslateS};
 
     #[test]
     fn test_adt_fmap() {
-        let adt = (Translate(Vec2::new(0.0, 0.0)), Point, Isosurface(0.0));
+        let adt = (TranslateS(Vec2::new(0.0, 0.0)), Point, IsosurfaceS(0.0));
         let mapped = adt.fmap(Const(()));
         assert_eq!(mapped, ((), (), ()));
     }

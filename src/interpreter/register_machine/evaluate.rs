@@ -15,19 +15,20 @@ use crate::{ExpandAliasF, LiftAdtF, LiftEvaluateF, LiftParamF};
 /// evaluate the shape's domain functions and produce an updated context
 #[types]
 #[functions]
-pub trait Evaluate<D, C> {
-    type Evaluate;
+pub trait EvaluateImpl<D, C> {
+    type EvaluateImpl;
 
-    fn evaluate(self, input: C) -> Self::Evaluate;
+    fn evaluate_impl(self, input: C) -> Self::EvaluateImpl;
 }
 
-impl<T, D, C> Evaluate<D, C> for T
+impl<T, D, C> EvaluateImpl<D, C> for T
 where
     C: Clone,
     T: Fmap<LiftAdtF>,
     FmapT<T, LiftAdtF>: Fmap<Curry2B<LiftParamF, C>>,
     FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>: Chain<ExpandAliasF<D>>,
-    ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF<D>>: Fmap<LiftEvaluateF<D>>,
+    ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF<D>>:
+        Fmap<LiftEvaluateF<D>>,
     FmapT<
         ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF<D>>,
         LiftEvaluateF<D>,
@@ -41,7 +42,7 @@ where
         Id,
     >: Closure<C>,
 {
-    type Evaluate = OutputT<
+    type EvaluateImpl = OutputT<
         FoldrT<
             FmapT<
                 ChainT<FmapT<FmapT<T, LiftAdtF>, Curry2B<LiftParamF, C>>, ExpandAliasF<D>>,
@@ -53,7 +54,7 @@ where
         C,
     >;
 
-    fn evaluate(self, input: C) -> Self::Evaluate {
+    fn evaluate_impl(self, input: C) -> Self::EvaluateImpl {
         self.fmap(LiftAdtF)
             .fmap(LiftParamF.suffix2(input.clone()))
             .chain(ExpandAliasF::<D>::default())
@@ -62,3 +63,14 @@ where
             .call(input)
     }
 }
+
+pub trait Evaluate<C>: Sized {
+    fn evaluate<D>(self, input: C) -> EvaluateImplT<Self, D, C>
+    where
+        Self: EvaluateImpl<D, C>,
+    {
+        EvaluateImpl::<D, C>::evaluate_impl(self, input)
+    }
+}
+
+impl<T, D> Evaluate<D> for T where T: Sized {}

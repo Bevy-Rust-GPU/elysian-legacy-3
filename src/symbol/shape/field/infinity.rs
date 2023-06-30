@@ -2,7 +2,7 @@ use crate::{
     Distance, Domains, EvaluateFunction, EvaluateInputs, Gradient, IntoMonad, LiftAdt, Position,
 };
 
-use glam::Vec2;
+use crate::glam::Vec2;
 use t_funk::{
     closure::Const,
     typeclass::{functor::Fmap, monad::Identity},

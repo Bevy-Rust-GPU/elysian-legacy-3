@@ -1,4 +1,4 @@
-use glam::{DVec2, DVec3, DVec4, IVec2, IVec3, IVec4, UVec2, UVec3, UVec4, Vec2, Vec3, Vec4};
+use crate::glam::{DVec2, DVec3, DVec4, IVec2, IVec3, IVec4, UVec2, UVec3, UVec4, Vec2, Vec3, Vec4};
 use t_funk::{
     closure::{Curry2, Curry2B},
     macros::{functions, impl_adt, types},
@@ -28,7 +28,6 @@ impl_adt! {
             | i64
             | f32
             | f64
-            | String
             | Vec2
             | Vec3
             | Vec4
@@ -47,6 +46,15 @@ impl_adt! {
         fn lift_param(self, _: C) -> Self::LiftParam {
             self
         }
+    }
+}
+
+#[cfg(feature = "std")]
+impl<C> LiftParam<C> for String {
+    type LiftParam = Self;
+
+    fn lift_param(self,_:C) -> Self::LiftParam {
+        self
     }
 }
 

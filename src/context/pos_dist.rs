@@ -15,7 +15,7 @@ pub struct PosDist<P, D> {
 
 #[cfg(test)]
 mod test {
-    use glam::Vec2;
+    use crate::glam::Vec2;
     use t_funk::collection::set::{Empty, Insert, Subtraction, Union};
 
     use crate::{Distance, PosDist, Position};

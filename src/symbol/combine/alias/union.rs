@@ -4,8 +4,8 @@ use t_funk::{
 };
 
 use crate::{
-    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
-    EvaluateSide, ExpandAlias, Inherited, IntoMonad, IntoMonadT, Left, LiftAdt, Pair, Right,
+    Alias, Dist, Distance, EvaluatePredicated, EvaluateSelect, ExpandAlias, ExpandAliasT,
+    Inherited, IntoMonad, IntoTuple, IntoTupleT, LiftAdt, Pair,
 };
 
 use t_funk::macros::{functions, types};
@@ -14,29 +14,33 @@ use crate::Combine;
 
 #[functions]
 #[types]
-pub trait Union<T> {
+pub trait UnionTrait<T> {
     type Union;
 
     fn union(self, rhs: T) -> Self::Union;
 }
 
-impl<T, U> Union<U> for T
+impl<T, U> UnionTrait<U> for T
 where
-    T: IntoMonad,
-    U: IntoMonad,
+    T: IntoTuple,
+    U: IntoTuple,
 {
-    type Union = Combine<IntoMonadT<T>, IntoMonadT<U>, IntoMonadT<UnionS>>;
+    type Union = Combine<IntoTupleT<T>, IntoTupleT<U>, IntoTupleT<Union>>;
 
     fn union(self, rhs: U) -> Self::Union {
-        Combine(self.into_monad(), rhs.into_monad(), UnionS.into_monad())
+        Combine(self.into_tuple(), rhs.into_tuple(), Union.into_tuple())
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct UnionS;
+pub struct Union;
 
-impl<F> Fmap<F> for UnionS {
+pub fn union() -> Union {
+    Union
+}
+
+impl<F> Fmap<F> for Union {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -44,7 +48,7 @@ impl<F> Fmap<F> for UnionS {
     }
 }
 
-impl IntoMonad for UnionS {
+impl IntoMonad for Union {
     type IntoMonad = Identity<Self>;
 
     fn into_monad(self) -> Self::IntoMonad {
@@ -52,7 +56,7 @@ impl IntoMonad for UnionS {
     }
 }
 
-impl LiftAdt for UnionS {
+impl LiftAdt for Union {
     type LiftAdt = Alias<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -60,37 +64,22 @@ impl LiftAdt for UnionS {
     }
 }
 
-impl ExpandAlias<Dist<f32>> for UnionS {
-    type ExpandAlias = (
-        EvaluateSide<Left, Inherited, ContextA>,
-        EvaluateSide<Right, Inherited, ContextB>,
-        BooleanConditional<
-            Lt,
-            CopyContext<ContextA, ContextOut>,
-            CopyContext<ContextB, ContextOut>,
-            Distance<f32>,
-        >,
-    );
+impl ExpandAlias<Dist<f32>> for Union {
+    type ExpandAlias = ExpandAliasT<EvaluateSelect<Inherited, Distance<f32>, Lt>, Dist<f32>>;
 
     fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()
     }
 }
 
-impl<D> ExpandAlias<(Distance<f32>, D)> for UnionS
+impl<D> ExpandAlias<(Distance<f32>, D)> for Union
 where
     D: Pair,
 {
-    type ExpandAlias = (
-        EvaluateSide<Left, Dist<f32>, ContextA>,
-        EvaluateSide<Right, Dist<f32>, ContextB>,
-        BooleanConditional<
-            Lt,
-            EvaluateSide<Left, Inherited, ContextOut>,
-            EvaluateSide<Right, Inherited, ContextOut>,
-            Distance<f32>,
-        >,
-    );
+    type ExpandAlias = ExpandAliasT<
+        EvaluatePredicated<Dist<f32>, Inherited, Distance<f32>, Lt>,
+        (Distance<f32>, D),
+    >;
 
     fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()

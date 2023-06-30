@@ -21,12 +21,12 @@ impl_adt! {
 
 #[cfg(test)]
 mod test {
-    use glam::Vec2;
+    use crate::glam::Vec2;
     use t_funk::{
         function::FormatDebug, macros::lift, typeclass::foldable::Foldl, typeclass::functor::Fmap,
     };
 
-    use crate::{Isosurface, Point, Translate};
+    use crate::{IsosurfaceS, Point, TranslateS};
 
     #[lift]
     fn concat(a: String, b: String) -> String {
@@ -35,10 +35,10 @@ mod test {
 
     #[test]
     fn test_adt_foldl() {
-        let adt = (Translate(Vec2::new(0.0, 0.0)), Point, Isosurface(0.0));
+        let adt = (TranslateS(Vec2::new(0.0, 0.0)), Point, IsosurfaceS(0.0));
         let mapped = adt.fmap(FormatDebug);
         let folded = mapped.foldl(Concat, String::default());
 
-        assert_eq!(folded, "Translate(Vec2(0.0, 0.0))PointIsosurface(0.0)")
+        assert_eq!(folded, "TranslateS(Vec2(0.0, 0.0))PointIsosurfaceS(0.0)")
     }
 }

@@ -1,13 +1,14 @@
+use elysian::glam::{Vec2, Vec3};
 use elysian::{
-    Circle, Color, Context, ContextRasterImage, Dist, DistColorToRgb, Distance, Evaluate,
-    IntoMonad, IntoMonadT, Isosurface, Manifold, PosDistColor, Position, Raster, RasterToImage,
-    Rasterizer, Scale, Set, Subtraction, Translate, Union, ViuerPrinter,
+    Circle, Color, Context, ContextRasterImage, Dist, DistColorToRgb, Distance, EvaluateImpl,
+    FoldCombine, Isomanifold, MakeSubtraction, PosDistColor, Position, Raster, RasterToImage,
+    Rasterizer, Scale, Set, Translate, Union, ViuerPrinter,
 };
-use glam::{Vec2, Vec3};
 use image::{ImageBuffer, Rgb};
 use t_funk::{
-    closure::{Closure, Curry2, Curry2A},
+    closure::{Curry2, Curry2A},
     macros::lift,
+    typeclass::functor::Fmap,
 };
 
 // TODO: Reimplement printing behaviour
@@ -44,70 +45,61 @@ fn main() {
     >;
 
     #[lift]
-    fn viuer<T>(t: T)
+    fn viuer<T>(t: T) -> T
     where
-        T: IntoMonad,
+        T: Clone,
         (
-            Rasterizer<IntoMonadT<T>, ShapeCtxFrom>,
+            Rasterizer<T, ShapeCtxFrom>,
             RasterToImage<ShapeCtxTo, Curry2A<DistColorToRgb, (Vec3, f32)>>,
             ViuerPrinter<ImageBuffer<Rgb<f32>, Vec<f32>>>,
-        ): Evaluate<Domains, RasterCtx>,
+        ): EvaluateImpl<Domains, RasterCtx>,
     {
-        let t = t.into_monad();
-
         let comp = (
-            Rasterizer::<IntoMonadT<T>, ShapeCtxFrom> {
+            Rasterizer::<T, ShapeCtxFrom> {
                 width: 48,
                 height: 48,
-                shape: t,
+                shape: t.clone(),
                 context: Default::default(),
             },
-            RasterToImage(DistColorToRgb.prefix2((Vec3::ZERO, 48.0)), Default::default()),
+            RasterToImage(
+                DistColorToRgb.prefix2((Vec3::ZERO, 48.0)),
+                Default::default(),
+            ),
             ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default(),
         );
 
-        comp.evaluate(Default::default());
+        comp.evaluate_impl(Default::default());
+
+        t
     }
 
-    let shape_a = (
-        Translate(Vec2::new(-0.5, -0.5)),
-        Circle(1.2_f32),
-        Set(Color(Vec3::X)),
-    );
-    Viuer.call(shape_a);
+    let shape_a = Circle(1.2_f32)
+        .translate(Vec2::new(-0.5, -0.5))
+        .set(Color(Vec3::X));
 
-    let shape_b = (
-        Translate(Vec2::new(0.5, 0.5)),
-        Circle(1.1_f32),
-        Set(Color(Vec3::Y)),
-    );
-    Viuer.call(shape_b);
+    let shape_b = Circle(1.1_f32)
+        .translate(Vec2::new(0.5, 0.5))
+        .set(Color(Vec3::Y));
 
-    let shape_c = (
-        Translate(Vec2::new(0.0, 0.5)),
-        Circle(1.3_f32),
-        Set(Color(Vec3::Z)),
-    );
-    Viuer.call(shape_c);
+    let shape_c = Circle(1.3_f32)
+        .translate(Vec2::new(0.0, 0.5))
+        .set(Color(Vec3::Z));
 
-    let shape_d = (
-        Translate(Vec2::new(0.0, -0.5)),
-        Circle(1.15_f32),
-        Set(Color(Vec3::ONE)),
-    );
-    Viuer.call(shape_d);
+    let shape_d = Circle(1.15_f32)
+        .translate(Vec2::new(0.0, -0.5))
+        .set(Color(Vec3::ONE));
 
-    let combined = shape_a.union(shape_b).union(shape_c).subtraction(shape_d);
-    Viuer.call(combined);
+    (shape_a, shape_b, shape_c, shape_d).fmap(viuer);
 
-    let shape = Scale(
-        0.5_f32,
-        (
-            Translate(Vec2::new(0.25, 0.25)),
-            combined,
-            Manifold,
-            Isosurface(0.5_f32),
-        ),
-    );
-    Viuer.call(shape);
+    let combined = (shape_a, shape_b, shape_c)
+        .fold_combine(Union)
+        .subtraction(shape_d);
+    viuer(combined);
+
+    let shape = combined
+        .translate(Vec2::new(0.25, 0.25))
+        .isomanifold(0.5_f32)
+        .scale(0.5_f32);
+
+    viuer(shape);
 }

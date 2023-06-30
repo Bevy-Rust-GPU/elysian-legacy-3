@@ -1,11 +1,12 @@
 use t_funk::{
+    closure::Curry2B,
     function::Lt,
     typeclass::{functor::Fmap, monad::Identity},
 };
 
 use crate::{
-    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Distance, EvaluateSide,
-    ExpandAlias, Inherited, InsertProperty, IntoMonad, IntoMonadT, Left, LiftAdt, Right,
+    Alias, ContextOut, Dist, Distance, EvaluateSide, ExpandAlias, Inherited, IntoMonad, IntoTuple,
+    IntoTupleT, Left, LiftAdt, Right, UnaryConditional,
 };
 
 use t_funk::macros::{functions, types};
@@ -14,29 +15,33 @@ use crate::Combine;
 
 #[functions]
 #[types]
-pub trait Overlay<T> {
+pub trait MakeOverlay<T> {
     type Overlay;
 
     fn overlay(self, rhs: T) -> Self::Overlay;
 }
 
-impl<T, U> Overlay<U> for T
+pub fn overlay() -> Overlay {
+    Overlay
+}
+
+impl<T, U> MakeOverlay<U> for T
 where
-    T: IntoMonad,
-    U: IntoMonad,
+    T: IntoTuple,
+    U: IntoTuple,
 {
-    type Overlay = Combine<IntoMonadT<T>, IntoMonadT<U>, IntoMonadT<OverlayS>>;
+    type Overlay = Combine<IntoTupleT<T>, IntoTupleT<U>, IntoTupleT<Overlay>>;
 
     fn overlay(self, rhs: U) -> Self::Overlay {
-        Combine(self.into_monad(), rhs.into_monad(), OverlayS.into_monad())
+        Combine(self.into_tuple(), rhs.into_tuple(), Overlay.into_tuple())
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct OverlayS;
+pub struct Overlay;
 
-impl<F> Fmap<F> for OverlayS {
+impl<F> Fmap<F> for Overlay {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -44,7 +49,7 @@ impl<F> Fmap<F> for OverlayS {
     }
 }
 
-impl IntoMonad for OverlayS {
+impl IntoMonad for Overlay {
     type IntoMonad = Identity<Self>;
 
     fn into_monad(self) -> Self::IntoMonad {
@@ -52,7 +57,7 @@ impl IntoMonad for OverlayS {
     }
 }
 
-impl LiftAdt for OverlayS {
+impl LiftAdt for Overlay {
     type LiftAdt = Alias<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -60,16 +65,15 @@ impl LiftAdt for OverlayS {
     }
 }
 
-impl<D> ExpandAlias<D> for OverlayS {
+impl<D> ExpandAlias<D> for Overlay {
     type ExpandAlias = (
-        EvaluateSide<Right, Inherited, ContextA>,
-        CopyContext<ContextA, ContextB>,
-        InsertProperty<Distance<f32>, ContextB>,
-        BooleanConditional<
-            Lt,
-            CopyContext<ContextA, ContextOut>,
-            EvaluateSide<Left, Inherited, ContextOut>,
+        EvaluateSide<Right, Dist<f32>, ContextOut>,
+        UnaryConditional<
+            ContextOut,
             Distance<f32>,
+            Curry2B<Lt, Distance<f32>>,
+            EvaluateSide<Right, Inherited, ContextOut>,
+            EvaluateSide<Left, Inherited, ContextOut>,
         >,
     );
 

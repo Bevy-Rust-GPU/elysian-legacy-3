@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use t_funk::{
     closure::{Closure, ComposeLF, OutputT},
@@ -7,10 +7,16 @@ use t_funk::{
     typeclass::{
         foldable::{Foldr, FoldrT},
         functor::{Fmap, FmapT},
+        monad::Identity,
+        semigroup::MappendT,
     },
 };
 
-use crate::{EvaluateFunction, LiftAdt, LiftEvaluateF, Pair, Run, ShapeA, ShapeB};
+use crate::{
+    Alias, BinaryConditional, ContextA, ContextB, ContextOut, CopyContext, EvaluateFunction,
+    ExpandAlias, ExpandAliasT, IntoMonad, IntoTupleT, LiftAdt, LiftEvaluateF, Pair, Run, ShapeA,
+    ShapeB,
+};
 
 use super::{ContextIn, InheritedA, InheritedB};
 
@@ -150,5 +156,123 @@ where
                 .foldr(ComposeLF, Id)
                 .call(context_in),
         )
+    }
+}
+
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EvaluateBoth<T>(PhantomData<T>);
+
+impl<T> IntoMonad for EvaluateBoth<T> {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
+
+impl<T> LiftAdt for EvaluateBoth<T> {
+    type LiftAdt = Alias<Self>;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        Alias(self)
+    }
+}
+
+impl<T, D> ExpandAlias<D> for EvaluateBoth<T>
+where
+    T: Default,
+{
+    type ExpandAlias = (
+        EvaluateSide<Left, T, ContextA>,
+        EvaluateSide<Right, T, ContextB>,
+    );
+
+    fn expand_alias(self) -> Self::ExpandAlias {
+        Default::default()
+    }
+}
+
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EvaluateSelect<D, T, F>(pub F, pub PhantomData<(D, T)>);
+
+impl<D, T, F> IntoMonad for EvaluateSelect<D, T, F> {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
+
+impl<D, T, F> LiftAdt for EvaluateSelect<D, T, F> {
+    type LiftAdt = Alias<Self>;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        Alias(self)
+    }
+}
+
+impl<D, T, F, E> ExpandAlias<E> for EvaluateSelect<D, T, F>
+where
+    D: Default,
+    T: Default,
+    F: Default,
+{
+    type ExpandAlias = MappendT<
+        ExpandAliasT<EvaluateBoth<D>, E>,
+        IntoTupleT<
+            BinaryConditional<
+                T,
+                F,
+                CopyContext<ContextA, ContextOut>,
+                CopyContext<ContextB, ContextOut>,
+            >,
+        >,
+    >;
+
+    fn expand_alias(self) -> Self::ExpandAlias {
+        Default::default()
+    }
+}
+
+#[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EvaluatePredicated<P, D, T, F>(pub F, pub PhantomData<(P, D, T)>);
+
+impl<P, D, T, F> IntoMonad for EvaluatePredicated<P, D, T, F> {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
+
+impl<P, D, T, F> LiftAdt for EvaluatePredicated<P, D, T, F> {
+    type LiftAdt = Alias<Self>;
+
+    fn lift_adt(self) -> Self::LiftAdt {
+        Alias(self)
+    }
+}
+
+impl<P, D, T, F, E> ExpandAlias<E> for EvaluatePredicated<P, D, T, F>
+where
+    P: Default,
+    D: Default,
+    T: Default,
+    F: Default,
+{
+    type ExpandAlias = MappendT<
+        ExpandAliasT<EvaluateBoth<P>, E>,
+        IntoTupleT<
+            BinaryConditional<
+                T,
+                F,
+                EvaluateSide<Left, D, ContextOut>,
+                EvaluateSide<Right, D, ContextOut>,
+            >,
+        >,
+    >;
+
+    fn expand_alias(self) -> Self::ExpandAlias {
+        Default::default()
     }
 }

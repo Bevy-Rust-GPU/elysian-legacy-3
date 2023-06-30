@@ -1,6 +1,6 @@
 //! Gradient domain
 
-use std::ops::{Mul, Neg};
+use core::ops::{Mul, Neg};
 
 use crate::LiftParam;
 

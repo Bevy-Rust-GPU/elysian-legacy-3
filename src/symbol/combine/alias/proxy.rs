@@ -1,13 +1,13 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use t_funk::{
     function::{Id, Lt},
-    typeclass::{monad::Identity, functor::Fmap},
+    typeclass::{functor::Fmap, monad::Identity, semigroup::MappendT},
 };
 
 use crate::{
-    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, CopyProperty, Distance,
-    EvaluateSide, ExpandAlias, Inherited, Left, LiftAdt, Right, IntoMonad,
+    Alias, BinaryConditional, ContextA, ContextB, ContextOut, CopyContext, CopyProperty, Distance,
+    EvaluateBoth, ExpandAlias, ExpandAliasT, Inherited, IntoMonad, LiftAdt,
 };
 
 use t_funk::macros::types;
@@ -15,25 +15,25 @@ use t_funk::macros::types;
 use crate::Combine;
 
 #[types]
-pub trait Proxy<U> {
+pub trait MakeProxy<U> {
     type Proxy<T>;
 
     fn proxy<T>(self, rhs: U) -> Self::Proxy<T>;
 }
 
-impl<T, R> Proxy<R> for T {
-    type Proxy<U> = Combine<Self, R, Identity<ProxyS<U>>>;
+impl<T, R> MakeProxy<R> for T {
+    type Proxy<U> = Combine<Self, R, Identity<Proxy<U>>>;
 
     fn proxy<U>(self, rhs: R) -> Self::Proxy<U> {
-        Combine(self, rhs, Identity(ProxyS(PhantomData::<U>)))
+        Combine(self, rhs, Identity(Proxy(PhantomData::<U>)))
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct ProxyS<T>(pub PhantomData<T>);
+pub struct Proxy<T>(pub PhantomData<T>);
 
-impl<T, F> Fmap<F> for ProxyS<T> {
+impl<T, F> Fmap<F> for Proxy<T> {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -41,7 +41,7 @@ impl<T, F> Fmap<F> for ProxyS<T> {
     }
 }
 
-impl<T> IntoMonad for ProxyS<T> {
+impl<T> IntoMonad for Proxy<T> {
     type IntoMonad = Identity<Self>;
 
     fn into_monad(self) -> Self::IntoMonad {
@@ -49,7 +49,7 @@ impl<T> IntoMonad for ProxyS<T> {
     }
 }
 
-impl<T> LiftAdt for ProxyS<T> {
+impl<T> LiftAdt for Proxy<T> {
     type LiftAdt = Alias<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -57,13 +57,14 @@ impl<T> LiftAdt for ProxyS<T> {
     }
 }
 
-impl<T, D> ExpandAlias<D> for ProxyS<T> {
-    type ExpandAlias = (
-        EvaluateSide<Left, Inherited, ContextA>,
-        EvaluateSide<Right, Inherited, ContextB>,
-        CopyContext<ContextA, ContextOut>,
-        BooleanConditional<Lt, Id, CopyProperty<T, ContextB, ContextOut>, Distance<f32>>,
-    );
+impl<T, D> ExpandAlias<D> for Proxy<T> {
+    type ExpandAlias = MappendT<
+        ExpandAliasT<EvaluateBoth<Inherited>, D>,
+        (
+            CopyContext<ContextA, ContextOut>,
+            BinaryConditional<Distance<f32>, Lt, Id, CopyProperty<T, ContextB, ContextOut>>,
+        ),
+    >;
 
     fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()

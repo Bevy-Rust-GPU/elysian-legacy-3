@@ -1,7 +1,7 @@
 //! Distance domain
 //! Subdomain of position
 
-use std::ops::Neg;
+use core::ops::Neg;
 
 use t_funk::macros::{
     applicative::Applicative, functor::Functor, monad::Monad, Copointed, Pointed,

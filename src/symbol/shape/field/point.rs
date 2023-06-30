@@ -1,6 +1,6 @@
 use crate::{Distance, Domains, EvaluateFunction, EvaluateInputs, Gradient, LiftAdt, Position, IntoMonad};
 
-use glam::Vec2;
+use crate::glam::Vec2;
 use t_funk::{macros::lift, typeclass::{functor::Fmap, monad::Identity}};
 
 // Point field symbol

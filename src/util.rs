@@ -1,4 +1,3 @@
-use image::{DynamicImage, RgbaImage};
 use t_funk::macros::lift;
 
 /// Private trait identifying types equivalent to a 2-tuple
@@ -39,17 +38,25 @@ pub fn as_usize(t: f32) -> usize {
     t as usize
 }
 
-/// Convert a collection of characters into a string
-#[lift]
-pub fn chars_to_string<T>(t: T) -> String
-where
-    T: IntoIterator<Item = char>,
-{
-    t.into_iter().map(|c| c.to_string()).collect()
+#[cfg(feature = "std")]
+mod standard {
+    use image::{DynamicImage, RgbaImage};
+
+    /// Convert a collection of characters into a string
+    #[lift]
+    pub fn chars_to_string<T>(t: T) -> String
+    where
+        T: IntoIterator<Item = char>,
+    {
+        t.into_iter().map(|c| c.to_string()).collect()
+    }
+
+    /// Convert a DynamicImage into an RgbaImage
+    #[lift]
+    pub fn to_rgba8(t: DynamicImage) -> RgbaImage {
+        t.to_rgba8()
+    }
 }
 
-/// Convert a DynamicImage into an RgbaImage
-#[lift]
-pub fn to_rgba8(t: DynamicImage) -> RgbaImage {
-    t.to_rgba8()
-}
+#[cfg(feature = "std")]
+pub use standard::*;

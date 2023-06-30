@@ -1,13 +1,13 @@
 use t_funk::{
     closure::ComposeLT,
     function::{Gt, Neg},
-    typeclass::{functor::Fmap, monad::Identity},
+    typeclass::{functor::Fmap, monad::Identity, semigroup::MappendT},
 };
 
 use crate::{
-    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
-    EvaluateSide, ExpandAlias, Inherited, IntoMonad, IntoMonadT, Left, LiftAdt, MapProperty, Pair,
-    Right,
+    Alias, BinaryConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
+    EvaluateBoth, EvaluateSide, ExpandAlias, ExpandAliasT, Inherited, IntoMonad, IntoTuple,
+    IntoTupleT, Left, LiftAdt, MapProperty, Pair, Right,
 };
 
 use t_funk::macros::{functions, types};
@@ -16,33 +16,33 @@ use crate::Combine;
 
 #[functions]
 #[types]
-pub trait Subtraction<R> {
+pub trait MakeSubtraction<R> {
     type Subtraction;
 
     fn subtraction(self, rhs: R) -> Self::Subtraction;
 }
 
-impl<T, U> Subtraction<U> for T
+impl<T, U> MakeSubtraction<U> for T
 where
-    T: IntoMonad,
-    U: IntoMonad,
+    T: IntoTuple,
+    U: IntoTuple,
 {
-    type Subtraction = Combine<IntoMonadT<T>, IntoMonadT<U>, IntoMonadT<SubtractionS>>;
+    type Subtraction = Combine<IntoTupleT<T>, IntoTupleT<U>, IntoTupleT<Subtraction>>;
 
     fn subtraction(self, rhs: U) -> Self::Subtraction {
         Combine(
-            self.into_monad(),
-            rhs.into_monad(),
-            SubtractionS.into_monad(),
+            self.into_tuple(),
+            rhs.into_tuple(),
+            Subtraction.into_tuple(),
         )
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct SubtractionS;
+pub struct Subtraction;
 
-impl<F> Fmap<F> for SubtractionS {
+impl<F> Fmap<F> for Subtraction {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -50,7 +50,7 @@ impl<F> Fmap<F> for SubtractionS {
     }
 }
 
-impl IntoMonad for SubtractionS {
+impl IntoMonad for Subtraction {
     type IntoMonad = Identity<Self>;
 
     fn into_monad(self) -> Self::IntoMonad {
@@ -58,7 +58,7 @@ impl IntoMonad for SubtractionS {
     }
 }
 
-impl LiftAdt for SubtractionS {
+impl LiftAdt for Subtraction {
     type LiftAdt = Alias<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -66,42 +66,44 @@ impl LiftAdt for SubtractionS {
     }
 }
 
-impl ExpandAlias<Dist<f32>> for SubtractionS {
-    type ExpandAlias = (
-        EvaluateSide<Left, Inherited, ContextA>,
-        EvaluateSide<Right, Inherited, ContextB>,
-        MapProperty<ContextB, Distance<f32>, Neg>,
-        BooleanConditional<
-            Gt,
-            CopyContext<ContextA, ContextOut>,
-            CopyContext<ContextB, ContextOut>,
-            Distance<f32>,
-        >,
-    );
+impl ExpandAlias<Dist<f32>> for Subtraction {
+    type ExpandAlias = MappendT<
+        ExpandAliasT<EvaluateBoth<Inherited>, Dist<f32>>,
+        (
+            MapProperty<ContextB, Distance<f32>, Neg>,
+            BinaryConditional<
+                Distance<f32>,
+                Gt,
+                CopyContext<ContextA, ContextOut>,
+                CopyContext<ContextB, ContextOut>,
+            >,
+        ),
+    >;
 
     fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()
     }
 }
 
-impl<D> ExpandAlias<(Distance<f32>, D)> for SubtractionS
+impl<D> ExpandAlias<(Distance<f32>, D)> for Subtraction
 where
     D: Pair,
 {
-    type ExpandAlias = (
-        EvaluateSide<Left, Dist<f32>, ContextA>,
-        EvaluateSide<Right, Dist<f32>, ContextB>,
-        MapProperty<ContextB, Distance<f32>, Neg>,
-        BooleanConditional<
-            Gt,
-            EvaluateSide<Left, Inherited, ContextOut>,
-            ComposeLT<
-                EvaluateSide<Right, Inherited, ContextOut>,
-                MapProperty<ContextOut, Distance<f32>, Neg>,
+    type ExpandAlias = MappendT<
+        ExpandAliasT<EvaluateBoth<Dist<f32>>, (Distance<f32>, D)>,
+        (
+            MapProperty<ContextB, Distance<f32>, Neg>,
+            BinaryConditional<
+                Distance<f32>,
+                Gt,
+                EvaluateSide<Left, Inherited, ContextOut>,
+                ComposeLT<
+                    EvaluateSide<Right, Inherited, ContextOut>,
+                    MapProperty<ContextOut, Distance<f32>, Neg>,
+                >,
             >,
-            Distance<f32>,
-        >,
-    );
+        ),
+    >;
 
     fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()

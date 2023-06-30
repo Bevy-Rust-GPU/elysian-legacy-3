@@ -1,18 +1,38 @@
 mod raster;
 pub use raster::*;
 
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
-use glam::Vec2;
+use crate::glam::Vec2;
 use t_funk::{
     closure::Closure,
     collection::set::{Insert, InsertT},
-    typeclass::functor::Fmap,
+    typeclass::{functor::Fmap, monad::Identity},
 };
 
 use crate::{
-    Context, Evaluate, EvaluateFunction, EvaluateInputs, EvaluateT, LiftAdt, Modify, Position,
+    Context, EvaluateFunction, EvaluateImpl, EvaluateImplT, EvaluateInputs, IntoMonad, IntoTuple,
+    IntoTupleT, LiftAdt, Modify, Position,
 };
+
+pub trait Rasterize {
+    type Rasterize<C>;
+
+    fn rasterize<C>(self, w: usize, h: usize) -> Self::Rasterize<C>;
+}
+
+impl<T> Rasterize for T {
+    type Rasterize<C> = Rasterizer<T, C>;
+
+    fn rasterize<C>(self, width: usize, height: usize) -> Self::Rasterize<C> {
+        Rasterizer {
+            width,
+            height,
+            shape: self,
+            context: PhantomData,
+        }
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Rasterizer<S, C> {
@@ -60,6 +80,14 @@ impl<S, C, F> Fmap<F> for Rasterizer<S, C> {
     }
 }
 
+impl<S, C> IntoMonad for Rasterizer<S, C> {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
+
 impl<S, C> LiftAdt for Rasterizer<S, C> {
     type LiftAdt = Modify<Self>;
 
@@ -96,11 +124,12 @@ pub struct RasterizeF<S, D> {
 
 impl<D, C, S> Closure<Context<C>> for RasterizeF<S, D>
 where
-    S: Clone + Evaluate<D, InsertT<C, Position<Vec2>>>,
-    EvaluateT<S, D, InsertT<C, Position<Vec2>>>: Default + Clone,
+    S: Clone + IntoTuple,
+    IntoTupleT<S>: Clone + EvaluateImpl<D, InsertT<C, Position<Vec2>>>,
+    EvaluateImplT<IntoTupleT<S>, D, InsertT<C, Position<Vec2>>>: Default + Clone,
     C: Clone + Insert<Position<Vec2>>,
 {
-    type Output = Raster<EvaluateT<S, D, InsertT<C, Position<Vec2>>>>;
+    type Output = Raster<EvaluateImplT<IntoTupleT<S>, D, InsertT<C, Position<Vec2>>>>;
 
     fn call(self, Context(ctx): Context<C>) -> Self::Output {
         let mut out: Self::Output = Raster::new(self.width, self.height);
@@ -108,8 +137,8 @@ where
             for (x, col) in row.iter_mut().enumerate() {
                 let nx = ((x as f32 + 0.5) / self.width as f32) * 2.0 - 1.0;
                 let ny = ((y as f32 + 0.5) / self.height as f32) * 2.0 - 1.0;
-                *col = Evaluate::<D, InsertT<C, Position<Vec2>>>::evaluate(
-                    self.shape.clone(),
+                *col = EvaluateImpl::<D, InsertT<C, Position<Vec2>>>::evaluate_impl(
+                    self.shape.clone().into_tuple(),
                     ctx.clone().insert(Position(Vec2::new(nx, ny))),
                 );
             }

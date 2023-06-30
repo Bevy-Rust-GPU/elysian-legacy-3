@@ -1,8 +1,11 @@
-use t_funk::{function::Gt, typeclass::{monad::Identity, functor::Fmap}};
+use t_funk::{
+    function::Gt,
+    typeclass::{functor::Fmap, monad::Identity},
+};
 
 use crate::{
-    Alias, BooleanConditional, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
-    EvaluateSide, ExpandAlias, Inherited, IntoMonad, IntoMonadT, Left, LiftAdt, Pair, Right,
+    Alias, Dist, Distance, EvaluatePredicated, EvaluateSelect, ExpandAlias, ExpandAliasT,
+    Inherited, IntoMonad, IntoTuple, IntoTupleT, LiftAdt, Pair,
 };
 
 use t_funk::macros::{functions, types};
@@ -11,33 +14,33 @@ use crate::Combine;
 
 #[functions]
 #[types]
-pub trait Intersection<R> {
+pub trait MakeIntersection<R> {
     type Intersection;
 
     fn intersection(self, rhs: R) -> Self::Intersection;
 }
 
-impl<T, U> Intersection<U> for T
+impl<T, U> MakeIntersection<U> for T
 where
-    T: IntoMonad,
-    U: IntoMonad,
+    T: IntoTuple,
+    U: IntoTuple,
 {
-    type Intersection = Combine<IntoMonadT<T>, IntoMonadT<U>, IntoMonadT<IntersectionS>>;
+    type Intersection = Combine<IntoTupleT<T>, IntoTupleT<U>, IntoTupleT<Intersection>>;
 
     fn intersection(self, rhs: U) -> Self::Intersection {
         Combine(
-            self.into_monad(),
-            rhs.into_monad(),
-            IntersectionS.into_monad(),
+            self.into_tuple(),
+            rhs.into_tuple(),
+            Intersection.into_tuple(),
         )
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct IntersectionS;
+pub struct Intersection;
 
-impl<F> Fmap<F> for IntersectionS {
+impl<F> Fmap<F> for Intersection {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -45,7 +48,7 @@ impl<F> Fmap<F> for IntersectionS {
     }
 }
 
-impl IntoMonad for IntersectionS {
+impl IntoMonad for Intersection {
     type IntoMonad = Identity<Self>;
 
     fn into_monad(self) -> Self::IntoMonad {
@@ -53,7 +56,7 @@ impl IntoMonad for IntersectionS {
     }
 }
 
-impl LiftAdt for IntersectionS {
+impl LiftAdt for Intersection {
     type LiftAdt = Alias<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -61,37 +64,22 @@ impl LiftAdt for IntersectionS {
     }
 }
 
-impl ExpandAlias<Dist<f32>> for IntersectionS {
-    type ExpandAlias = (
-        EvaluateSide<Left, Inherited, ContextA>,
-        EvaluateSide<Right, Inherited, ContextB>,
-        BooleanConditional<
-            Gt,
-            CopyContext<ContextA, ContextOut>,
-            CopyContext<ContextB, ContextOut>,
-            Distance<f32>,
-        >,
-    );
+impl ExpandAlias<Dist<f32>> for Intersection {
+    type ExpandAlias = ExpandAliasT<EvaluateSelect<Inherited, Distance<f32>, Gt>, Dist<f32>>;
 
     fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()
     }
 }
 
-impl<D> ExpandAlias<(Distance<f32>, D)> for IntersectionS
+impl<D> ExpandAlias<(Distance<f32>, D)> for Intersection
 where
     D: Pair,
 {
-    type ExpandAlias = (
-        EvaluateSide<Left, Dist<f32>, ContextA>,
-        EvaluateSide<Right, Dist<f32>, ContextB>,
-        BooleanConditional<
-            Gt,
-            EvaluateSide<Left, Inherited, ContextOut>,
-            EvaluateSide<Right, Inherited, ContextOut>,
-            Distance<f32>,
-        >,
-    );
+    type ExpandAlias = ExpandAliasT<
+        EvaluatePredicated<Dist<f32>, Inherited, Distance<f32>, Gt>,
+        (Distance<f32>, D),
+    >;
 
     fn expand_alias(self) -> Self::ExpandAlias {
         Default::default()

@@ -1,46 +1,42 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use t_funk::{
-    closure::{Compose, ComposeT},
+    closure::{Curry2, Curry2B},
     function::Gt,
     macros::{functions, types},
-    typeclass::{monad::Identity, functor::Fmap},
+    typeclass::{functor::Fmap, monad::Identity},
 };
 
 use crate::{
-    BooleanConditional, Combine, ContextA, ContextB, ContextOut, CopyContext, Dist, Distance,
-    EvaluateSide, ExpandAlias, Inherited, InsertProperty, IntoMonad, IntoMonadT, Left, Right, LiftAdt, Alias,
+    Alias, Combine, ContextOut, Dist, Distance, EvaluateSide, ExpandAlias, Inherited,
+    InsertProperty, IntoMonad, IntoTuple, IntoTupleT, Left, LiftAdt, Right, UnaryConditional,
 };
 
 #[functions]
 #[types]
-pub trait OuterBound<R> {
+pub trait MakeOuterBound<R> {
     type OuterBound;
 
     fn outer_bound(self, rhs: R) -> Self::OuterBound;
 }
 
-impl<T, U> OuterBound<U> for T
+impl<T, U> MakeOuterBound<U> for T
 where
-    T: IntoMonad,
-    U: IntoMonad,
+    T: IntoTuple,
+    U: IntoTuple,
 {
-    type OuterBound = Combine<IntoMonadT<T>, IntoMonadT<U>, IntoMonadT<OuterBoundS>>;
+    type OuterBound = Combine<IntoTupleT<T>, IntoTupleT<U>, IntoTupleT<OuterBound>>;
 
     fn outer_bound(self, rhs: U) -> Self::OuterBound {
-        Combine(
-            self.into_monad(),
-            rhs.into_monad(),
-            OuterBoundS.into_monad(),
-        )
+        Combine(self.into_tuple(), rhs.into_tuple(), OuterBound.into_tuple())
     }
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct OuterBoundS;
+pub struct OuterBound;
 
-impl<F> Fmap<F> for OuterBoundS {
+impl<F> Fmap<F> for OuterBound {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -48,7 +44,7 @@ impl<F> Fmap<F> for OuterBoundS {
     }
 }
 
-impl IntoMonad for OuterBoundS {
+impl IntoMonad for OuterBound {
     type IntoMonad = Identity<Self>;
 
     fn into_monad(self) -> Self::IntoMonad {
@@ -56,7 +52,7 @@ impl IntoMonad for OuterBoundS {
     }
 }
 
-impl LiftAdt for OuterBoundS {
+impl LiftAdt for OuterBound {
     type LiftAdt = Alias<Self>;
 
     fn lift_adt(self) -> Self::LiftAdt {
@@ -64,32 +60,26 @@ impl LiftAdt for OuterBoundS {
     }
 }
 
-impl<D> ExpandAlias<D> for OuterBoundS {
+impl<D> ExpandAlias<D> for OuterBound {
     type ExpandAlias = (
-        EvaluateSide<Left, (Distance<f32>, ()), ContextA>,
-        CopyContext<ContextA, ContextB>,
-        InsertProperty<Distance<f32>, ContextB>,
-        BooleanConditional<
-            Gt,
-            EvaluateSide<Right, Inherited, ContextOut>,
-            ComposeT<InsertProperty<Distance<f32>, ContextOut>, CopyContext<ContextB, ContextOut>>,
+        EvaluateSide<Left, Dist<f32>, ContextOut>,
+        UnaryConditional<
+            ContextOut,
             Distance<f32>,
+            Curry2B<Gt, Distance<f32>>,
+            EvaluateSide<Right, Inherited, ContextOut>,
+            InsertProperty<Distance<f32>, ContextOut>,
         >,
     );
 
     fn expand_alias(self) -> Self::ExpandAlias {
         (
-            EvaluateSide::<Left, Dist<f32>, ContextA>::default(),
-            CopyContext::<ContextA, ContextB>::default(),
-            InsertProperty(Distance(0.0), PhantomData::<ContextB>),
-            BooleanConditional(
-                Gt,
+            EvaluateSide::<Left, Dist<f32>, ContextOut>::default(),
+            UnaryConditional(
+                Gt.suffix2(Distance(0.0)),
                 EvaluateSide::<Right, Inherited, ContextOut>::default(),
-                CopyContext::<ContextB, ContextOut>::default().compose_l(InsertProperty(
-                    Distance(f32::INFINITY),
-                    PhantomData::<ContextOut>,
-                )),
-                PhantomData::<Distance<f32>>,
+                InsertProperty(Distance(f32::INFINITY), PhantomData::<ContextOut>),
+                PhantomData,
             ),
         )
     }

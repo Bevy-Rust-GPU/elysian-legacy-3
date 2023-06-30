@@ -552,13 +552,60 @@
 
   DONE: Implemented via Overlay alias
 
-=======================================================================================================================
-
 * Smooth color overlaying
   * Need to be able to smoothly blend between background and foreground
   * Since boolean version uses foreground distance < 0 as a predicate,
     should be able to control this by mapping it to a range.
     ex. -0.5 fg distance = full fg, 0.5 fg distance = full bg
+
+  DONE: Implemented as SmoothOverlay, using the new UnaryConditional function
+
+* Refactor IntoMonad instances to output 1-tuples
+  * Allows mappend
+  * Enables A, B -> ((A,), (B,)) -> (A, B) abstractions
+    * ex. Prefixing position modifiers, suffixing distance modifiers
+  * Probably better to take a monadic type and transparently
+    Chain it into a 1-tuple, since that avoids locking down to a
+    specific representation
+
+* Trait-based application for modifier symbols
+  * Set, Combine, Translate, Manifold, Isosurface, etc
+  * Combine should take the RHS shape and combination subprogram
+    * Should in theory allow ergonomic composition
+
+* Monoid instances for combiner functions
+  ex. Being able to use (foo, bar, baz).fmap(MakeUnion).mconcat()
+      to fold a tuple of symbols into nested Combines
+  * mconcat would output a Monadic type,
+    so preferable that the surrounding systems are
+    general enough to be able to use it directly
+  * Potentially very powerful via a prospective MakeCombine monoid
+    * Provide the combiner subprogram once, mconcat an arbitrary-length list with it
+
+  DONE: Implemented as FoldCombine, MakeMonoidCombine, MonoidCombine
+
+* Discretize combiner functions
+  * Currently unergonomic for literal use, should be able to create abstractions
+    to specialize around explicit per-domain blending
+
+  DONE: Implemented EvaluatePredicated and EvaluateSelect to abstract
+        over common functionality.
+        In addition, settled on distance-only for smooth combiners,
+        with other properties being dragged through via boolean
+        for potential blending by downstream code
+
+=======================================================================================================================
+
+* Generalize blending
+  * Need to investigate why PolynomialSmoothOverlay doesn't expand to an alias
+    when used in monoid composition
+  * Boolean, polynomial lerp, dither, noise, etc
+
+* Rust-GPU compatibility pass
+  * Port diagrams example field into a shader
+
+* Crate structure pass
+  * Bevy-style multi-crate setup
 
 * Abstract over multi-frame evaluation
   * ex:
@@ -574,8 +621,7 @@
   * Local origins
   * Envelope-based layout
     * Alignment (i.e. envelope fit vs plane)
-  * Snug fit via raycasting
-  * Monoid composition
+  * Snug fit via raymarching / binary search
   * Points
   * Segments
   * Lines
@@ -596,6 +642,7 @@
           though may not be mandatory if strongly-typed recursive control flow is viable
     * EDSL graph visualizer
       * Create a new EDSL visualizing the graph as UI primitives
+      * Seems like a mapping operation
     * Graph optimizer
     * Bevy hierarchy generator
       * Interpret boolean union as breaking a child out of its parent hierarchy
@@ -604,13 +651,6 @@
         * ex. Layout:
           Replace a Combine<A, B, AxialFit> with Combine<Shape<Translate, A>, Shape<Translate, B>, Union>
           * Where AxialFit is semantically equivalent to raycast-based layout from Haskell diagrams
-          * This raises the question of how AxialFit relates to Union
-            * Suggests the need for composable Combine subtypes?
-              * Devil's advocate says this may be overkill,
-                since ex. horizontal layout aims to avoid overlap
-              * However, making it compositional strengthens semantics
-                and eases implementation for coupled cases
-                (i.e. via type alias or function call wrapping)
           * Code should be shareable between runtime and static evaluation
 
 * Investigate more idiomatic Raster -> ImageBuffer conversion

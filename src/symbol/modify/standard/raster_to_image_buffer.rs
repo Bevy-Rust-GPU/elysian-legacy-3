@@ -1,18 +1,53 @@
 use std::marker::PhantomData;
 
-use glam::{Vec2, Vec3};
-use image::{ImageBuffer, Luma, Pixel, Rgb};
+use crate::glam::{Vec2, Vec3, Vec4};
+use image::{ImageBuffer, Luma, Pixel, Rgb, Rgba};
 use t_funk::{
     closure::{Closure, OutputT},
     collection::set::Get,
     macros::{lift, Closure},
-    typeclass::{copointed::Copointed, functor::Fmap},
+    typeclass::{
+        copointed::Copointed,
+        functor::Fmap,
+        semigroup::{Mappend, MappendT}, monad::Identity,
+    },
 };
 
 use crate::{
-    Color, Distance, EvaluateFunction, EvaluateInputs, Gradient, Invert, LiftAdt, Modify, Raster,
-    Saturate,
+    Color, Distance, EvaluateFunction, EvaluateInputs, Gradient, IntoMonad, IntoTuple, IntoTupleT,
+    Invert, LiftAdt, Modify, Raster, Saturate,
 };
+
+pub trait ToImage<F>: Sized + IntoTuple {
+    type ToImage<R>
+    where
+        RasterToImage<R, F>: IntoTuple,
+        IntoTupleT<Self>: Mappend<IntoTupleT<RasterToImage<R, F>>>;
+
+    fn to_image<R>(self, f: F) -> Self::ToImage<R>
+    where
+        RasterToImage<R, F>: IntoTuple,
+        IntoTupleT<Self>: Mappend<IntoTupleT<RasterToImage<R, F>>>;
+}
+
+impl<T, F> ToImage<F> for T
+where
+    T: Sized + IntoTuple,
+{
+    type ToImage<R> = MappendT<IntoTupleT<T>, IntoTupleT<RasterToImage<R, F>>>
+        where
+            RasterToImage<R, F>: IntoTuple,
+            IntoTupleT<T>: Mappend<IntoTupleT<RasterToImage<R, F>>>;
+
+    fn to_image<R>(self, f: F) -> Self::ToImage<R>
+    where
+        RasterToImage<R, F>: IntoTuple,
+        IntoTupleT<T>: Mappend<IntoTupleT<RasterToImage<R, F>>>,
+    {
+        self.into_tuple()
+            .mappend(RasterToImage(f, PhantomData).into_tuple())
+    }
+}
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RasterToImage<R, F>(pub F, pub PhantomData<R>);
@@ -22,6 +57,14 @@ impl<R, G, F> Fmap<F> for RasterToImage<R, G> {
 
     fn fmap(self, _: F) -> Self::Fmap {
         self
+    }
+}
+
+impl<R, F> IntoMonad for RasterToImage<R, F> {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
     }
 }
 
@@ -55,17 +98,49 @@ where
 }
 
 #[lift]
+pub fn dist_to_rgb<C>(c: C) -> Rgb<f32>
+where
+    C: Get<Distance<f32>>,
+{
+    let c = c.get().fmap(Saturate).fmap(Invert).copoint();
+    *Pixel::from_slice(&[c, c, c])
+}
+
+#[lift]
+pub fn dist_to_rgba<C>(k: f32, c: C) -> Rgba<f32>
+where
+    C: Get<Distance<f32>>,
+{
+    let c = c.get().fmap(Saturate).fmap(Invert).copoint() * k;
+    *Pixel::from_slice(&[c, c, c, 1.0])
+}
+
+#[lift]
 pub fn dist_grad_to_rgb<C>(c: C) -> Rgb<f32>
 where
     C: Get<(Distance<f32>, Gradient<Vec2>)>,
 {
     let (Distance(dist), Gradient(g)) = c.get();
 
-    let c = if dist <= 0.0 {
-        [g.x * 0.5 + 0.5, g.y * 0.5 + 0.5, 1.0 - dist]
-    } else {
-        [g.x * 0.5 + 0.5, g.y * 0.5 + 0.5, 0.0]
-    };
+    let g = g * 0.5 + 0.5;
+    let c = g.extend(if dist <= 0.0 { 1.0 - dist } else { 0.0 });
+
+    let c = [c.x, c.y, c.z];
+
+    *Pixel::from_slice(&c)
+}
+
+#[lift]
+pub fn dist_grad_to_rgba<C>(c: C) -> Rgba<f32>
+where
+    C: Get<(Distance<f32>, Gradient<Vec2>)>,
+{
+    let (Distance(dist), Gradient(g)) = c.get();
+
+    let g = g * 0.5 + 0.5;
+    let c = g.extend(if dist <= 0.0 { 1.0 - dist } else { 0.0 });
+
+    let c = [c.x, c.y, c.z, 1.0];
 
     *Pixel::from_slice(&c)
 }
@@ -93,6 +168,18 @@ where
     let Color(c) = ctx.get();
 
     let c = [c.x, c.y, c.z];
+
+    *Pixel::from_slice(&c)
+}
+
+#[lift]
+pub fn color_to_rgba<C>(ctx: C) -> Rgba<f32>
+where
+    C: Get<Color<Vec4>>,
+{
+    let Color(c) = ctx.get();
+
+    let c = [c.x, c.y, c.z, c.w];
 
     *Pixel::from_slice(&c)
 }

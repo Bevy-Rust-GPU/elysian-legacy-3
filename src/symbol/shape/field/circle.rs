@@ -1,6 +1,9 @@
-use crate::{Alias, ExpandAlias, Isosurface, LiftAdt, Point, IntoMonad};
+use crate::{Alias, ExpandAlias, IntoMonad, IsosurfaceS, LiftAdt, Point};
 
-use t_funk::{macros::{applicative::Applicative, functor::Functor, monad::Monad}, typeclass::monad::Identity};
+use t_funk::{
+    macros::{applicative::Applicative, functor::Functor, monad::Monad},
+    typeclass::monad::Identity,
+};
 
 // Circle field symbol
 #[derive(
@@ -8,6 +11,17 @@ use t_funk::{macros::{applicative::Applicative, functor::Functor, monad::Monad},
 )]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Circle<T>(pub T);
+
+pub fn circle() -> Circle<f32>
+{
+    Circle(1.0)
+}
+
+impl<T> Circle<T> {
+    pub fn radius<U>(self, u: U) -> Circle<U> {
+        Circle(u)
+    }
+}
 
 impl<T> IntoMonad for Circle<T> {
     type IntoMonad = Identity<Self>;
@@ -26,9 +40,9 @@ impl<T> LiftAdt for Circle<T> {
 }
 
 impl<T, D> ExpandAlias<D> for Circle<T> {
-    type ExpandAlias = (Point, Isosurface<T>);
+    type ExpandAlias = (Point, IsosurfaceS<T>);
 
     fn expand_alias(self) -> Self::ExpandAlias {
-        (Point, Isosurface(self.0))
+        (Point, IsosurfaceS(self.0))
     }
 }

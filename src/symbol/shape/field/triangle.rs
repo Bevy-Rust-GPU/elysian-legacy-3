@@ -1,4 +1,4 @@
-use glam::Vec2;
+use crate::glam::Vec2;
 use t_funk::{
     closure::{Closure, OutputT},
     typeclass::{
@@ -7,14 +7,25 @@ use t_funk::{
         semigroup::{Mappend, MappendT},
     },
 };
+use rust_gpu_bridge::{Sin, Cos, Sqrt};
 
 use crate::{
     Alias, Demanifold, ExpandAlias, ExpandAliasT, IntoMonad, IntoMonadT, LiftAdt, Line, Reflect,
-    Translate,
+    TranslateS,
 };
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Triangle<T>(pub T);
+
+pub fn triangle() -> Triangle<f32> {
+    Triangle(1.0)
+}
+
+impl<T> Triangle<T> {
+    pub fn radius<U>(self, u: U) -> Triangle<U> {
+        Triangle(u)
+    }
+}
 
 impl<T, F> Fmap<F> for Triangle<T>
 where
@@ -49,7 +60,7 @@ impl<D> ExpandAlias<D> for Triangle<f32> {
     type ExpandAlias = (
         Reflect<
             IntoMonadT<
-                Reflect<MappendT<(Translate<Vec2>,), (Demanifold<ExpandAliasT<Line<Vec2>, D>>,)>>,
+                Reflect<MappendT<(TranslateS<Vec2>,), (Demanifold<ExpandAliasT<Line<Vec2>, D>>,)>>,
             >,
         >,
     );
@@ -64,7 +75,7 @@ impl<D> ExpandAlias<D> for Triangle<f32> {
             Vec2::X,
             Reflect(
                 Vec2::new(angle.cos(), angle.sin()),
-                (Translate(Vec2::Y * width / 3.0_f32.sqrt()),)
+                (TranslateS(Vec2::Y * width / 3.0_f32.sqrt()),)
                     .mappend((Demanifold(Vec2::Y, line),)),
             )
             .into_monad(),

@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use t_funk::{
     closure::{Closure, OutputT},
@@ -6,9 +6,10 @@ use t_funk::{
         map::{Get as GetM, GetT as GetMT, Insert as InsertM, InsertT as InsertMT},
         set::{Get as GetS, Insert as InsertS, InsertT as InsertST},
     },
+    typeclass::{functor::Fmap, monad::Identity},
 };
 
-use crate::{ContextA, ContextB, ContextOut, Distance, EvaluateFunction, LiftAdt, Run};
+use crate::{ContextA, ContextB, ContextOut, Distance, EvaluateFunction, IntoMonad, LiftAdt, Run};
 
 // Fetch a given property P from ContextA and ContextB,
 // combine using a (P, P) -> P function, and write it to ContextOut
@@ -20,6 +21,14 @@ impl<F, T> LiftAdt for BlendProperty<F, T> {
 
     fn lift_adt(self) -> Self::LiftAdt {
         Run(self)
+    }
+}
+
+impl<F, T> IntoMonad for BlendProperty<F, T> {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
     }
 }
 
@@ -62,6 +71,17 @@ where
 // combine using a (D, D, P, P) -> P function, and write it to ContextOut
 #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
 pub struct BlendPropertyDist<F, T>(pub F, pub PhantomData<T>);
+
+impl<F, T, G> Fmap<G> for BlendPropertyDist<F, T>
+where
+    G: Closure<F>,
+{
+    type Fmap = Self;
+
+    fn fmap(self, _: G) -> Self::Fmap {
+        self
+    }
+}
 
 impl<F, T> LiftAdt for BlendPropertyDist<F, T> {
     type LiftAdt = Run<Self>;

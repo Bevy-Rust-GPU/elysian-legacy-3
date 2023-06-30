@@ -1,11 +1,13 @@
 mod expand_alias;
 mod impls;
 mod into_monad;
+mod into_tuple;
 mod lift_adt;
 
 pub use expand_alias::*;
 pub use impls::*;
 pub use into_monad::*;
+pub use into_tuple::*;
 pub use lift_adt::*;
 
 use t_funk::macros::{define_adt, Copointed, Pointed};
@@ -30,42 +32,62 @@ pub use t_funk::op_chain::Done;
 
 #[cfg(test)]
 mod test {
-    use glam::{Vec2, Vec3};
-    use image::{ImageBuffer, Rgb};
+
+    use core::marker::PhantomData;
+
+    use crate::glam::{Vec2, Vec4};
+    use image::{ImageBuffer, Rgb, Rgba};
     use t_funk::{
-        closure::{Closure, Compose, ComposeLF, Curry2},
-        function::{range, Div, Id, Mul},
+        closure::{Closure, ComposeLF, Curry2, Div},
+        function::{range, Id},
         macros::lift,
         typeclass::{foldable::Foldr, functor::Fmap, monad::Chain},
     };
 
     use crate::{
-        Circle, Color, ColorToRgb, Context, ContextRasterImage, Dist, DistColorToRgb, DistGrad,
-        DistGradToRgb, Distance, Evaluate, ExpandAliasF, Gradient, Infinity, IntoMonad, Isosurface,
-        LiftAdtF, LiftEvaluateF, LiftParamF, Manifold, NegInfinity, Overlay, PosDistGradColor,
-        Position, Proxy, Raster, RasterToImage, Rasterizer, Replace, Ring, Set, Translate,
-        Triangle, Union, UnionF, ViuerPrinter,
+        circle, polynomial_smooth_overlay, ring, smooth_overlay, triangle, union,
+        BlendPropertyDist, Color, ColorToRgba, Context, ContextRasterImage, DistGrad,
+        DistGradToRgb, DistToRgba, Distance, Evaluate, EvaluateImpl, ExpandAlias, ExpandAliasF,
+        FoldCombine, Gradient, Infinity, IntoTuple, Isomanifold, LiftAdt, LiftAdtF, LiftEvaluateF,
+        LiftParamF, MakeProxy, MakeReplace, PolynomialSmoothOverlay, PosDistGradColor, Position,
+        Raster, Rasterize, Ring, Scale, SetColor, ToImage, Translate, Viuer, BLACK, CYAN,
+        TRANSPARENT, YELLOW,
     };
 
-    pub type ShapeCtxFrom = PosDistGradColor<Position<Vec2>, (), (), Color<Vec3>>;
-    pub type ShapeCtxTo = PosDistGradColor<(), Distance<f32>, Gradient<Vec2>, Color<Vec3>>;
+    pub type ShapeCtxFrom = PosDistGradColor<Position<Vec2>, (), (), Color<Vec4>>;
+    pub type ShapeCtxTo = PosDistGradColor<(), Distance<f32>, Gradient<Vec2>, Color<Vec4>>;
 
     pub type RasterCtx = ContextRasterImage<
         Context<ShapeCtxFrom>,
         Raster<ShapeCtxFrom>,
-        ImageBuffer<Rgb<f32>, Vec<f32>>,
+        ImageBuffer<Rgba<f32>, Vec<f32>>,
     >;
 
     #[test]
     fn test_adt() {
-        let shape_a = (Translate(Vec2::new(-0.2, -0.2)), Ring(0.8_f32, 0.1_f32));
-        let shape_b = (Translate(Vec2::new(0.2, 0.2)), Ring(0.8_f32, 0.2_f32));
-        let _shape_c = (Translate(Vec2::new(0.0, 0.4)), Ring(0.8_f32, 0.3_f32));
-        let _shape_d = (Translate(Vec2::new(0.0, -0.4)), Ring(0.8_f32, 0.4_f32));
+        let shape_a = ring()
+            .radius(0.8_f32)
+            .width(0.1_f32)
+            .translate(Vec2::splat(-0.2));
+
+        let shape_b = ring()
+            .radius(0.8_f32)
+            .width(0.2_f32)
+            .translate(Vec2::splat(0.2));
+
+        let _shape_c = ring()
+            .radius(0.8_f32)
+            .width(0.3_f32)
+            .translate(Vec2::X * 0.4);
+
+        let _shape_d = ring()
+            .radius(0.8_f32)
+            .width(0.4_f32)
+            .translate(Vec2::Y * -0.4);
 
         let combined = shape_a.replace::<Gradient<Vec2>>(shape_b);
 
-        let shape = combined.into_monad();
+        let shape = combined.into_tuple();
         let context = ShapeCtxFrom::default();
 
         let bar = shape.fmap(LiftAdtF);
@@ -75,12 +97,12 @@ mod test {
         let bar = bar.foldr(ComposeLF, Id);
         let _bar = bar.call(context);
 
-        let _foo =
-            Evaluate::<DistGrad<f32, Vec2>, ShapeCtxFrom>::evaluate(shape, Default::default());
+        let _foo = EvaluateImpl::<DistGrad<f32, Vec2>, ShapeCtxFrom>::evaluate_impl(
+            shape,
+            Default::default(),
+        );
 
-        let combined = shape_a.proxy::<Gradient<f32>>(shape_b);
-
-        let _positioned = (Set(Position(Vec2::default())), combined);
+        let _combined = shape_a.proxy::<Gradient<f32>>(shape_b);
 
         /*
         let input = PosDistColor::<(), (), Color<Vec3>>::default();
@@ -91,87 +113,53 @@ mod test {
         let _foo =
             Evaluate::<Dist<f32>, PosDistColor<(), (), Color<Vec3>>>::evaluate(positioned, input);
         */
-        let context = RasterCtx::default();
 
-        let rasterizer = (
-            Rasterizer::<_, ShapeCtxFrom> {
-                width: 48,
-                height: 48,
-                shape,
-                ..Default::default()
-            },
-            RasterToImage::<ShapeCtxTo, DistGradToRgb>::default(),
-            ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default(),
-            /*
-            RasterToAscii(ASCII_RAMP, PhantomData::<PosDistGrad<Vec2, f32, Vec2>>),
-            Print,
-            */
-        );
-
-        Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
+        shape
+            .rasterize::<ShapeCtxFrom>(48, 48)
+            .to_image::<ShapeCtxTo>(DistGradToRgb)
+            .viuer::<ImageBuffer<Rgb<f32>, Vec<f32>>>()
+            .evaluate::<DistGrad<f32, Vec2>>(RasterCtx::default());
     }
 
     #[test]
     fn test_composition() {
-        let context = RasterCtx::default();
-
         let frag_size = 48.0_f32;
-
-        let radius = 0.9_f32;
+        let frag_recip = 1.0 / frag_size;
 
         let inner_line = 1.5_f32 / frag_size;
         let mid_line = 2.0_f32 / frag_size;
         let outer_line = 2.5_f32 / frag_size;
 
-        let yellow = Vec3::new(1.0, 1.0, 0.0);
-        let cyan = Vec3::new(0.0, 1.0, 1.0);
-        let white = Vec3::ONE;
-        let black = Vec3::ZERO;
+        let background = Infinity.color(TRANSPARENT);
+        let tri = triangle().color(YELLOW);
+        let circle = circle().color(CYAN);
 
-        let neg_inf = (NegInfinity, Set(Color(white)));
-        let triangle = (Triangle(radius), Set(Color(yellow)));
-        let circle = (Circle(radius), Set(Color(cyan)));
-        let lines = range::<U1, U5, f32>()
-            .fmap(
-                Div.suffix2(10.0_f32)
-                    .compose_l(Mul.suffix2(radius))
-                    .compose_l(MakeRing.suffix2(inner_line)),
-            )
-            .foldr(UnionF, Infinity)
-            .union((
-                Triangle(radius),
-                Manifold,
-                Isosurface(mid_line),
-                Set(Color(black)),
+        let lines = (
+            range::<U1, U5, f32>()
+                .fmap(Div(10.0_f32))
+                .fmap(MakeRing.suffix2(inner_line))
+                .fold_combine(union()),
+            triangle().isomanifold(mid_line),
+            ring().width(outer_line),
+        )
+            .fold_combine(union())
+            .color(BLACK);
+
+        let shape = (background, circle, tri, lines)
+            //.fold_combine(overlay())
+            .fold_combine((
+                smooth_overlay().k(frag_recip),
+                polynomial_smooth_overlay::<Gradient<Vec2>>(frag_recip),
+                polynomial_smooth_overlay::<Color<Vec4>>(frag_recip),
             ))
-            .union((Ring(radius, outer_line), Set(Color(black))));
+            .scale(0.9_f32)
+            .into_tuple();
 
-        let shape = neg_inf.overlay(circle).overlay(triangle).overlay(lines);
-
-        let shape = shape.into_monad();
-
-        let rasterizer = (
-            Rasterizer::<_, ShapeCtxFrom> {
-                width: 48,
-                height: 48,
-                shape,
-                ..Default::default()
-            },
-            RasterToImage(
-                ColorToRgb,
-                //DistGradToRgb,
-                //DistToLuma,
-                Default::default(),
-            ),
-            ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default(),
-        );
-
-        Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
-    }
-
-    #[lift]
-    fn make_ring<T, U>(t: T, u: U) -> Ring<T, U> {
-        Ring(t, u)
+        shape
+            .rasterize::<ShapeCtxFrom>(48, 48)
+            .to_image::<ShapeCtxTo>(ColorToRgba)
+            .viuer::<ImageBuffer<Rgba<f32>, Vec<f32>>>()
+            .evaluate::<DistGrad<f32, Vec2>>(RasterCtx::default());
     }
 
     use t_funk::typenum::consts::{U1, U5};
@@ -180,46 +168,26 @@ mod test {
     fn test_monadic_composition() {
         let frag_size = 48.0_f32;
 
-        let radius = 0.9_f32;
-
         let inner_line = 1.5_f32 / frag_size;
         let mid_line = 2.0_f32 / frag_size;
         let outer_line = 2.5_f32 / frag_size;
 
-        let shape = range::<U1, U5, f32>()
-            .fmap(
-                Div.suffix2(10.0_f32)
-                    .compose_l(Mul.suffix2(radius))
-                    .compose_l(MakeRing.suffix2(inner_line)),
-            )
-            .foldr(UnionF, Infinity)
-            .union((
-                Triangle(radius),
-                Manifold,
-                Isosurface(mid_line),
-                Set(Color(Vec3::ZERO)),
-            ))
-            .union((Ring(radius, outer_line), Set(Color(Vec3::ZERO))));
+        let shape = (
+            range::<U1, U5, f32>()
+                .fmap(Div(10.0_f32))
+                .fmap(MakeRing.suffix2(inner_line))
+                .fold_combine(union()),
+            triangle().isomanifold(mid_line),
+            ring().width(outer_line),
+        )
+            .fold_combine(union())
+            .color(BLACK)
+            .scale(0.9_f32);
 
-        let shape = shape.into_monad();
-
-        let context = RasterCtx::default();
-
-        let rasterizer = (
-            Rasterizer::<_, ShapeCtxFrom> {
-                width: frag_size as usize,
-                height: frag_size as usize,
-                shape,
-                ..Default::default()
-            },
-            RasterToImage(
-                //DistColorToRgb.prefix2((Vec3::ONE, frag_size)),
-                DistColorToRgb.prefix2((Vec3::ONE, frag_size)),
-                Default::default(),
-            ),
-            ViuerPrinter::<ImageBuffer<Rgb<f32>, Vec<f32>>>::default(),
-        );
-
-        Evaluate::<DistGrad<f32, Vec2>, RasterCtx>::evaluate(rasterizer, context);
+        shape
+            .rasterize::<ShapeCtxFrom>(frag_size as usize, frag_size as usize)
+            .to_image::<ShapeCtxTo>(DistToRgba.prefix2(1.0))
+            .viuer::<ImageBuffer<Rgba<f32>, Vec<f32>>>()
+            .evaluate::<DistGrad<f32, Vec2>>(RasterCtx::default());
     }
 }

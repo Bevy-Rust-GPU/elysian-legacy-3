@@ -1,10 +1,48 @@
 use std::marker::PhantomData;
 
 use image::DynamicImage;
-use t_funk::{closure::Closure, typeclass::functor::Fmap};
+use t_funk::{
+    closure::Closure,
+    typeclass::{
+        functor::Fmap,
+        monad::Identity,
+        semigroup::{Mappend, MappendT},
+    },
+};
 use viuer::Config;
 
-use crate::{EvaluateFunction, EvaluateInputs, LiftAdt, Modify};
+use crate::{EvaluateFunction, EvaluateInputs, IntoMonad, IntoTuple, IntoTupleT, LiftAdt, Modify};
+
+pub trait Viuer: Sized + IntoTuple {
+    type Viuer<U>
+    where
+        ViuerPrinter<U>: IntoTuple,
+        IntoTupleT<Self>: Mappend<IntoTupleT<ViuerPrinter<U>>>;
+
+    fn viuer<U>(self) -> Self::Viuer<U>
+    where
+        ViuerPrinter<U>: IntoTuple,
+        IntoTupleT<Self>: Mappend<IntoTupleT<ViuerPrinter<U>>>;
+}
+
+impl<T> Viuer for T
+where
+    T: IntoTuple,
+{
+    type Viuer<U> = MappendT<IntoTupleT<T>, IntoTupleT<ViuerPrinter<U>>>
+        where
+            ViuerPrinter<U>: IntoTuple,
+            IntoTupleT<T>: Mappend<IntoTupleT<ViuerPrinter<U>>>;
+
+    fn viuer<U>(self) -> Self::Viuer<U>
+    where
+        ViuerPrinter<U>: IntoTuple,
+        IntoTupleT<T>: Mappend<IntoTupleT<ViuerPrinter<U>>>,
+    {
+        self.into_tuple()
+            .mappend(ViuerPrinter::<U>::default().into_tuple())
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ViuerPrinter<T> {
@@ -24,7 +62,7 @@ pub struct ViuerPrinter<T> {
 impl<T> Default for ViuerPrinter<T> {
     fn default() -> Self {
         Self {
-            transparent: false,
+            transparent: true,
             absolute_offset: false,
             x: 0,
             y: 0,
@@ -67,6 +105,14 @@ impl<T, F> Fmap<F> for ViuerPrinter<T> {
     }
 }
 
+impl<T> IntoMonad for ViuerPrinter<T> {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
+
 impl<T> LiftAdt for ViuerPrinter<T> {
     type LiftAdt = Modify<Self>;
 
@@ -90,7 +136,7 @@ impl<T, D> EvaluateFunction<D> for ViuerPrinter<T> {
 
 impl<T> Closure<T> for ViuerPrinter<T>
 where
-    T: core::fmt::Debug + Into<DynamicImage>,
+    T: Into<DynamicImage>,
 {
     type Output = ();
 

@@ -1,11 +1,11 @@
-use std::ops::{Div, Mul};
+use core::ops::{Div, Mul};
 
 use crate::{
     Alias, Distance, EvaluateFunction, EvaluateInputs, ExpandAlias, ExpandAliasF, IntoMonad,
-    LiftAdt, LiftAdtF, Modify, Position,
+    IntoTuple, IntoTupleT, LiftAdt, LiftAdtF, Modify, Position,
 };
 
-use glam::Vec2;
+use crate::glam::Vec2;
 use t_funk::{
     closure::{Curry2, Curry2B},
     macros::{applicative::Applicative, functor::Functor, lift, monad::Monad},
@@ -16,11 +16,28 @@ use t_funk::{
     },
 };
 
+pub trait Scale<U> {
+    type Scale;
+
+    fn scale(self, s: U) -> Self::Scale;
+}
+
+impl<T, U> Scale<U> for T
+where
+    T: IntoTuple,
+{
+    type Scale = Scaler<U, IntoTupleT<T>>;
+
+    fn scale(self, s: U) -> Self::Scale {
+        Scaler(s, self.into_tuple())
+    }
+}
+
 // Wrapper to pre-scale a Position, then post-inverse-scale a resulting Distance
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Scale<S, T>(pub S, pub T);
+pub struct Scaler<S, T>(pub S, pub T);
 
-impl<S, T, F> Fmap<F> for Scale<S, T> {
+impl<S, T, F> Fmap<F> for Scaler<S, T> {
     type Fmap = Self;
 
     fn fmap(self, _: F) -> Self::Fmap {
@@ -28,18 +45,18 @@ impl<S, T, F> Fmap<F> for Scale<S, T> {
     }
 }
 
-impl<S, T> LiftAdt for Scale<S, T>
+impl<S, T> LiftAdt for Scaler<S, T>
 where
     T: Fmap<LiftAdtF>,
 {
-    type LiftAdt = Alias<Scale<S, FmapT<T, LiftAdtF>>>;
+    type LiftAdt = Alias<Scaler<S, FmapT<T, LiftAdtF>>>;
 
     fn lift_adt(self) -> Self::LiftAdt {
-        Alias(Scale(self.0, self.1.fmap(LiftAdtF)))
+        Alias(Scaler(self.0, self.1.fmap(LiftAdtF)))
     }
 }
 
-impl<S, T, D> ExpandAlias<D> for Scale<S, T>
+impl<S, T, D> ExpandAlias<D> for Scaler<S, T>
 where
     S: Clone,
     T: Chain<ExpandAliasF<D>>,
@@ -58,7 +75,7 @@ where
     }
 }
 
-impl<S, T> IntoMonad for Scale<S, T> {
+impl<S, T> IntoMonad for Scaler<S, T> {
     type IntoMonad = Identity<Self>;
 
     fn into_monad(self) -> Self::IntoMonad {

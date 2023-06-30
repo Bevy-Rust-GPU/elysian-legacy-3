@@ -1,6 +1,7 @@
 use crate::{EvaluateFunction, EvaluateInputs, IntoMonad, LiftAdt, Modify, Position};
 
-use glam::Vec2;
+use rust_gpu_bridge::{Sign, Abs};
+use crate::glam::Vec2;
 use t_funk::{
     closure::{Closure, Curry2, Curry2A, OutputT},
     typeclass::{functor::Fmap, monad::Identity}, macros::lift,
@@ -59,7 +60,7 @@ pub fn elongate_f((vector, abs): (Vec2, bool), Position(p): Position<Vec2>) -> P
     let l = vector.length();
     let n = vector.normalize();
     let dp = n.dot(p);
-    let ds = dp.signum();
+    let ds = dp.sign();
     let da = if abs { dp.abs() } else { dp };
     let d = da.min(l) * ds;
 

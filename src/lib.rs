@@ -1,4 +1,9 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 extern crate self as elysian;
+
+pub use rust_gpu_bridge::glam;
+pub use t_funk;
 
 mod adt;
 mod context;

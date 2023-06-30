@@ -1,11 +1,12 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 use crate::{
-    Distance, Evaluate, EvaluateT, ExpandAlias, ExpandAliasF, IntoMonad, LiftAdt, LiftAdtF,
+    Distance, EvaluateImpl, EvaluateImplT, ExpandAlias, ExpandAliasF, IntoMonad, LiftAdt, LiftAdtF,
     LiftEvaluate, LiftParam, LiftParamF, Position,
 };
 
-use glam::Vec2;
+use rust_gpu_bridge::Sign;
+use crate::glam::Vec2;
 use t_funk::{
     closure::{Closure, Curry2, Curry2B},
     collection::set::{Get, Insert},
@@ -15,7 +16,8 @@ use t_funk::{
     },
 };
 
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "std", derive(Debug))]
+#[derive(Default, Copy, Clone, PartialEq)]
 pub struct Demanifold<T>(pub Vec2, pub T);
 
 impl<T> IntoMonad for Demanifold<T> {
@@ -70,24 +72,25 @@ impl<T, D> LiftEvaluate<D> for Demanifold<T> {
     }
 }
 
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "std", derive(Debug))]
+#[derive(Default, Copy, Clone, PartialEq)]
 pub struct EvaluateDemanifold<T, D>(Vec2, T, PhantomData<D>);
 
 impl<T, D, C> Closure<C> for EvaluateDemanifold<T, D>
 where
     C: Clone + Get<Position<Vec2>> + Insert<Position<Vec2>, Insert = C>,
-    T: Evaluate<D, C>,
-    EvaluateT<T, D, C>:
-        Clone + Get<Distance<f32>> + Insert<Distance<f32>, Insert = EvaluateT<T, D, C>>,
+    T: EvaluateImpl<D, C>,
+    EvaluateImplT<T, D, C>:
+        Clone + Get<Distance<f32>> + Insert<Distance<f32>, Insert = EvaluateImplT<T, D, C>>,
 {
-    type Output = EvaluateT<T, D, C>;
+    type Output = EvaluateImplT<T, D, C>;
 
     fn call(self, input: C) -> Self::Output {
         let n = self.0;
         let Position(p) = Get::<Position<Vec2>>::get(input.clone());
-        let s = n.dot(p).signum();
+        let s = n.dot(p).sign();
 
-        let input = Evaluate::<D, C>::evaluate(self.1, input);
+        let input = EvaluateImpl::<D, C>::evaluate_impl(self.1, input);
 
         let Distance(d) = Get::<Distance<f32>>::get(input.clone());
         Insert::<Distance<f32>>::insert(input, Distance(d * s))
