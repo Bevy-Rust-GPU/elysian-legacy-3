@@ -94,12 +94,12 @@ fn main() {
     let combined = (shape_a, shape_b, shape_c)
         .fold_combine(Union)
         .subtraction(shape_d);
-    viuer(combined);
+    //viuer(combined);
 
     let shape = combined
         .translate(Vec2::new(0.25, 0.25))
         .isomanifold(0.5_f32)
         .scale(0.5_f32);
 
-    viuer(shape);
+    //viuer(shape);
 }

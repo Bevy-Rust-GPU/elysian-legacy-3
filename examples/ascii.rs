@@ -49,15 +49,15 @@ fn main() {
     let combined = (shape_a, shape_b, shape_c, shape_d)
         .fmap(ascii)
         .fold_combine(Union);
-    ascii(combined);
+    //ascii(combined);
 
     let combined = shape_a.outer_bound(combined);
-    ascii(combined);
+    //ascii(combined);
 
     let shape = combined
         .isosurface(0.2_f32)
         .manifold()
         .translate(Vec2::new(0.25, 0.25))
         .scale(0.5_f32);
-    ascii(shape);
+    //ascii(shape);
 }

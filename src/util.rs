@@ -41,6 +41,7 @@ pub fn as_usize(t: f32) -> usize {
 #[cfg(feature = "std")]
 mod standard {
     use image::{DynamicImage, RgbaImage};
+    use t_funk::macros::lift;
 
     /// Convert a collection of characters into a string
     #[lift]

@@ -9,13 +9,18 @@ use t_funk::{
         functor::Fmap,
         monad::Identity,
         semigroup::{Mappend, MappendT},
-    },
+    }, macros::lift,
 };
 
 // Ring field symbol
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Ring<T, U>(pub T, pub U);
+
+#[lift]
+pub fn make_ring<T, U>(t: T, u: U) -> Ring<T, U> {
+    Ring(t, u)
+}
 
 pub fn ring() -> Ring<f32, f32> {
     Ring(1.0, 0.2)

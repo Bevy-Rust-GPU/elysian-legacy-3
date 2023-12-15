@@ -1,9 +1,10 @@
 use t_funk::{
     closure::{Closure, OutputT},
-    typeclass::functor::Fmap, macros::impl_adt,
+    macros::impl_adt,
+    typeclass::functor::Fmap,
 };
 
-use crate::{Combine, Run, Alias, Modify, Domains};
+use crate::{Alias, Combine, Domains, Modify, Run};
 
 impl_adt! {
     impl<A, F> Fmap<F> for Run<A> | Modify<A> | Domains<A> | Alias<A>
@@ -20,12 +21,16 @@ impl_adt! {
 
 impl<A, B, F, FM> Fmap<FM> for Combine<A, B, F>
 where
-    FM: Clone + Closure<A> + Closure<B>,
+    FM: Clone + Closure<A> + Closure<B> + Closure<F>,
 {
-    type Fmap = Combine<OutputT<FM, A>, OutputT<FM, B>, F>;
+    type Fmap = Combine<OutputT<FM, A>, OutputT<FM, B>, OutputT<FM, F>>;
 
     fn fmap(self, f: FM) -> Self::Fmap {
-        Combine(f.clone().call(self.0), f.call(self.1), self.2)
+        Combine(
+            f.clone().call(self.0),
+            f.clone().call(self.1),
+            f.call(self.2),
+        )
     }
 }
 
@@ -43,3 +48,4 @@ mod test {
         assert_eq!(mapped, ((), (), ()));
     }
 }
+

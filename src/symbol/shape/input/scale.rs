@@ -45,6 +45,14 @@ impl<S, T, F> Fmap<F> for Scaler<S, T> {
     }
 }
 
+impl<S, T> IntoMonad for Scaler<S, T> {
+    type IntoMonad = Identity<Self>;
+
+    fn into_monad(self) -> Self::IntoMonad {
+        Identity(self)
+    }
+}
+
 impl<S, T> LiftAdt for Scaler<S, T>
 where
     T: Fmap<LiftAdtF>,
@@ -72,14 +80,6 @@ where
         (ScalePosition(self.0.clone()),)
             .mappend(self.1.chain(ExpandAliasF::<D>::default()))
             .mappend((InverseScaleDistance(self.0),))
-    }
-}
-
-impl<S, T> IntoMonad for Scaler<S, T> {
-    type IntoMonad = Identity<Self>;
-
-    fn into_monad(self) -> Self::IntoMonad {
-        Identity(self)
     }
 }
 

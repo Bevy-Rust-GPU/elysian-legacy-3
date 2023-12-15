@@ -594,15 +594,39 @@
         with other properties being dragged through via boolean
         for potential blending by downstream code
 
+* Rust-GPU compatibility pass
+  * Port diagrams example field into a shader
+
+  DONE: Now rust-gpu compatible, but type-level metaprogramming causes IR explosion when compiled via rust-gpu
+
 =======================================================================================================================
+
+* Formalize interpretation of free structure
+  * Existing type-level register machine behaviour is an interpreter
+  * Could this be unified under Interpret and Interpreter traits?
+    * Traversable is likely relevant here
+  * Alternate interpreters:
+    * Dynamic structuring
+      * Convert ADT into a type-erased value-level equivalent (ex. dyn / impl Trait)
+        * Useful for runtime editing,
+          though may not be mandatory if strongly-typed recursive control flow is viable
+    * EDSL graph visualizer
+      * Create a new EDSL visualizing the graph as UI primitives
+      * Seems like a mapping operation
+    * Graph optimizer
+    * Bevy hierarchy generator
+      * Interpret boolean union as breaking a child out of its parent hierarchy
+    * Static evaluation
+      * Pre-evaluate expensive operations
+        * ex. Layout:
+          Replace a Combine<A, B, AxialFit> with Combine<Shape<Translate, A>, Shape<Translate, B>, Union>
+          * Where AxialFit is semantically equivalent to raycast-based layout from Haskell diagrams
+          * Code should be shareable between runtime and static evaluation
 
 * Generalize blending
   * Need to investigate why PolynomialSmoothOverlay doesn't expand to an alias
     when used in monoid composition
   * Boolean, polynomial lerp, dither, noise, etc
-
-* Rust-GPU compatibility pass
-  * Port diagrams example field into a shader
 
 * Crate structure pass
   * Bevy-style multi-crate setup
@@ -630,28 +654,6 @@
   * Trails
   * Paths
   * Arrows
-
-* Formalize interpretation of free structure
-  * Existing type-level register machine behaviour is an interpreter
-  * Could this be unified under Interpret and Interpreter traits?
-    * Traversable is likely relevant here
-  * Alternate interpreters:
-    * Dynamic structuring
-      * Convert ADT into a type-erased value-level equivalent (ex. dyn / impl Trait)
-        * Useful for runtime editing,
-          though may not be mandatory if strongly-typed recursive control flow is viable
-    * EDSL graph visualizer
-      * Create a new EDSL visualizing the graph as UI primitives
-      * Seems like a mapping operation
-    * Graph optimizer
-    * Bevy hierarchy generator
-      * Interpret boolean union as breaking a child out of its parent hierarchy
-    * Static evaluation
-      * Pre-evaluate expensive operations
-        * ex. Layout:
-          Replace a Combine<A, B, AxialFit> with Combine<Shape<Translate, A>, Shape<Translate, B>, Union>
-          * Where AxialFit is semantically equivalent to raycast-based layout from Haskell diagrams
-          * Code should be shareable between runtime and static evaluation
 
 * Investigate more idiomatic Raster -> ImageBuffer conversion
   * Currently similar to monadic chaining, but implemented manually

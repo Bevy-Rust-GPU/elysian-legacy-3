@@ -28,20 +28,21 @@ define_adt!(
       | Combine<A, B, F>(pub A, pub B, pub F);
 );
 
-pub use t_funk::op_chain::Done;
-
 #[cfg(test)]
 mod test {
 
     use core::marker::PhantomData;
 
-    use crate::glam::{Vec2, Vec4};
+    use crate::{
+        glam::{Vec2, Vec4},
+        ImageWriter, DistGradToRgba,
+    };
     use image::{ImageBuffer, Rgb, Rgba};
     use t_funk::{
         closure::{Closure, ComposeLF, Curry2, Div},
         function::{range, Id},
         macros::lift,
-        typeclass::{foldable::Foldr, functor::Fmap, monad::Chain},
+        typeclass::{foldable::Foldr, functor::Fmap, monad::Chain, semigroup::Mappend},
     };
 
     use crate::{
@@ -152,14 +153,18 @@ mod test {
                 polynomial_smooth_overlay::<Gradient<Vec2>>(frag_recip),
                 polynomial_smooth_overlay::<Color<Vec4>>(frag_recip),
             ))
-            .scale(0.9_f32)
-            .into_tuple();
+            .scale(0.9_f32);
 
         shape
-            .rasterize::<ShapeCtxFrom>(48, 48)
+            .rasterize::<ShapeCtxFrom>(frag_size as usize, frag_size as usize)
             .to_image::<ShapeCtxTo>(ColorToRgba)
             .viuer::<ImageBuffer<Rgba<f32>, Vec<f32>>>()
             .evaluate::<DistGrad<f32, Vec2>>(RasterCtx::default());
+    }
+
+    #[lift]
+    fn make_ring<T, U>(t: T, u: U) -> Ring<T, U> {
+        Ring(t, u)
     }
 
     use t_funk::typenum::consts::{U1, U5};
@@ -183,6 +188,8 @@ mod test {
             .fold_combine(union())
             .color(BLACK)
             .scale(0.9_f32);
+
+        panic!("{shape:#?}");
 
         shape
             .rasterize::<ShapeCtxFrom>(frag_size as usize, frag_size as usize)
